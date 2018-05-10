@@ -1,7 +1,7 @@
 PLEXIL5 
 ========
 The Plan Execution Interchange Language ([PLEXIL](http://plexil.sourceforge.net)) is an open source
-synchronous language developed by NASA for commanding and monitoring
+synchronous language developed by [NASA](https://www.nasa.gov) for commanding and monitoring
 autonomous systems. PLEXIL Formal Interactive Verification Environment
 (PLEXIL5) is a tool that implements a formal executable semantics of
 PLEXIL. PLEXIL5 provides a graphical interface that enable access to
@@ -15,14 +15,17 @@ variables.
 
 PLEXIL’s operational semantics has been formally specified and key
 meta-theoretical properties of the language, such as determinism and
-compositionality, have been formally verified in the Prototype
-Verification System (PVS). This formalization yields a formal
+compositionality, have been
+[formally verified](https://shemesh.larc.nasa.gov/fm/PLEXIL)  in the [Prototype
+Verification System](http://pvs.csl.sri.com/) (PVS). This formalization yields a formal
 executable semantics of the language that serves as an efficient
 formal interpreter and reference implementation of PLEXIL. This formal
-semantics is at the core of the verification capabilities of the
+semantics is at the core of the verification capabilities of 
 PLEXIL5. The formal analysis capabilities offered by PLEXIL5 are based
-on PLEXIL’s rewriting logic semantics written in Maude and verified in
-PVS.  The graphical user interface has been developed in Java using
+on PLEXIL’s rewriting logic semantics written in the [Maude](http://maude.cs.illinois.edu/) system and verified in
+PVS.
+
+The graphical user interface has been developed in Java using
 the model-view-controller pattern. The object oriented model
 represents the hierarchical structure of plans, their execution
 behavior, and the external environment. The view consists of several
@@ -35,8 +38,7 @@ the tool links a series of parsers and translators that internally
 1.  generate the format supported by the rewriting logic semantics of the
 language implemented in Maude and
 
-2. construct an object oriented
-plan model from Maude’s output.
+2. construct an object oriented plan model from Maude’s output.
 
  Java and Maude communicate as processes at the operating system’s
 level with help of the Java/Maude Integration API, developed as part
