@@ -52,11 +52,11 @@ PLEXIL5 v0.0 (May-31-2018)
 
 * [Apache Ant](https://ant.apache.org/)
 
-* [Maude Interpreter Binaries](http://maude.cs.uiuc.edu/download/). Copy maude.linux64, maude.linux, maude.intelDarwin to 'plexilite' folder.
+* [Maude Interpreter Binaries](http://maude.cs.uiuc.edu/download/). Copy maude.linux64, maude.linux, maude.intelDarwin to `plexilite` folder.
 
 ## Compiling and running
 
-In 'build' directory:
+In `build` directory:
 
 ```bash
 $ ant run
