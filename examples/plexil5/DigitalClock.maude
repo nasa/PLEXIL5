@@ -1,0 +1,104 @@
+mod DIGITALCLOCK is
+ protecting PLEXILITE-PREDS .
+
+
+op DigitalClock : -> Plexil .
+eq DigitalClock = list(
+			'DigitalClock,
+			(('h : v(0)) ('m : v(0)) ),
+			(
+  			(endc:	areChildren?('DigitalClock, finished)),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true)))
+  			),
+  			(Clock)
+			) .
+
+
+op Clock : -> Plexil .
+eq Clock = list(
+			'Clock,
+			nilocdecl,
+			(
+  			(endc:	areChildren?('Clock . 'DigitalClock, finished)),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	(lookupOnChange ('DigitalClock . 'Click,v(0)) equ const(v(true)))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true)))
+  			),
+  			(H M1 M2)
+			) .
+
+
+op H : -> Plexil .
+eq H = assignment(
+			'H,
+			(('x : v(12)) ),
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	(var(('m . 'DigitalClock)) equ const(v(59)))),
+  			(priority: 1)
+  			),
+			(('h . 'DigitalClock) := (var(('h . 'DigitalClock)) + const(v(1))))
+			) .
+
+
+op M1 : -> Plexil .
+eq M1 = assignment(
+			'M1,
+			(('x : v(5)) ),
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	var(('m . 'DigitalClock)) < const(v(59))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true))),
+  			(priority: 1)
+  			),
+			(('m . 'DigitalClock) := (var(('m . 'DigitalClock)) + var(('x . 'M1 . 'Clock . 'DigitalClock))))
+			) .
+
+
+op M2 : -> Plexil .
+eq M2 = assignment(
+			'M2,
+			nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	(var(('m . 'DigitalClock)) equ const(v(59)))),
+  			(priority: 1)
+  			),
+			(('m . 'DigitalClock) := const(v(0)))
+			) .
+
+
+op DigitalClockEnv : -> ContextList .
+eq DigitalClockEnv = (('DigitalClock . 'Click) : v(true))
+	# (('DigitalClock . 'Click) : v(true))
+	# (('DigitalClock . 'Click) : v(false))
+	# (('DigitalClock . 'Click) : v(false))
+	# (('DigitalClock . 'Click) : v(true))
+	# (('DigitalClock . 'Click) : v(true)) .
+
+
+endm
+
+eof

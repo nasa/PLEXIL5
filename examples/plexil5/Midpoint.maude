@@ -1,0 +1,81 @@
+mod MIDPOINT is
+ protecting PLEXILITE-PREDS .
+
+
+op Midpoint : -> Plexil .
+eq Midpoint = list(
+			'Midpoint,
+			(('x : v(0)) ('y : v(9)) ),
+			(
+  			(endc:	areChildren?('Midpoint, finished)),
+  			(inv:	const(v(true))),
+  			(post:	var(('x . 'Midpoint)) >= var(('y . 'Midpoint))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true)))
+  			),
+  			(S)
+			) .
+
+
+op S : -> Plexil .
+eq S = list(
+			'S,
+			nilocdecl,
+			(
+  			(endc:	areChildren?('S . 'Midpoint, finished)),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	var(('x . 'Midpoint)) < var(('y . 'Midpoint))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true)))
+  			),
+  			(X Y)
+			) .
+
+
+op X : -> Plexil .
+eq X = assignment(
+			'X,
+			nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true))),
+  			(priority: 1)
+  			),
+			(('x . 'Midpoint) := (var(('x . 'Midpoint)) + const(v(1))))
+			) .
+
+
+op Y : -> Plexil .
+eq Y = assignment(
+			'Y,
+			nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true))),
+  			(priority: 1)
+  			),
+			(('y . 'Midpoint) := (var(('y . 'Midpoint)) - const(v(1))))
+			) .
+
+
+op MidpointEnv : -> ContextList .
+eq MidpointEnv = mtcontext .
+
+
+endm
+
+eof

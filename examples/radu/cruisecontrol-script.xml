@@ -1,0 +1,25 @@
+<PLEXILScript>
+ <Step>
+   <State name="cruisecontrol.MergingTraffic" type="boolean" >
+      <Value>true</Value>
+   </State>
+   <State name="cruisecontrol.LetBehind" type="boolean" >
+      <Value>true</Value>
+   </State>
+   <State name="cruisecontrol.RollStop" type="boolean" >
+      <Value>true</Value>
+   </State>
+ </Step>
+
+ <Step>
+   <State name="cruisecontrol.MergingTraffic" type="boolean" >
+      <Value>true</Value>
+   </State>
+   <State name="cruisecontrol.LetBehind" type="boolean" >
+      <Value>true</Value>
+   </State>
+   <State name="cruisecontrol.RollStop" type="boolean" >
+      <Value>true</Value>
+   </State>
+ </Step>
+</PLEXILScript>

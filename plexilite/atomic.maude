@@ -1,0 +1,407 @@
+----                                                               Atomic rules
+----                                                       author: Camilo Rocha
+
+mod ATOMIC is
+  protecting SYNC-REDUCTION .
+
+  var AS        : ActionSet .
+  var AR        : Arguments .
+  var NA        : AttributeSet .
+  var NA'       : AttributeSet .
+  vars B B'     : Bool . 
+  var C         : Cid .
+  var CI        : CommandInfo .
+  var CONF      : Config .
+  vars PS PS'   : Configuration .
+  var GAMMA     : Context .
+  var SIGMA     : Contexts .
+  vars E E' E'' : Expression .
+  var Exp       : Expression .
+  var I         : Identifier .
+  var N         : Nat .
+  vars Q Q'     : NeQualified .
+  var O         : Outcome .
+  var P         : Parameters .
+  vars Pr Pr'   : Processes .
+  vars A A' A'' : Qualified .
+  vars A1 A2    : Qualified .
+  var R         : Rat .
+  var S         : Status .
+  var TS        : TransitionSet .
+  vars TL TL'   : TraceList .
+  vars V V' V'' : Value .
+  var X         : XFlag .
+
+*** Inactive
+ 
+  op inac : Config -> Config .
+ ceq inac((GAMMA |- [ < A : C | NA, status: inactive, active: true, startc: E > PS] {AS} {TS TL})) 
+   = if ancestorInvariantFalse(GAMMA,Pr,A) 
+     then 
+       inac((GAMMA |- Pr' {AS,setStatus(A, finished),setOutcome(A,skipped),removeMonitors(A)} {("inactive-01",TS) TL}))
+     else
+       if ancestorEndTrue(GAMMA,[< A : C | NA, status: inactive, active: true, startc: E > PS],A) 
+       then 
+         inac((GAMMA |- Pr' {AS,setStatus(A, finished),setOutcome(A,skipped),removeMonitors(A)} {("inactive-02",TS) TL}))
+       else
+         if parentExecuting(Pr,A) 
+         then 
+           inac((GAMMA |- Pr' {AS,setStatus(A, waiting)} {("inactive-03",TS) TL}))
+         else 
+           inac((GAMMA |- Pr' {AS} {TS TL}))
+         fi
+       fi
+     fi
+  if Pr  := [ < A : C | NA, status: inactive, active: true, startc: E > PS]
+  /\ Pr' := [ < A : C | NA, status: inactive, active: false, startc: E > PS] .
+  eq inac(CONF) = CONF [owise] .
+
+*** Waiting
+  op waiting : Config -> Config .
+ ceq waiting((GAMMA |- [ < A : C | NA, status: waiting, active: true, skip: E, startc: E', pre: E'', monscrtd: B > PS] {AS} {TS TL})) 
+   = if ancestorInvariantFalse(GAMMA,Pr,A) 
+     then 
+       waiting((GAMMA |- Pr' {AS, setStatus(A,finished),setOutcome(A,skipped),removeMonitors(A)} {("waiting-01",TS) TL}))
+     else
+       if ancestorEndTrue(GAMMA,Pr,A) 
+       then 
+         waiting((GAMMA |- Pr' {AS, setStatus(A,finished),setOutcome(A,skipped),removeMonitors(A)} {("waiting-02",TS) TL}))
+       else
+         if eval(GAMMA,Pr,E) == const(v(true)) 
+         then 
+           waiting((GAMMA |- Pr' {AS, setStatus(A,finished),setOutcome(A,skipped),removeMonitors(A)} {("waiting-03",TS) TL}))
+         else
+           if eval(GAMMA,Pr,E') == const(v(true)) 
+           then
+             if eval(GAMMA,Pr,E'') == const(v(true))
+             then
+               waitingaux(A,(GAMMA |- Pr {AS} {TS TL}))
+             else 
+               waiting((GAMMA |- Pr' {AS,setStatus(A,iterationEnded),setOutcome(A,fail(preconditionFail))} {("waiting-05",TS) TL}))
+             fi
+           else
+             if B == false and-then hasLookupOnChange?(E')
+	     then
+               waiting((GAMMA |- Pr' {AS,createMonitors(A,E',false),setMonitorFlag(A,true) } {("waiting-04b",TS) TL}))
+	     else
+               waiting((GAMMA |- Pr' {AS} {TS TL}))
+	     fi
+           fi
+         fi
+       fi
+     fi
+  if Pr  := [ < A : C | NA, status: waiting, active: true, skip: E, startc: E', pre: E'', monscrtd: B > PS]
+  /\ Pr' := [ < A : C | NA, status: waiting, active: false, skip: E, startc: E', pre: E'', monscrtd: B > PS] .
+  eq waiting( CONF ) = CONF [owise] .
+ 
+  op waitingaux : Qualified Config -> Config .
+  eq waitingaux(A,(GAMMA |- [ < A : retCommand | NA, status: waiting, active: true, command: (Q / P), 
+       commandInfo: CI, endc: E, extVar: A' > PS] 
+     {AS} {TS TL})) 
+   = waiting((GAMMA |- [ < A : retCommand | NA, status: waiting, active: false, command: (Q / P), 
+       commandInfo: CI, endc: E, extVar: A' > PS] 
+     {AS, setStatus(A,executing), setCommandInfo(A, evalpar(GAMMA,[PS],P) / Q / invoked),createMonitors(A,lookupOnChange(A',v(0)))} 
+     {("waiting-04a-funCall",TS) TL})) .
+  eq waitingaux(A,(GAMMA |- [ < A : command | NA, status: waiting, active: true, command: (Q / P), 
+      commandInfo: CI, endc: E > PS] {AS} {TS TL})) 
+   = waiting((GAMMA |- [ < A : command | NA, status: waiting, active: false, command: (Q / P), 
+       commandInfo: CI, endc: E > PS] 
+     {AS, setStatus(A,executing), setCommandInfo(A, evalpar(GAMMA,[PS],P) / Q / invoked)} 
+     {("waiting-04a-command",TS) TL})) .
+  eq waitingaux(A,(GAMMA |- [ < A : empty | NA, status: waiting, active: true, endc: E > PS] {AS} {TS TL})) 
+   = waiting((GAMMA |- [ < A : empty | NA, status: waiting, active: false, endc: E > PS] 
+     {AS,setStatus(A,executing)} 
+     {("waiting-04a-empty",TS) TL})) .
+  eq waitingaux(A,(GAMMA |- [ < A : list | NA, status: waiting, active: true, endc: E > PS] {AS} {TS TL}))
+   = waiting((GAMMA |- [ < A : list | NA, status: waiting, active: false, endc: E > PS] 
+     {AS,setStatus(A,executing)} 
+     {("waiting-04a-list",TS) TL})) .
+  eq waitingaux(A,(GAMMA |- [ < A : assignment | NA, status: waiting, active: true, endc: E > PS] {AS} {TS TL})) 
+   = waiting((GAMMA |- [ < A : assignment | NA, status: waiting, active: false, endc: E > PS] 
+     {AS,setStatus(A,executing)} 
+     {("waiting-04a-assignment",TS) TL})) .
+  eq waitingaux(A,CONF) = CONF [owise] .
+ 
+*** Executing
+
+**** List
+ op execlist : Config -> Config .
+ceq execlist((GAMMA |- [ < A : list | NA, status: executing, active: true, inv: E, endc: E', monscrtd: B > PS] {AS} {TS TL})) 
+  = if ancestorInvariantFalse(GAMMA,Pr,A) 
+    then 
+      execlist((GAMMA |- Pr' {AS,setStatus(A,failing),setOutcome(A,fail(parentFail))} {("execlist-01",TS) TL}))
+    else
+      if eval(GAMMA,Pr,E) == const(v(false))
+      then 
+        execlist((GAMMA |- Pr' {AS,setStatus(A,failing),setOutcome(A,fail(invariantFail))} {("execlist-02",TS) TL}))
+      else 
+        if eval(GAMMA,Pr,E') == const(v(true)) 
+        then 
+          execlist((GAMMA |- Pr' {AS,setStatus(A,finishing)} {("execlist-03",TS) TL}))
+        else
+          if B == false and-then hasLookupOnChange?(E')
+          then
+            execlist((GAMMA |- Pr' {AS,createMonitors(A,E',false),setMonitorFlag(A,true) } {("execlist-03b",TS) TL}))
+          else
+            execlist((GAMMA |- Pr' {AS} {TS TL}))
+          fi
+        fi
+      fi
+    fi
+  if Pr  := [ < A : list | NA, status: executing, active: true, inv: E, endc: E', monscrtd: B > PS]
+  /\ Pr' := [ < A : list | NA, status: executing, active: false, inv: E, endc: E', monscrtd: B > PS] .
+  eq execlist( CONF ) = CONF .
+
+**** Command
+  op execommand : Config -> Config .
+ ceq execommand((GAMMA |- [ < A : command | NA, inv: E, endc: E', post: E'', status: executing, commandInfo: (AR / A' / X), active: true, monscrtd: B > PS] {AS} {TS TL}))
+   = if ancestorInvariantFalse(GAMMA,Pr,A) 
+     then 
+       if eval(GAMMA, Pr, E') =/= const(v(true)) 
+       then 
+         execommand((GAMMA |- Pr' {AS,setStatus(A,failing),setOutcome(A,fail(parentFail)),setCommandInfo(A, AR / A' / aborting)} {("execommand-01",TS) TL}))
+       else 
+         execommand((GAMMA |- Pr' {AS,setStatus(A,finished),setOutcome(A,fail(parentFail)),setCommandInfo(A, AR / A' / idle),removeMonitors(A)} {("execommand-02",TS) TL}))
+       fi
+     else
+       if eval(GAMMA,Pr',E) == const(v(false)) 
+       then
+         if eval(GAMMA, Pr, E') =/= const(v(true)) 
+         then 
+           execommand((GAMMA |- Pr' {AS,setStatus(A,failing),setOutcome(A,fail(invariantFail)),setCommandInfo(A, AR / A' / aborting)} {("execommand-03",TS) TL}))
+         else 
+           execommand((GAMMA |- Pr' {AS,setStatus(A,iterationEnded),setOutcome(A,fail(invariantFail)),setCommandInfo(A, AR / A' / idle)} {("execommand-04",TS) TL}))
+         fi
+       else
+         if eval(GAMMA,Pr,E') == const(v(true)) 
+         then 
+           if eval(GAMMA,Pr,E'') == const(v(true))
+           then 
+             execommand((GAMMA |- Pr' {AS,setStatus(A,iterationEnded),setOutcome(A,success),setCommandInfo(A, AR / A' / idle)} {("execommand-05",TS) TL}))
+           else 
+             execommand((GAMMA |- Pr' {AS,setStatus(A,iterationEnded),setOutcome(A,fail(postconditionFail)),setCommandInfo(A, AR / A' / idle)} {("execommand-06",TS) TL}))
+           fi
+         else
+           if B == false and-then hasLookupOnChange?(E')
+           then
+             execommand((GAMMA |- Pr' {AS,createMonitors(A,E',false),setMonitorFlag(A,true) } {("execommand-05b",TS) TL}))
+           else
+             execommand((GAMMA |- Pr' {AS} {TS TL}))
+           fi
+         fi
+       fi
+     fi
+  if Pr  := [ < A : command | NA, inv: E, endc: E', post: E'', status: executing, commandInfo: (AR / A' / X), active: true, monscrtd: B > PS]
+  /\ Pr' := [ < A : command | NA, inv: E, endc: E', post: E'', status: executing, commandInfo: (AR / A' / X), active: false, monscrtd: B > PS] .
+  eq execommand(CONF) = CONF [owise] .
+ 
+**** Assignment
+  op execassignment : Config -> Config .
+ ceq execassignment((GAMMA |- [ < A : assignment | NA, (A' := Exp), status: executing, priority: R, active: true, inv: E, endc: E', monscrtd: B > < A' : memory | NA', actVal: V > PS] {AS} {TS TL}))
+   = if ancestorInvariantFalse(GAMMA,Pr,A) 
+     then 
+       execassignment((GAMMA |- Pr' {AS,setStatus(A,finished),setOutcome(A,fail(parentFail)),setMem(A',unknown),removeMonitors(A)} {("execassignment-01",TS) TL}))
+     else
+       if eval(GAMMA, Pr, E ) == const(v(false)) 
+       then 
+         execassignment((GAMMA |- Pr' {AS,setStatus(A,iterationEnded),setOutcome(A,fail(invariantFail)),setMem(A',unknown)} {("execassignment-02",TS) TL}))
+       else
+         if eval(GAMMA, Pr, E' ) == const(v(true)) 
+         then 
+           execassignment((GAMMA |- Pr' {AS,setStatus(A,iterationEnded),setMem(A',expToVal(eval(GAMMA,[< A : assignment | NA, (A' := Exp), status: executing, priority: R, active: true, inv: E, endc: E' > < A' : memory | NA', actVal: V > PS],Exp)))} {("execassignment-03",TS) TL}))
+         else
+           if B == false and-then hasLookupOnChange?(E')
+           then
+             execassignment((GAMMA |- Pr' {AS,createMonitors(A,E',false),setMonitorFlag(A,true) } {("execassignment-03b",TS) TL}))
+           else
+             execassignment((GAMMA |- Pr' {AS} {TS TL}))
+           fi
+         fi
+       fi
+     fi
+  if Pr  := [ < A : assignment | NA, (A' := Exp), status: executing, priority: R, active: true, inv: E, endc: E', monscrtd: B > < A' : memory | NA', actVal: V > PS]
+  /\ Pr' := [ < A : assignment | NA, (A' := Exp), status: executing, priority: R, active: false, inv: E, endc: E', monscrtd: B > < A' : memory | NA', actVal: V > PS]
+  /\ hasPriority(PS,A',R) .
+  eq execassignment(CONF) = CONF [owise] .
+
+**** RetCommand
+  op execretCommand : Config -> Config .
+---(
+ ceq execretCommand((GAMMA |- [ < A : retCommand | NA, locVar: A1, extVar: A2, commandInfo: (AR / A'' / X), status: executing, active: true, inv: E, endc: E', post: E'' > PS] {AS} {TS TL})) 
+   = if ancestorInvariantFalse((GAMMA),Pr,A) 
+     then
+       if eval(GAMMA,Pr, E') =/= const(v(true))
+       then 
+         execretCommand((GAMMA |- Pr' {AS,setStatus(A,failing),setOutcome(A,fail(parentFail)),setCommandInfo(A,AR / A'' / aborting),setMem(A1,unknown)} {("execretcommand-01",TS) TL}))
+       else 
+         execretCommand((GAMMA |- Pr' {AS,setStatus(A,finished),setMem(A1,unknown)} {("execretcommand-01",TS) TL}))
+       fi
+     else
+       if eval(GAMMA,Pr,E) == const(v(false))
+       then 
+         if eval(GAMMA,Pr, E') =/= const(v(true))
+         then 
+           execretCommand((GAMMA |- Pr' {AS,setStatus(A,failing),setOutcome(A,fail(parentFail)),setCommandInfo(A,AR / A'' / aborting),setMem(A1,unknown)} {("execretcommand-02",TS) TL}))
+         else 
+           execretCommand((GAMMA |- Pr' {AS,setStatus(A,iterationEnded), setMem(A1,unknown)} {("execretcommand-02",TS) TL}))
+         fi
+       else
+         if eval(GAMMA,Pr,E') == const(v(true)) 
+         then 
+           if eval(GAMMA,Pr,E'') == const(v(true))
+           then
+             execretCommand((GAMMA |- Pr' {AS,setStatus(A,iterationEnded),setOutcome(A,success),setCommandInfo(A,AR / A'' / idle), setMem(A1,expToVal(eval(GAMMA,[PS],lookup(A2))))} {("execretcommand-03",TS) TL}))
+           else 
+             execretCommand((GAMMA |- Pr' {AS,setStatus(A,iterationEnded),setOutcome(A,fail(postconditionFail)),setMem(A1,unknown)} {("execretcommand-03",TS) TL}))
+           fi
+         else
+           execretCommand((GAMMA |- Pr' {AS} {TS TL}))
+         fi
+       fi
+     fi
+  if Pr  := [ < A : retCommand | NA, locVar: A1, extVar: A2, commandInfo: (AR / A'' / X), status: executing, active: true, inv: E, endc: E', post: E'' > PS]
+  /\ Pr' := [ < A : retCommand | NA, locVar: A1, extVar: A2, commandInfo: (AR / A'' / X), status: executing, active: false, inv: E, endc: E', post: E'' > PS] .
+)---
+  eq execretCommand(CONF) = CONF [owise] .
+  
+**** Empty
+  op execempty : Config -> Config .
+ ceq execempty((GAMMA |- [ < A : empty | NA, status: executing, active: true, inv: E, endc: E', monscrtd: B > PS] {AS} {TS TL})) 
+   = if ancestorInvariantFalse(GAMMA,Pr,A) 
+     then 
+       execempty((GAMMA |- Pr' {AS,setStatus(A,finished),setOutcome(A,fail(parentFail)),removeMonitors(A)} {("execempty-01",TS) TL}))
+     else
+       if eval(GAMMA,Pr,E) == const(v(false)) 
+       then 
+         execempty((GAMMA |- Pr' {AS,setStatus(A,iterationEnded),setOutcome(A,fail(invariantFail))} {("execempty-02",TS) TL}))
+       else
+         if eval(GAMMA,Pr,E') == const(v(true)) 
+         then 
+           execempty((GAMMA |- Pr' {AS,setStatus(A,iterationEnded)} {("execempty-03",TS) TL}))
+         else 
+           if B == false and-then hasLookupOnChange?(E')
+           then
+             execempty((GAMMA |- Pr' {AS,createMonitors(A,E',false),setMonitorFlag(A,true) } {("execempty-03b",TS) TL}))
+           else
+             execempty((GAMMA |- Pr' {AS} {TS TL}))
+           fi
+         fi
+       fi
+     fi
+  if Pr  := [ < A : empty | NA, status: executing, active: true, inv: E, endc: E', monscrtd: B > PS]
+  /\ Pr' := [ < A : empty | NA, status: executing, active: false, inv: E, endc: E', monscrtd: B > PS] .
+  eq execempty(CONF) = CONF [owise] .
+ 
+*** Failing
+
+**** List
+  op failinglist : Config -> Config . 
+ ceq failinglist((GAMMA |- [ < A : list | NA, status: failing, outcome: O, active: true > PS] {AS} {TS TL})) 
+   = if childrenWaitingFinished(GAMMA,Pr,A)
+     then 
+       if O =/= fail(parentFail) 
+       then 
+         failinglist((GAMMA |- Pr' {AS,setStatus(A,iterationEnded)} {("failinglist-01",TS) TL}))
+       else 
+         failinglist((GAMMA |- Pr' {AS,setStatus(A,finished),removeMonitors(A)} {("failinglist-02",TS) TL}))
+       fi
+     else 
+       failinglist((GAMMA |- Pr' {AS} {TS TL}))
+     fi
+  if Pr  := [ < A : list | NA, status: failing, outcome: O, active: true > PS]
+  /\ Pr' := [ < A : list | NA, status: failing, outcome: O, active: false > PS] .
+  eq failinglist(CONF) = CONF [owise] .
+
+**** Command
+  op failingcommand : Config -> Config .
+ ceq failingcommand(((GAMMA, (A'' : aborted)) |- [ < A : command | NA, commandInfo: (AR / A'' / X), status: failing, outcome: O, active: true > PS] {AS} {TS TL})) 
+   = if O =/= fail(parentFail) 
+     then 
+       failingcommand(((GAMMA, (A'' : aborted)) |- Pr' {AS,setStatus(A,iterationEnded),setCommandInfo(A,AR / A'' / idle)} {("failingcommand-01",TS) TL}))
+     else 
+       failingcommand(((GAMMA, (A'' : aborted)) |- Pr' {AS,setStatus(A,finished),setCommandInfo(A,AR / A'' / idle),removeMonitors(A)} {("failingcommand-02",TS) TL}))
+     fi
+  if Pr  := [ < A : command | NA, commandInfo: (AR / A'' / X), status: failing, outcome: O, active: true > PS]
+  /\ Pr' := [ < A : command | NA, commandInfo: (AR / A'' / X), status: failing, outcome: O, active: false > PS] .
+  eq failingcommand(CONF) = CONF [owise] .
+
+
+*** Finishing
+  op finishinglist : Config -> Config .
+ ceq finishinglist((GAMMA |- [ < A : list | NA, status: finishing, active: true, inv: E, post: E' > PS] {AS} {TS TL})) 
+   = if ancestorInvariantFalse(GAMMA,Pr,A) 
+     then 
+       finishinglist((GAMMA |- Pr' {AS,setStatus(A,failing),setOutcome(A,fail(parentFail))} {("finishinglist-01",TS) TL}))
+     else
+       if eval(GAMMA,Pr,E) == const(v(false)) 
+       then 
+         finishinglist((GAMMA |- Pr' {AS,setStatus(A,failing),setOutcome(A,fail(invariantFail))} {("finishinglist-02",TS) TL}))
+       else
+         if childrenWaitingFinished(GAMMA,Pr,A) 
+         then
+           finishinglist((GAMMA |- Pr' {AS,setStatus(A,iterationEnded)} {("finishinglist-03",TS) TL}))
+         else
+           finishinglist((GAMMA |- Pr' {AS} {TS TL}))
+         fi
+       fi
+     fi
+  if Pr  := [ < A : list | NA, status: finishing, active: true, inv: E, post: E' > PS]
+  /\ Pr' := [ < A : list | NA, status: finishing, active: false, inv: E, post: E' > PS] .	
+  eq finishinglist(CONF) = CONF [owise] .
+
+*** Iteration ended
+  op iterationended : Config -> Config .
+ ceq iterationended((GAMMA |- [ < A : C | NA, status: iterationEnded, active: true, repeatc: E, post: E', loopenabled: B, outcome: O, monscrtd: B' > PS] {AS} {TS TL})) 
+   = if ancestorInvariantFalse(GAMMA,Pr,A) 
+     then 
+       iterationended((GAMMA |- Pr' {AS,setStatus(A,finished),setOutcome(A,fail(parentFail)),removeMonitors(A)} {("iterationended-01",TS) TL}))
+     else
+       if ancestorEndTrue(GAMMA,Pr,A) 
+       then 
+         iterationended((GAMMA |- Pr' {AS,setStatus(A,finished),removeMonitors(A)} {("iterationended-02",TS) TL}))
+       else
+         if B == false
+         then
+           if B' == false
+           then
+             iterationended((GAMMA |- Pr' {AS,createMonitors(A,E,true),setMonitorFlag(A,true)} {("iterationended-02b",TS) TL}))
+           else
+             iterationended((GAMMA |- Pr' {AS} {TS TL}))
+           fi
+         else
+           if ((eval(GAMMA,Pr,E) == const(v(false))) or (eval(GAMMA,Pr,E) == const(unknown))) 
+           then
+             if eval(GAMMA,Pr,E') == const(v(true)) 
+             then 
+               iterationended((GAMMA |- Pr' {AS,setStatus(A,finished),if isFailure?(O) then mtactions else setOutcome(A,success) fi,removeMonitors(A),setLoopEnabled(A,not(hasLookupOnChange?(E)))} {("iterationended-03a",TS) TL}))
+             else 
+               iterationended((GAMMA |- Pr' {AS,setStatus(A,finished),setOutcome(A,fail(postconditionFail)),removeMonitors(A),setLoopEnabled(A,not(hasLookupOnChange?(E)))} {("iterationended-03b",TS) TL}))
+             fi
+           else 
+             if eval(GAMMA,Pr,E) == const(v(true)) 
+             then 
+               iterationended((GAMMA |- Pr' {AS,setStatus(A,waiting),setOutcome(A,none),resetMem(A),setLoopEnabled(A,not(hasLookupOnChange?(E)))} {("iterationended-04",TS) TL}))
+             else 
+               iterationended((GAMMA |- Pr' {AS} {TS TL}))
+             fi
+           fi
+         fi
+       fi
+     fi
+  if Pr  := [ < A : C | NA, status: iterationEnded, active: true, repeatc: E, post: E', loopenabled: B, outcome: O, monscrtd: B' > PS]
+  /\ Pr' := [ < A : C | NA, status: iterationEnded, active: false, repeatc: E, post: E', loopenabled: B, outcome: O, monscrtd: B' > PS] .
+  eq iterationended(CONF) = CONF [owise] .
+ 
+*** Finished
+  op finished : Config -> Config .
+ ceq finished((GAMMA |- [ < A : C | NA, status: finished, active: true > PS] {AS} {TS TL})) 
+   = if parentWaiting(Pr,A)
+     then 
+       finished((GAMMA |- Pr' {AS,setStatus(A,inactive),setOutcome(A,none),resetMem(A)} {("finished",TS) TL}))
+     else 
+       finished((GAMMA |- Pr' {AS} {TS TL}))
+     fi
+  if Pr  := [ < A : C | NA, status: finished, active: true > PS]
+  /\ Pr' := [ < A : C | NA, status: finished, active: false > PS] .
+  eq finished(CONF) = CONF [owise] .
+endm

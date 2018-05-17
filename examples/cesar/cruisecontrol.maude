@@ -1,0 +1,752 @@
+mod CRUISECONTROL is
+ protecting PLEXILITE-PREDS .
+
+
+op cruisecontrol : -> Plexil .
+eq cruisecontrol = list(
+			'cruisecontrol,
+			(('INIT-DISTANCE : v(55)) ('BEGIN-RAMP : v(33)) ('END-RAMP : v(25)) ('AT-INTERSECTION : v(0)) ('timestep : v(1)) ('SEMAPHORE-CYCLE : v(28)) ('GREEN-LIGHT : v(28)) ('YELLOW-LIGHT : v(12)) ('RED-LIGHT : v(8)) ('STOPPED : v(0)) ('SLOW : v(1)) ('MODERATE : v(2)) ('FAST : v(3)) ('DESIRED : v(2)) ('A-distance : v(55)) ('A-speed : v(1)) ('A-acceleration : v(0)) ('A-semaphore-counter : v(28)) ('cruise-enabled : v(false)) ('cruise-speed : v(0)) ('merging-traffic : v(true)) ('let-behind : v(true)) ('roll-stop : v(true)) ),
+			(
+  			(endc:	areChildren?('cruisecontrol, finished)),
+  			(inv:	(not (((var(('A-distance . 'cruisecontrol)) equ var(('AT-INTERSECTION . 'cruisecontrol)))) and (var(('A-speed . 'cruisecontrol)) > var(('STOPPED . 'cruisecontrol)))))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true)))
+  			),
+  			(Car Driver Semaphore)
+			) .
+
+
+op Car : -> Plexil .
+eq Car = assignment(
+			'Car,
+			nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	(var(('A-distance . 'cruisecontrol)) > var(('AT-INTERSECTION . 'cruisecontrol))) and (var(('A-speed . 'cruisecontrol)) > const(v(0)))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true))),
+  			(priority: 1)
+  			),
+			(('A-distance . 'cruisecontrol) := (var(('A-distance . 'cruisecontrol)) - (var(('A-speed . 'cruisecontrol)) * var(('timestep . 'cruisecontrol)))))
+			) .
+
+
+op Driver : -> Plexil .
+eq Driver = list(
+			'Driver,
+			nilocdecl,
+			(
+  			(endc:	areChildren?('Driver . 'cruisecontrol, finished)),
+  			(inv:	(not (((isOutcomeFailure?(('DriveToRamp . 'Driver . 'cruisecontrol))) or (isOutcomeFailure?(('AvoidTraffic . 'Driver . 'cruisecontrol))))))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true)))
+  			),
+  			(DriveToRamp AvoidTraffic StopAtLight)
+			) .
+
+
+op DriveToRamp : -> Plexil .
+eq DriveToRamp = list(
+			'DriveToRamp,
+			nilocdecl,
+			(
+  			(endc:	areChildren?('DriveToRamp . 'Driver . 'cruisecontrol, finished)),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	var(('A-distance . 'cruisecontrol)) > var(('BEGIN-RAMP . 'cruisecontrol))),
+  			(skip:	const(v(false))),
+  			(startc:	var(('A-distance . 'cruisecontrol)) > var(('BEGIN-RAMP . 'cruisecontrol)))
+  			),
+  			(SetDesiredCruise MaintainSpeed IncreaseSpeed DecreaseSpeed)
+			) .
+
+
+op SetDesiredCruise : -> Plexil .
+eq SetDesiredCruise = list(
+			'SetDesiredCruise,
+			nilocdecl,
+			(
+  			(endc:	areChildren?('SetDesiredCruise . 'DriveToRamp . 'Driver . 'cruisecontrol, finished)),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	(not (((var(('A-speed . 'cruisecontrol)) equ var(('DESIRED . 'cruisecontrol)))) and ((var(('cruise-enabled . 'cruisecontrol)) equ const(v(false))))))),
+  			(startc:	const(v(true)))
+  			),
+  			(EnableCruise SetCruiseSpeed NoAcceleration)
+			) .
+
+
+op EnableCruise : -> Plexil .
+eq EnableCruise = assignment(
+			'EnableCruise,
+			nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true))),
+  			(priority: 1)
+  			),
+			(('cruise-enabled . 'cruisecontrol) := const(v(true)))
+			) .
+
+
+op SetCruiseSpeed : -> Plexil .
+eq SetCruiseSpeed = assignment(
+			'SetCruiseSpeed,
+			nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true))),
+  			(priority: 1)
+  			),
+			(('cruise-speed . 'cruisecontrol) := var(('A-speed . 'cruisecontrol)))
+			) .
+
+
+op NoAcceleration : -> Plexil .
+eq NoAcceleration = assignment(
+			'NoAcceleration,
+			nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true))),
+  			(priority: 1)
+  			),
+			(('A-acceleration . 'cruisecontrol) := const(v(0)))
+			) .
+
+
+op MaintainSpeed : -> Plexil .
+eq MaintainSpeed = list(
+			'MaintainSpeed,
+			nilocdecl,
+			(
+  			(endc:	areChildren?('MaintainSpeed . 'DriveToRamp . 'Driver . 'cruisecontrol, finished)),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	(not ((((var(('A-speed . 'cruisecontrol)) equ var(('DESIRED . 'cruisecontrol)))) and ((var(('cruise-enabled . 'cruisecontrol)) equ const(v(true))))) and ((var(('cruise-speed . 'cruisecontrol)) equ var(('DESIRED . 'cruisecontrol))))))),
+  			(startc:	const(v(true)))
+  			),
+  			(AtDesiredSpeed ConstantSpeed)
+			) .
+
+
+op AtDesiredSpeed : -> Plexil .
+eq AtDesiredSpeed = assignment(
+			'AtDesiredSpeed,
+			nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true))),
+  			(priority: 1)
+  			),
+			(('A-speed . 'cruisecontrol) := var(('DESIRED . 'cruisecontrol)))
+			) .
+
+
+op ConstantSpeed : -> Plexil .
+eq ConstantSpeed = assignment(
+			'ConstantSpeed,
+			nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true))),
+  			(priority: 1)
+  			),
+			(('A-acceleration . 'cruisecontrol) := const(v(0)))
+			) .
+
+
+op IncreaseSpeed : -> Plexil .
+eq IncreaseSpeed = list(
+			'IncreaseSpeed,
+			nilocdecl,
+			(
+  			(endc:	areChildren?('IncreaseSpeed . 'DriveToRamp . 'Driver . 'cruisecontrol, finished)),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	(not (var(('A-speed . 'cruisecontrol)) < var(('DESIRED . 'cruisecontrol))))),
+  			(startc:	const(v(true)))
+  			),
+  			(IncSpeed2Cruise Accelerate2Cruise)
+			) .
+
+
+op IncSpeed2Cruise : -> Plexil .
+eq IncSpeed2Cruise = assignment(
+			'IncSpeed2Cruise,
+			nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true))),
+  			(priority: 1)
+  			),
+			(('A-speed . 'cruisecontrol) := (var(('A-speed . 'cruisecontrol)) + const(v(1))))
+			) .
+
+
+op Accelerate2Cruise : -> Plexil .
+eq Accelerate2Cruise = assignment(
+			'Accelerate2Cruise,
+			nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true))),
+  			(priority: 1)
+  			),
+			(('A-acceleration . 'cruisecontrol) := const(v(1)))
+			) .
+
+
+op DecreaseSpeed : -> Plexil .
+eq DecreaseSpeed = list(
+			'DecreaseSpeed,
+			nilocdecl,
+			(
+  			(endc:	areChildren?('DecreaseSpeed . 'DriveToRamp . 'Driver . 'cruisecontrol, finished)),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	(not (var(('A-speed . 'cruisecontrol)) > var(('DESIRED . 'cruisecontrol))))),
+  			(startc:	const(v(true)))
+  			),
+  			(DecSpeed2Cruise Decelerate2Cruise)
+			) .
+
+
+op DecSpeed2Cruise : -> Plexil .
+eq DecSpeed2Cruise = assignment(
+			'DecSpeed2Cruise,
+			nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true))),
+  			(priority: 1)
+  			),
+			(('A-speed . 'cruisecontrol) := (var(('A-speed . 'cruisecontrol)) - const(v(1))))
+			) .
+
+
+op Decelerate2Cruise : -> Plexil .
+eq Decelerate2Cruise = assignment(
+			'Decelerate2Cruise,
+			nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true))),
+  			(priority: 1)
+  			),
+			(('A-acceleration . 'cruisecontrol) := const(v(-1)))
+			) .
+
+
+op AvoidTraffic : -> Plexil .
+eq AvoidTraffic = list(
+			'AvoidTraffic,
+			nilocdecl,
+			(
+  			(endc:	areChildren?('AvoidTraffic . 'Driver . 'cruisecontrol, finished)),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	(var(('END-RAMP . 'cruisecontrol)) <= var(('A-distance . 'cruisecontrol))) and (var(('A-distance . 'cruisecontrol)) <= var(('BEGIN-RAMP . 'cruisecontrol))))
+  			),
+  			(LetBehind LetAhead NoTraffic)
+			) .
+
+
+op LetBehind : -> Plexil .
+eq LetBehind = list(
+			'LetBehind,
+			nilocdecl,
+			(
+  			(endc:	areChildren?('LetBehind . 'AvoidTraffic . 'Driver . 'cruisecontrol, finished)),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	(not (((var(('merging-traffic . 'cruisecontrol)) equ const(v(true)))) and ((var(('let-behind . 'cruisecontrol)) equ const(v(true))))))),
+  			(startc:	const(v(true)))
+  			),
+  			(IncSpeedAtRamp AccelerateAtRamp)
+			) .
+
+
+op IncSpeedAtRamp : -> Plexil .
+eq IncSpeedAtRamp = assignment(
+			'IncSpeedAtRamp,
+			nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true))),
+  			(priority: 1)
+  			),
+			(('A-speed . 'cruisecontrol) := (var(('A-speed . 'cruisecontrol)) + const(v(1))))
+			) .
+
+
+op AccelerateAtRamp : -> Plexil .
+eq AccelerateAtRamp = assignment(
+			'AccelerateAtRamp,
+			nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true))),
+  			(priority: 1)
+  			),
+			(('A-acceleration . 'cruisecontrol) := const(v(1)))
+			) .
+
+
+op LetAhead : -> Plexil .
+eq LetAhead = list(
+			'LetAhead,
+			nilocdecl,
+			(
+  			(endc:	areChildren?('LetAhead . 'AvoidTraffic . 'Driver . 'cruisecontrol, finished)),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	(not (((var(('merging-traffic . 'cruisecontrol)) equ const(v(true)))) and ((not ((var(('let-behind . 'cruisecontrol)) equ const(v(true))))))))),
+  			(startc:	const(v(true)))
+  			),
+  			(DecSpeedAtRamp DecelerateAtRamp)
+			) .
+
+
+op DecSpeedAtRamp : -> Plexil .
+eq DecSpeedAtRamp = assignment(
+			'DecSpeedAtRamp,
+			nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true))),
+  			(priority: 1)
+  			),
+			(('A-speed . 'cruisecontrol) := (var(('A-speed . 'cruisecontrol)) - const(v(1))))
+			) .
+
+
+op DecelerateAtRamp : -> Plexil .
+eq DecelerateAtRamp = assignment(
+			'DecelerateAtRamp,
+			nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true))),
+  			(priority: 1)
+  			),
+			(('A-acceleration . 'cruisecontrol) := const(v(-1)))
+			) .
+
+
+op NoTraffic : -> Plexil .
+eq NoTraffic = assignment(
+			'NoTraffic,
+			nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	(var(('merging-traffic . 'cruisecontrol)) equ const(v(true)))),
+  			(startc:	const(v(true))),
+  			(priority: 1)
+  			),
+			(('A-acceleration . 'cruisecontrol) := const(v(0)))
+			) .
+
+
+op StopAtLight : -> Plexil .
+eq StopAtLight = list(
+			'StopAtLight,
+			nilocdecl,
+			(
+  			(endc:	areChildren?('StopAtLight . 'Driver . 'cruisecontrol, finished)),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	(var(('A-distance . 'cruisecontrol)) > var(('AT-INTERSECTION . 'cruisecontrol))) and (var(('A-speed . 'cruisecontrol)) > const(v(0)))),
+  			(skip:	const(v(false))),
+  			(startc:	(var(('AT-INTERSECTION . 'cruisecontrol)) < var(('A-distance . 'cruisecontrol))) and (var(('A-distance . 'cruisecontrol)) < var(('END-RAMP . 'cruisecontrol))))
+  			),
+  			(Roll Break CruiseOn BreakLate NoCruiseSlowdown)
+			) .
+
+
+op Roll : -> Plexil .
+eq Roll = list(
+			'Roll,
+			nilocdecl,
+			(
+  			(endc:	areChildren?('Roll . 'StopAtLight . 'Driver . 'cruisecontrol, finished)),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	(not ((((var(('cruise-enabled . 'cruisecontrol)) equ const(v(true)))) and (var(('A-speed . 'cruisecontrol)) > var(('cruise-speed . 'cruisecontrol)))) and ((var(('roll-stop . 'cruisecontrol)) equ const(v(true))))))),
+  			(startc:	const(v(true)))
+  			),
+  			(RollDecSpeed RollDecelerate)
+			) .
+
+
+op RollDecSpeed : -> Plexil .
+eq RollDecSpeed = assignment(
+			'RollDecSpeed,
+			nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true))),
+  			(priority: 1)
+  			),
+			(('A-speed . 'cruisecontrol) := (var(('A-speed . 'cruisecontrol)) - const(v(1))))
+			) .
+
+
+op RollDecelerate : -> Plexil .
+eq RollDecelerate = assignment(
+			'RollDecelerate,
+			nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true))),
+  			(priority: 1)
+  			),
+			(('A-acceleration . 'cruisecontrol) := const(v(-1)))
+			) .
+
+
+op Break : -> Plexil .
+eq Break = list(
+			'Break,
+			nilocdecl,
+			(
+  			(endc:	areChildren?('Break . 'StopAtLight . 'Driver . 'cruisecontrol, finished)),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	(not ((((var(('cruise-enabled . 'cruisecontrol)) equ const(v(true)))) and (var(('A-speed . 'cruisecontrol)) > var(('cruise-speed . 'cruisecontrol)))) and ((not ((var(('roll-stop . 'cruisecontrol)) equ const(v(true))))))))),
+  			(startc:	const(v(true)))
+  			),
+  			(PressBreakPedal BreakDecelerate BreakDisengage)
+			) .
+
+
+op PressBreakPedal : -> Plexil .
+eq PressBreakPedal = assignment(
+			'PressBreakPedal,
+			nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true))),
+  			(priority: 1)
+  			),
+			(('A-speed . 'cruisecontrol) := (var(('A-speed . 'cruisecontrol)) - const(v(1))))
+			) .
+
+
+op BreakDecelerate : -> Plexil .
+eq BreakDecelerate = assignment(
+			'BreakDecelerate,
+			nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true))),
+  			(priority: 1)
+  			),
+			(('A-acceleration . 'cruisecontrol) := const(v(-1)))
+			) .
+
+
+op BreakDisengage : -> Plexil .
+eq BreakDisengage = assignment(
+			'BreakDisengage,
+			nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true))),
+  			(priority: 1)
+  			),
+			(('cruise-enabled . 'cruisecontrol) := const(v(false)))
+			) .
+
+
+op CruiseOn : -> Plexil .
+eq CruiseOn = assignment(
+			'CruiseOn,
+			nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	(not ((((var(('cruise-enabled . 'cruisecontrol)) equ const(v(true)))) and ((var(('A-speed . 'cruisecontrol)) equ var(('cruise-speed . 'cruisecontrol))))) and (var(('A-acceleration . 'cruisecontrol)) < const(v(0)))))),
+  			(startc:	const(v(true))),
+  			(priority: 1)
+  			),
+			(('A-acceleration . 'cruisecontrol) := const(v(0)))
+			) .
+
+
+op BreakLate : -> Plexil .
+eq BreakLate = list(
+			'BreakLate,
+			nilocdecl,
+			(
+  			(endc:	areChildren?('BreakLate . 'StopAtLight . 'Driver . 'cruisecontrol, finished)),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	(not ((((var(('cruise-enabled . 'cruisecontrol)) equ const(v(true)))) and (var(('A-speed . 'cruisecontrol)) <= var(('cruise-speed . 'cruisecontrol)))) and ((not (var(('A-acceleration . 'cruisecontrol)) < const(v(0)))))))),
+  			(startc:	const(v(true)))
+  			),
+  			(PressPedalLate DecelerateLate DisengageLate)
+			) .
+
+
+op PressPedalLate : -> Plexil .
+eq PressPedalLate = assignment(
+			'PressPedalLate,
+			nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true))),
+  			(priority: 1)
+  			),
+			(('A-speed . 'cruisecontrol) := (var(('A-speed . 'cruisecontrol)) - const(v(1))))
+			) .
+
+
+op DecelerateLate : -> Plexil .
+eq DecelerateLate = assignment(
+			'DecelerateLate,
+			nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true))),
+  			(priority: 1)
+  			),
+			(('A-acceleration . 'cruisecontrol) := const(v(-1)))
+			) .
+
+
+op DisengageLate : -> Plexil .
+eq DisengageLate = assignment(
+			'DisengageLate,
+			nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true))),
+  			(priority: 1)
+  			),
+			(('cruise-enabled . 'cruisecontrol) := const(v(false)))
+			) .
+
+
+op NoCruiseSlowdown : -> Plexil .
+eq NoCruiseSlowdown = list(
+			'NoCruiseSlowdown,
+			nilocdecl,
+			(
+  			(endc:	areChildren?('NoCruiseSlowdown . 'StopAtLight . 'Driver . 'cruisecontrol, finished)),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	(not (((not ((var(('cruise-enabled . 'cruisecontrol)) equ const(v(true)))))) and (var(('A-speed . 'cruisecontrol)) > const(v(0)))))),
+  			(startc:	const(v(true)))
+  			),
+  			(SlowDecSpeed SlowDecelerate)
+			) .
+
+
+op SlowDecSpeed : -> Plexil .
+eq SlowDecSpeed = assignment(
+			'SlowDecSpeed,
+			nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true))),
+  			(priority: 1)
+  			),
+			(('A-speed . 'cruisecontrol) := (var(('A-speed . 'cruisecontrol)) - const(v(1))))
+			) .
+
+
+op SlowDecelerate : -> Plexil .
+eq SlowDecelerate = assignment(
+			'SlowDecelerate,
+			nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true))),
+  			(priority: 1)
+  			),
+			(('A-acceleration . 'cruisecontrol) := const(v(-1)))
+			) .
+
+
+op Semaphore : -> Plexil .
+eq Semaphore = assignment(
+			'Semaphore,
+			nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	var(('A-semaphore-counter . 'cruisecontrol)) > const(v(0))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true))),
+  			(priority: 1)
+  			),
+			(('A-semaphore-counter . 'cruisecontrol) := (var(('A-semaphore-counter . 'cruisecontrol)) - var(('timestep . 'cruisecontrol))))
+			) .
+
+
+op cruisecontrolEnv : -> ContextList .
+eq cruisecontrolEnv = mtcontext .
+
+
+endm
+
+eof

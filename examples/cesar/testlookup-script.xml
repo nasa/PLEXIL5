@@ -1,0 +1,12 @@
+<PLEXILScript>
+ <Step>
+   <State name="MergingTraffic" type="boolean" >
+      <Value>false</Value>
+   </State>
+ </Step>
+ <Step>
+   <State name="MergingTraffic" type="boolean" >
+      <Value>true</Value>
+   </State>
+ </Step>
+</PLEXILScript>

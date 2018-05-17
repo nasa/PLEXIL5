@@ -1,0 +1,14 @@
+testif:
+{
+   Integer x = 0;
+
+//   Sequence
+//
+//    Main: 
+//    {
+      If ( x == 0 )
+      Then Zero: {  Command: action1(); }
+      Else Positive: { Command: action2(); }
+//    }
+}
+

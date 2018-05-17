@@ -1,0 +1,145 @@
+----                          Main theory gathering the specification of PLEXIL
+----                                                       author: Camilo Rocha
+
+*** Load PLEXIL specification
+*** in prelude.maude
+in defs.maude
+in plexil.maude
+in evaluation.maude
+in funpred.maude
+in compiler.maude
+in syncred.maude
+in atomic.maude
+in reductions.maude
+
+mod PLEXILITE is
+ pr PLEXIL .
+ pr COMPILER .
+ pr REDUCTIONS .
+endm
+
+*** Model checking support
+in model-checker.maude
+
+mod PLEXILITE-PREDS is
+ pr PLEXILITE .
+ inc MODEL-CHECKER .
+ subsort GlobalConfig < State .
+
+ var As        : Actions . 
+ var Ats       : AttributeSet . 
+ var C         : Cid . 
+ var Conf      : Configuration . 
+ var GAMMA     : Context .
+ var Cs        : Contexts . 
+ vars E E' E'' : Expression .
+ var F         : Fail .
+ var Phi       : Formula .
+ var GConf     : GlobalConfig .
+ var Q         : NeQualified . 
+ var Out       : Outcome .
+ var S         : Status .
+ var Tr        : Trace .
+ var Val       : Value . 
+
+ *** Status predicate
+ op status : NeQualified Status -> Prop .
+ eq (Cs > GAMMA |- [ < Q : C | Ats, status: S > Conf ] As Tr) |= status(Q, S) 
+  = true .
+
+ *** Outcome predicates
+ op outcome : NeQualified Outcome -> Prop .
+ eq (Cs > GAMMA |- [ < Q : C | Ats, outcome: Out > Conf ] As Tr) |= outcome(Q,Out)
+  = true . 
+ --- Fail predicate: special type of outcome predicate that can be used
+ --- when only it is important if a node fails, but not the type of failure
+ op fail : NeQualified -> Prop .
+ eq (Cs > GAMMA |- [ < Q : C | Ats, outcome: fail(F) > Conf ] As Tr) |= fail(Q) 
+  = true .
+
+ *** Conditions predicates
+ ops end inv post pre start repeat : NeQualified Expression -> Prop .
+ eq (Cs > GAMMA |- [ < Q : C | Ats, endc: E' > Conf ] As Tr) |= end(Q, E)
+  = if eval(GAMMA, [ < Q : C | Ats, endc: E' > Conf ], E') == 
+       eval(GAMMA, [ < Q : C | Ats, endc: E' > Conf ], E)
+    then true else false fi .
+ eq (Cs > GAMMA |- [ < Q : C | Ats, inv: E' > Conf ] As Tr) |= inv(Q, E)
+  = if eval(GAMMA, [ < Q : C | Ats, inv: E' > Conf ], E') == 
+       eval(GAMMA, [ < Q : C | Ats, inv: E' > Conf ], E)
+    then true else false fi .
+ eq (Cs > GAMMA |- [ < Q : C | Ats, post: E' > Conf ] As Tr) |= post(Q, E)
+  = if eval(GAMMA, [ < Q : C | Ats, post: E' > Conf ], E') == 
+       eval(GAMMA, [ < Q : C | Ats, post: E' > Conf ], E)
+    then true else false fi .
+ eq (Cs > GAMMA |- [ < Q : C | Ats, pre: E' > Conf ] As Tr) |= pre(Q, E)
+  = if eval(GAMMA, [ < Q : C | Ats, pre: E' > Conf ], E') == 
+       eval(GAMMA, [ < Q : C | Ats, pre: E' > Conf ], E)
+    then true else false fi .
+ eq (Cs > GAMMA |- [ < Q : C | Ats, startc: E' > Conf ] As Tr) |= start(Q, E)
+  = if eval(GAMMA, [ < Q : C | Ats, startc: E' > Conf ], E') == 
+       eval(GAMMA, [ < Q : C | Ats, startc: E' > Conf ], E)
+    then true else false fi .
+ eq (Cs > GAMMA |- [ < Q : C | Ats, repeatc: E' > Conf ] As Tr) |= start(Q, E)
+  = if eval(GAMMA, [ < Q : C | Ats, repeatc: E' > Conf ], E') == 
+       eval(GAMMA, [ < Q : C | Ats, repeatc: E' > Conf ], E)
+    then true else false fi .
+
+ *** Ancestor Invariant satisfies some property
+ op ancestorInv : NeQualified Expression -> Prop .
+ eq (Cs > GAMMA |- [ Conf ] As Tr) |= ancestorInv(Q, E)
+  = ancestorInv?(Q,E,GAMMA,Conf) .
+
+ *** All children with a certain status
+ op allChildrenProcessesWithStatus : NeQualified Status -> Prop .
+ eq (Cs > GAMMA |- [Conf] As Tr) |= allChildrenProcessesWithStatus(Q, S) 
+  = processesWithStatus?(childrenProcesses(Q,Conf), S) .
+
+ --- Returns true iff the given expression evaluates to true in the
+ --- language of PLEXIL for the current context
+ op eval-exp : Expression -> Prop .
+ eq (Cs > GAMMA |- [Conf] As Tr) |= eval-exp(E)
+  = if eval(GAMMA, [Conf], E) == const(v(true))
+    then true
+    else false
+    fi .
+
+ --- own model checking functions so that we can memoize
+ --- the results and also be able to answer yes or no without
+ --- necessarily returning a counterexample
+ op model-check : State Formula ~> ModelCheckResult [memo] .
+ op model-check-lite : State Formula ~> Bool .
+ eq model-check(S:State,F:Formula)
+  = modelCheck(S:State,F:Formula) .
+ eq model-check-lite(S:State,F:Formula)
+  = if model-check(S:State,F:Formula) == true
+    then true
+    else false
+    fi .
+
+ op genInvFormula : GlobalConfig -> Formula .
+ op $genInvFormula : Configuration Formula -> Formula .
+ eq genInvFormula(GConf)
+  = $genInvFormula(config(processes(config(GConf))), True) .
+ceq $genInvFormula(< Q : C | Ats > Conf,Phi)
+  = $genInvFormula(Conf, Phi /\ (status(Q,inactive) \/ inv(Q,const(v(true)))))
+ if C == list or C == command or C == retCommand or C == assignment or C == empty .
+ eq $genInvFormula(Conf,Phi) = [] Phi [owise] .
+
+ op genPreFormula : GlobalConfig -> Formula .
+ op $genPreFormula : Configuration Formula -> Formula .
+ eq genPreFormula(GConf)
+  = $genPreFormula(config(processes(config(GConf))), True) .
+ceq $genPreFormula(< Q : C | Ats > Conf,Phi)
+  = $genPreFormula(Conf, Phi /\ ((status(Q,waiting) /\ start(Q,const(v(true)))) -> pre(Q,const(v(true)))))
+ if C == list or C == command or C == retCommand or C == assignment or C == empty .
+ eq $genPreFormula(Conf,Phi) = [] Phi [owise] .
+
+ op genPostFormula : GlobalConfig -> Formula .
+ op $genPostFormula : Configuration Formula -> Formula .
+ eq genPostFormula(GConf)
+  = $genPostFormula(config(processes(config(GConf))), True) .
+ceq $genPostFormula(< Q : C | Ats > Conf,Phi)
+  = $genPostFormula(Conf, Phi /\ ((status(Q,iterationEnded) /\ end(Q,const(v(true)))) -> post(Q,const(v(true)))))
+ if C == list or C == command or C == retCommand or C == assignment or C == empty .
+ eq $genPostFormula(Conf,Phi) = [] Phi [owise] .
+endm

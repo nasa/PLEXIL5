@@ -1,0 +1,64 @@
+mod EXCHANGE is
+ protecting PLEXILITE-PREDS .
+
+
+op Exchange : -> Plexil .
+eq Exchange = list(
+			'Exchange,
+			(('x : v(1)) ('y : v(2)) ),
+			(
+  			(endc:	areChildren?('Exchange, finished)),
+  			(inv:	((var(('x . 'Exchange)) + var(('y . 'Exchange))) equ const(v(3)))),
+  			(post:	(not ((var(('x . 'Exchange)) equ var(('y . 'Exchange)))))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true)))
+  			),
+  			(X Y)
+			) .
+
+
+op X : -> Plexil .
+eq X = assignment(
+			'X,
+			(('x : v(22)) ('w : v(99)) ),
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true))),
+  			(priority: 1)
+  			),
+			(('x . 'Exchange) := var(('w . 'X . 'Exchange)))
+			) .
+
+
+op Y : -> Plexil .
+eq Y = assignment(
+			'Y,
+			nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true))),
+  			(priority: 1)
+  			),
+			(('y . 'Exchange) := var(('x . 'Exchange)))
+			) .
+
+
+op ExchangeEnv : -> ContextList .
+eq ExchangeEnv = mtcontext .
+
+
+endm
+
+eof

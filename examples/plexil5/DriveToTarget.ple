@@ -1,0 +1,73 @@
+// A Plexil plan illustrating a simple rover driving task.
+
+DriveToTarget:
+{
+  Boolean drive_done = false, timeout = false;
+
+  Post: drive_done == true;
+
+  NodeList:
+
+    T1:
+    {
+	Integer x=0;
+	Assignment: x=Lookup(DriveToTarget.temperature);
+
+    }
+
+    Drive:
+    {      
+      Command: rover_drive(10);
+    }
+
+    StopForTimeout:
+    {
+      StartCondition: Lookup(DriveToTarget.time) >= 10;
+      NodeList:
+        Stop:
+        {
+          Command: rover_stop();
+        }
+        SetTimeoutFlag:
+        {
+          Assignment: timeout = true;
+        }
+    }
+
+    StopForTarget:
+    {
+      StartCondition: Lookup(DriveToTarget.target_in_view);
+      SkipCondition: timeout;
+      NodeList:
+        Stop:
+        {
+          Command: rover_stop();
+        }
+        SetDriveFlag:
+        {
+          Assignment: drive_done = true;
+        }
+    }
+
+    TakeNavcam:
+    {
+      StartCondition: timeout;
+      SkipCondition: drive_done;
+      Command: take_navcam();
+    }
+
+    TakePancam:
+    {
+      StartCondition: drive_done;
+      SkipCondition: timeout;
+      Command: take_pancam();
+    }
+
+    Heater:
+    {
+      SkipCondition: timeout;
+      StartCondition: Lookup(DriveToTarget.temperature) < 0;
+      EndCondition: Lookup(DriveToTarget.temperature) >= 10;
+      Command: turn_on_heater();
+    }
+}

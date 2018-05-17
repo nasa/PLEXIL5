@@ -1,0 +1,65 @@
+mod TESTLOOKUP is
+ protecting PLEXILITE-PREDS .
+
+
+op testlookup : -> Plexil .
+eq testlookup = list(
+			'testlookup,
+			(('merging-traffic : v(false)) ('a : v(true)) ('b : v(true)) ),
+			(
+  			(endc:	areChildren?('testlookup, finished)),
+  			(inv:	(not (((isOutcomeFailure?(('SetUp . 'testlookup))) or (isOutcomeFailure?(('Main . 'testlookup))))))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	lookupOnChange ('MergingTraffic,v(0)))
+  			),
+  			(SetUp Main)
+			) .
+
+
+op SetUp : -> Plexil .
+eq SetUp = assignment(
+			'SetUp,
+			nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true))),
+  			(priority: 1)
+  			),
+			(('merging-traffic . 'testlookup) := lookup ('MergingTraffic))
+			) .
+
+
+op Main : -> Plexil .
+eq Main = assignment(
+			'Main,
+			nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	(isStatus?(('SetUp . 'testlookup),finished))),
+  			(priority: 1)
+  			),
+			(('a . 'testlookup) := (var(('b . 'testlookup)) equ const(v(true))))
+			) .
+
+
+op testlookupEnv : -> ContextList .
+eq testlookupEnv = (('MergingTraffic) : v(false))
+	# (('MergingTraffic) : v(true)) .
+
+
+endm
+
+eof

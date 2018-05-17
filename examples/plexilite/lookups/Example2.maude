@@ -1,0 +1,46 @@
+***(
+2. Assume that N is
+Node N {
+ StartCondition: LookUpOnChange(X,5) >= 9
+ x := LookUpNow(X)
+}
+
+and that Sigma(i,X) = 10, Gamma(i-1,X) = 3. The execution of N ends with x
+having a value of 10.
+
+Explanation:
+Since there is a monitor on the variable X and that monitor holds at current
+time, Gamma(i,X) gets the value Sigma(i,X), i.e., 10. By definition, both
+LookUpOnChange(X,5) and LookUpNow(X) evaluate to Gamma(i,X) = 10.
+***)
+
+mod EXAMPLE2 is
+ protecting PLEXILITE-PREDS .
+
+ op Example2 : -> Plexil .
+ eq Example2 = assignment(
+                 'N,
+                  ('x : v(0)),
+                  (
+                    (startc:   lookupOnChange('X,v(5)) >= const(v(9))),
+                    (endc:     const(v(true))),
+                    (repeatc:  const(v(false))),
+                    (inv:      const(v(true))),
+                    (post:     const(v(true))),
+                    (pre:      const(v(true))),
+                    (skip:     const(v(false))),
+                    (priority: 1)
+                  ),
+                  (('x . 'N) := (lookup('X)))
+               ) .
+
+
+ op Example2Env : -> ContextList .
+ eq Example2Env = ('X : v(3)) # ('X : v(10)) .
+
+endm
+
+eof
+
+srew compile(Example2Env,Example2) using micro ! .
+srew compile(Example2Env,Example2) using micro ! ; macro ; micro ! .

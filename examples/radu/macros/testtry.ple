@@ -1,0 +1,16 @@
+testtry:
+{
+  Integer distance = 5;
+
+  Try:
+
+    Enter:
+    {
+      Command: init_distance();
+    }
+  
+    Drive:
+    {
+       Command: decrease_distance(1);
+    }
+}

@@ -1,0 +1,26 @@
+<PLEXILScript>
+
+
+ <Step>
+   <State name="time" type="real" >
+      <Value>4.0</Value>
+    </State>
+ </Step>
+ <Step>
+   <State name="time" type="real" >
+      <Value>5.0</Value>
+    </State>
+    <State name="temperature" type="real" >
+      <Value>-1.0</Value>
+    </State>
+    <CommandAck name="turn_on_heater" type="string" >
+      <Result>COMMAND_SUCCESS</Result>
+    </CommandAck>
+ </Step>
+ <Step>
+   <State name="time" type="real" >
+      <Value>6.0</Value>
+    </State>
+ </Step>
+
+</PLEXILScript>

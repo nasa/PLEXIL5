@@ -1,0 +1,406 @@
+*** Identifiers
+fmod IDENTIFIER is
+ protecting QID .
+ sort Identifier .
+ subsort Qid < Identifier .
+ op id : Qid -> Identifier .
+ op dot : -> Identifier .
+endfm
+
+view Identifier from TRIV to IDENTIFIER is
+ sort Elt to Identifier .
+endv
+
+*** Qualified
+fmod QUALIFIED is
+ protecting LIST{Identifier} 
+   * ( op nil to nilq , 
+       sort List{Identifier} to Qualified,
+       sort NeList{Identifier} to NeQualified,
+       op __ to _._ ) .
+endfm
+
+*** Values
+fmod VALUE is
+ protecting QID .
+ protecting INT .
+ protecting FLOAT .
+ protecting STRING .
+ sort Value .
+
+ op v : Int -> Value .
+ op v : Bool -> Value .
+ op v : Float -> Value .
+ op v : String -> Value .
+ ops unknown aborted default : -> Value .
+endfm
+
+view Value from TRIV to VALUE is
+ sort Elt to Value .
+endv
+
+*** Arguments
+fmod ARGUMENTS is
+ protecting LIST{Value} * ( sort List{Value} to Arguments , 
+                            op nil to nilarg ) .
+endfm
+
+*** Status
+fmod STATUS is
+ protecting QID .
+ sort Status .
+ ops inactive waiting executing finishing iterationEnded failing finished : -> Status [format (r o)] .
+ op statusdef : -> Status .
+ eq statusdef = inactive .
+endfm
+
+*** Fail
+fmod FAIL is
+ protecting QID .
+ sort Fail .
+ ops parentFail invariantFail preconditionFail postconditionFail : -> Fail .
+endfm
+
+*** XFlag
+fmod XFLAG is
+ protecting QID .
+ sort XFlag .
+ ops idle invoked aborting : -> XFlag .
+endfm
+
+*** Function
+**** We use shallow embedding for functions in constrast
+**** to the deep embedding of values
+fmod FUNCTION is
+ protecting ARGUMENTS .
+ sort Function .
+endfm
+
+*** Expressions
+fmod EXPRESSION is
+ protecting QUALIFIED .
+ protecting VALUE .
+ protecting FUNCTION .
+ sort Expression .
+ op const : Value -> Expression [format (b o)] .
+ op var : NeQualified -> Expression [format (b o)] .
+ op lookup : NeQualified -> Expression [format (b o)] .
+ op func : Function Expression -> Expression [format (b o)] .
+ op lookupOnChange : NeQualified Value -> Expression [format (b o)] .
+ op hasLookupOnChange? : Expression -> Bool .
+ op name : NeQualified -> Expression [format (b o)] .
+ op default : -> Expression [format (b o)] .
+ 
+ vars Q Q' : NeQualified .
+ var V : Value .
+ var F : Function .
+ var E : Expression .
+
+ op qualifyVarNames : Expression NeQualified -> Expression .
+ eq qualifyVarNames(const(V),Q) = const(V) .
+ eq qualifyVarNames(var(Q'),Q) = var((Q' . Q)) .
+ eq qualifyVarNames(lookup(Q'),Q) = lookup(Q') .
+ eq qualifyVarNames(func(F,E),Q) = func(F,qualifyVarNames(E,Q)) .
+ eq qualifyVarNames(lookupOnChange(Q',V),Q) = lookupOnChange(Q',V) .
+endfm
+
+view Expression from TRIV to EXPRESSION is
+ sort Elt to Expression .
+endv
+
+*** Parameters
+fmod PARAMETER is
+ protecting LIST{Expression} * ( sort List{Expression} to Parameters,
+                                 op nil to nilpar ) .
+endfm
+
+*** Outcome
+fmod OUTCOME is
+ protecting FAIL .
+ sort Outcome .
+
+ ops skipped success none : -> Outcome .
+ op fail : Fail -> Outcome .
+ 
+ op outcomedef : -> Outcome .
+ eq outcomedef = none .
+endfm
+
+*** Command
+fmod COMMAND is
+ protecting IDENTIFIER .
+ protecting PARAMETER .
+ protecting QUALIFIED .
+
+ sort Command .
+
+ op _/_ : NeQualified Parameters -> Command [prec 20] .
+ op qualifyVarNames : Command NeQualified -> Command .
+ op qualifyVarNamesAux : Parameters NeQualified -> Parameters .
+ 
+ var I : Identifier .
+ var E : Expression .
+ var P : Parameters .
+ var Q : NeQualified .
+ 
+ eq qualifyVarNames((I / P),Q) = (I / qualifyVarNamesAux(P,Q)) .
+ eq qualifyVarNamesAux(nilpar,Q) = nilpar .
+ eq qualifyVarNamesAux((E P),Q) = (qualifyVarNames(E,Q) qualifyVarNamesAux(P,Q)) . 
+endfm
+
+*** Command Info
+fmod COMMANDINFO is
+ protecting ARGUMENTS .
+ protecting QUALIFIED .
+ protecting XFLAG .
+ sort CommandInfo .
+
+ op _/_/_ : Arguments Qualified XFlag -> CommandInfo [prec 20] .
+ op commDefault : Qualified -> CommandInfo .
+ 
+ var Q : Qualified .
+ 
+ eq commDefault( Q ) = nilarg / Q / idle .
+endfm
+
+fmod VARIABLE is
+ protecting QUALIFIED .
+ protecting VALUE .
+ sort Variable .
+ 
+ op _:_ : Qualified Value -> Variable [prec 40] .
+endfm
+
+*** Global variable
+fmod GLOBAL is
+ protecting VARIABLE .
+ sort Global .
+ subsort Variable < Global .
+endfm
+
+view Global from TRIV to GLOBAL is
+ sort Elt to Global .
+endv
+
+*** Set of global variables
+fmod CONTEXT is
+ protecting SET{Global} * ( sort NeSet{Global} to NeContext,
+                            sort Set{Global} to Context,
+                            op empty to mtcontext ) .
+endfm
+
+*** List of Contexts
+fmod CONTEXTS is
+ protecting CONTEXT .
+ sort ContextList .
+ sort Contexts .
+ subsort Context < ContextList .
+ 
+ op nilcontexts : -> ContextList .
+ op _#_ : ContextList ContextList -> ContextList [assoc id: nilcontexts] .
+ op `{_`} : ContextList -> Contexts .
+endfm
+
+*** Local variable
+fmod LOCAL is
+ protecting VARIABLE .
+ sort Local .
+ subsort Variable < Local .
+endfm
+
+view Local from TRIV to LOCAL is
+ sort Elt to Local .
+endv
+
+*** Local variables
+fmod LOCALDECLS is
+ protecting LIST{Local} * ( sort NeList{Local} to NeLocalDecls ,
+                            sort List{Local} to LocalDecls ,
+                            op nil to nilocdecl ) .
+endfm
+
+*** Actions
+fmod ACTION is
+ sort Action .
+ protecting QUALIFIED .
+ protecting STATUS .
+ protecting OUTCOME .
+ protecting COMMAND .
+ protecting COMMANDINFO .
+ protecting IDENTIFIER .
+ 
+ op setStatus : Qualified Status -> Action .
+ op setOutcome : Qualified Outcome -> Action .
+ op setCommand : Qualified Command -> Action .
+ op setCommandInfo : Qualified CommandInfo -> Action .
+ op createMonitors : Qualified Expression -> Action .
+ op createMonitors : Qualified Expression Bool -> Action .
+ op removeMonitors : Qualified -> Action .
+ op setMem : Qualified Value -> Action .
+ op resetMem : Qualified -> Action . 
+ op setLoopEnabled : Qualified Bool -> Action .
+ op setMonitorFlag : Qualified Bool -> Action .
+
+ --- monitors by default do not come from repeat conditions;
+ --- they should be declared explicitly with value true
+ eq createMonitors(Q:Qualified,E:Expression)
+  = createMonitors(Q:Qualified,E:Expression,false) .
+endfm
+
+view Action from TRIV to ACTION is
+ sort Elt to Action .
+endv
+
+fmod ACTIONSET is
+ protecting SET{Action} * ( sort NeSet{Action} to NeActionSet,
+                            sort Set{Action} to ActionSet,
+                            op empty to mtactions ) .
+ 
+ var A : Action .
+ var AS : ActionSet .
+
+ op _nin_ : Action ActionSet -> Bool . 
+ eq A nin AS = not A in AS .
+ 
+ op activeRedex : Action ActionSet -> Bool .
+ eq activeRedex(A,AS) = not A in AS .
+endfm
+
+fmod ACTIONS is
+ protecting ACTIONSET .
+ sort Actions .
+ 
+ op `{_`} : ActionSet -> Actions .
+endfm
+
+*** Transition set and traces
+fmod TRANSITIONSET is
+ protecting STRING .
+ protecting SET{String} * ( sort NeSet{String} to NeTransitionSet,
+                            sort Set{String} to TransitionSet,
+                            op empty to mttrans ) .
+endfm
+
+view TransitionSet from TRIV to TRANSITIONSET is
+ sort Elt to TransitionSet .
+endv
+
+fmod TRACE is
+ protecting LIST{TransitionSet} * ( sort NeList{TransitionSet} to NeTraceList,
+                                    sort List{TransitionSet} to TraceList,
+                                    op nil to niltrace ) .
+ sort Trace .
+ op `{_`} : TraceList -> Trace .
+endfm
+
+mod PROCESS is
+ inc CONFIGURATION .
+ pr QUALIFIED .
+ pr STATUS .
+ pr OUTCOME .
+ pr COMMAND .
+ pr COMMANDINFO .
+ pr EXPRESSION .
+ pr RAT .
+ 
+ subsort NeQualified < Oid .
+ ops list command retCommand assignment empty memory monitor : -> Cid .
+
+ op status:_       : Status -> Attribute [ctor gather (&) format (u o o)] .
+ op outcome:_      : Outcome -> Attribute [ctor gather (&)] .
+ op command:_      : Command -> Attribute [ctor gather (&)] .
+ op commandInfo:_  : CommandInfo -> Attribute [ctor gather (&)] .
+ op qid:_          : Qualified -> Attribute [ctor gather (&)] .
+ op extVar:_       : Qualified -> Attribute [ctor gather (&)] .
+ op locVar:_       : Qualified -> Attribute [ctor gather (&)] .
+ op _:=_           : Qualified Expression -> Attribute [ctor] .
+ op active:_       : Bool -> Attribute [ctor gather (&)] .
+ op initVal:_      : Value -> Attribute [ctor gather (&)] .
+ op actVal:_       : Value -> Attribute [ctor gather (&)] .
+ op node:_         : Expression -> Attribute [ctor gather (&)] .
+ op threshold:_    : Value -> Attribute [ctor gather (&)] .
+ op fromrepeat:_   : Bool -> Attribute [ctor gather (&)] .
+
+*** Body conditions
+ op repeatc:_      : Expression -> Attribute [ctor gather (&)] .
+ op startc:_       : Expression -> Attribute [ctor gather (&)] .
+ op endc:_         : Expression -> Attribute [ctor gather (&)] .
+ op post:_         : Expression -> Attribute [ctor gather (&)] .
+ op skip:_         : Expression -> Attribute [ctor gather (&)] .
+ op pre:_          : Expression -> Attribute [ctor gather (&)] .
+ op inv:_          : Expression -> Attribute [ctor gather (&)] .
+ op priority:_     : Rat -> Attribute [ctor gather (&)] .
+ op loopenabled:_  : Bool -> Attribute [ctor gather (&)] .
+ op monscrtd:_     : Bool -> Attribute [ctor gather (&)] .
+ 
+ op defcond        : -> AttributeSet .
+ eq defcond = endc: const(v(true)), inv: const(v(true)), post: const(v(true)), pre: const(v(true)), repeatc: const(v(false)), skip: const(v(false)), startc: const(v(true)) .
+
+ op getRepeatCondition : AttributeSet -> Expression .
+ eq getRepeatCondition(repeatc: E:Expression , As:AttributeSet) = E:Expression .
+
+*** Processes
+ sort Processes .
+ op `[_`]          : Configuration -> Processes  .
+
+*** Projections
+ op config : Processes -> Configuration .
+ eq config([ Conf:Configuration ]) = Conf:Configuration .
+endm
+
+*** Configuration
+mod CONFIG is
+ protecting CONTEXTS .
+ protecting CONTEXT .
+ protecting PROCESS	 .
+ protecting ACTIONS .
+ protecting TRACE .
+ sort Config .
+ sort GlobalConfig .
+ op _|-___ : Context Processes Actions Trace -> Config [format (nio ns+++! o nio nio--- s)] .
+ op _>_    : Contexts Config -> GlobalConfig [format (n+ nio o n-)] .
+ 
+*** Projections
+ op context   : Config -> Context .
+ op processes : Config -> Processes .
+ op actions   : Config -> Actions .
+ op trace     : Config -> Trace .
+ op contexts  : GlobalConfig -> Contexts .
+ op config    : GlobalConfig -> Config .
+
+ var C : Config .  var Ps : Processes . var Cxs : Contexts . var Cx : Context . var As : Actions . var Tr : Trace .
+ eq context( Cx |- Ps As Tr ) = Cx .
+ eq processes( Cx |- Ps As Tr ) = Ps .
+ eq actions( Cx |- Ps As Tr ) = As .
+ eq trace( Cx |- Ps As Tr ) = Tr .
+ eq contexts( Cxs > C ) = Cxs .
+ eq config( Cxs > C ) = C .
+endm
+
+*** Definitions
+mod DEFS is
+ protecting IDENTIFIER .
+ protecting VALUE .
+ protecting STATUS .
+ protecting FAIL .
+ protecting XFLAG .
+ protecting FUNCTION .
+ protecting QUALIFIED .
+ protecting EXPRESSION .
+ protecting ARGUMENTS .
+ protecting PARAMETER .
+ protecting OUTCOME .
+ protecting COMMAND .
+ protecting COMMANDINFO .
+ protecting PROCESS .
+ protecting GLOBAL .
+ protecting CONTEXT .
+ protecting CONTEXTS .
+ protecting LOCAL .
+ protecting LOCALDECLS .
+ protecting ACTION .
+ protecting ACTIONSET .
+ protecting ACTIONS .
+ protecting TRACE .
+ protecting CONFIG .
+endm

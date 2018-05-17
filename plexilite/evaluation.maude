@@ -1,0 +1,208 @@
+----                                Extra/temporary definitions for expressions
+----                                                       author: Camilo Rocha
+
+fmod EXTENDED-EXPRESSION is
+ extending VALUE .
+ protecting INT .
+ protecting STATUS .
+ protecting OUTCOME .
+ protecting QUALIFIED .
+ protecting EXPRESSION .
+ extending FUNCTION .
+ 
+ op _+_ : Expression Expression -> Expression [prec 13 format (o sc o o)] .
+ op _-_ : Expression Expression -> Expression [prec 13 format (o sc o o)] .
+ op _*_ : Expression Expression -> Expression [prec 12 format (o sc o o)] .
+ op _<_ : Expression Expression -> Expression [prec 15 format (o sc o o)] .
+ op _<=_ : Expression Expression -> Expression [prec 15 format (o sc o o)] .
+ op _>_ : Expression Expression -> Expression [prec 15 format (o sc o o)] .
+ op _>=_ : Expression Expression -> Expression [prec 15 format (o sc o o)] .
+ op _and_ : Expression Expression -> Expression [prec 18 format (o sc o o)] .
+ op _or_ : Expression Expression -> Expression [prec 18 format (o sc o o)] .
+ op _equ_ : Expression Expression -> Expression [prec 20 format (o sc o o)] .
+ op _nequ_ : Expression Expression -> Expression [prec 20 format (o sc o o)] .
+ op not_ : Expression -> Expression [prec 17 format (c o o)] .
+
+*** Function Ids
+**** Absolute value (of integers and reals)
+ op absp  : -> Function .
+**** Square root (of reals)
+ op sqrt  : -> Function .
+**** Boolean negation
+ op notp  : -> Function .
+
+*** Predicates on processes
+ op isStatus?     : NeQualified Status -> Expression .
+ op isOutcome?    : NeQualified Outcome -> Expression .
+ op isOutcomeFailure? : NeQualified -> Expression .
+ op areChildren?  : NeQualified Status -> Expression .
+ op areChildren?  : Status -> Expression .
+ op cmdHandleRcv? : NeQualified -> Expression .
+ op cmdHandleRcv? : -> Expression .
+endfm
+
+----                                                   Evaluation specification
+----                                                       author: Camilo Rocha
+mod EVAL is
+ protecting EXTENDED-EXPRESSION .
+ protecting DEFS .
+
+ op eval : Context Processes Expression -> Expression .
+ op evalfunc : Function -> Expression . 
+
+ vars NA  Ats  : AttributeSet .
+ vars B B'     : Bool .
+ var Cd        : Cid .
+ vars PS PS'   : Configuration .
+ var C         : Context .
+ var Sigma     : Context .
+ vars E E' E'' : Expression .
+ var Fa        : Fail .
+ vars F F'     : Float .
+ var iD        : Identifier .
+ vars I I'     : Int .
+ vars Q Q'     : NeQualified .
+ var P         : Object .
+ vars O O'     : Outcome .
+ var PL        : Processes .
+ vars S S'     : Status .
+ var R R'      : String .
+ vars V V'     : Value .
+
+*** Operations on constants
+ eq const(V) equ const(V') = const(v(V == V')) .
+ eq const(V) nequ const(V') = const(v(V =/= V')) .
+ eq const(v(B)) and const(v(B')) = const(v(B and B')) .
+ eq const(v(B)) or const(v(B')) = const(v(B or B')) .
+ eq not const(v(B)) = const(v(not B)) .
+ eq const(v(I)) + const(v(I')) = const(v(I + I')) . 
+ eq const(v(I)) - const(v(I')) = const(v(I - I')) . 
+ eq const(v(I)) * const(v(I')) = const(v(I * I')) . 
+ eq const(v(I)) < const(v(I')) = const(v(I < I')) . 
+ eq const(v(I)) > const(v(I')) = const(v(I > I')) . 
+ eq const(v(I)) <= const(v(I')) = const(v(I <= I')) . 
+ eq const(v(I)) >= const(v(I')) = const(v(I >= I')) . 
+ eq const(v(F)) + const(v(F')) = const(v(F + F')) . 
+ eq const(v(F)) - const(v(F')) = const(v(F - F')) . 
+ eq const(v(F)) * const(v(F')) = const(v(F * F')) . 
+ eq const(v(F)) < const(v(F')) = const(v(F < F')) . 
+ eq const(v(F)) > const(v(F')) = const(v(F > F')) . 
+ eq const(v(F)) <= const(v(F')) = const(v(F <= F')) . 
+ eq const(v(F)) >= const(v(F')) = const(v(F >= F')) . 
+ eq const(v(R)) + const(v(R')) = const(v(R + R')) . 
+
+*** Constant expressions
+ eq eval(C,PL,const(V)) = const(V) .
+
+*** Expressions involving 'unknown'
+ eq eval(C,PL,const(unknown) + E) = const(unknown) . 
+ eq eval(C,PL,const(unknown) - E) = const(unknown) . 
+ eq eval(C,PL,const(unknown) * E) = const(unknown) . 
+ eq eval(C,PL,const(unknown) < E) = const(unknown) . 
+ eq eval(C,PL,const(unknown) > E) = const(unknown) . 
+ eq eval(C,PL,const(unknown) <= E) = const(unknown) . 
+ eq eval(C,PL,const(unknown) >= E) = const(unknown) . 
+ eq eval(C,PL,E + const(unknown)) = const(unknown) . 
+ eq eval(C,PL,E - const(unknown)) = const(unknown) . 
+ eq eval(C,PL,E * const(unknown)) = const(unknown) . 
+ eq eval(C,PL,E < const(unknown)) = const(unknown) . 
+ eq eval(C,PL,E > const(unknown)) = const(unknown) . 
+ eq eval(C,PL,E <= const(unknown)) = const(unknown) . 
+ eq eval(C,PL,E >= const(unknown)) = const(unknown) . 
+ eq eval(C,PL,const(unknown) and E) = const(unknown) . 
+ eq eval(C,PL,const(unknown) or E) = const(unknown) . 
+ eq eval(C,PL,const(v(true)) and const(unknown)) = const(unknown) .
+ eq eval(C,PL,const(v(false)) and const(unknown)) = const(v(false)) .
+ eq eval(C,PL,const(v(true)) or const(unknown)) = const(v(true)) . 
+ eq eval(C,PL,const(v(false)) or const(unknown)) = const(unknown) . 
+ eq eval(C,PL,not const(unknown)) = const(unknown) . 
+
+*** Recursive cases
+ eq eval(C,PL,E + E') = eval(C,PL,E) + eval(C,PL,E') . 
+ eq eval(C,PL,E - E') = eval(C,PL,E) - eval(C,PL,E') . 
+ eq eval(C,PL,E * E') = eval(C,PL,E) * eval(C,PL,E') . 
+ eq eval(C,PL,E < E') = eval(C,PL,E) < eval(C,PL,E') . 
+ eq eval(C,PL,E > E') = eval(C,PL,E) > eval(C,PL,E') . 
+ eq eval(C,PL,E <= E') = eval(C,PL,E) <= eval(C,PL,E') . 
+ eq eval(C,PL,E >= E') = eval(C,PL,E) >= eval(C,PL,E') . 
+ eq eval(C,PL,E equ E') = eval(C,PL,E) equ eval(C,PL,E') . 
+ eq eval(C,PL,E nequ E') = not (eval(C,PL,E) equ eval(C,PL,E')) . 
+ eq eval(C,PL,E and E') = eval(C,PL,E) and eval(C,PL,E') . 
+ eq eval(C,PL,E or E') = eval(C,PL,E) or eval(C,PL,E') . 
+ eq eval(C,PL,not E) = not eval(C,PL,E) .
+
+*** On local variables
+ eq eval(C,[ < Q : memory | NA , actVal: V > PS ],var(Q)) = const(V) .
+
+*** On context variables
+ eq eval(((Q : V),C), PL, lookup(Q)) = const(V) .
+ eq eval(((Q : V),C), PL, lookupOnChange(Q,V')) = const(V) .
+
+*** On functions
+**** Case by case
+ ceq eval(C,PL,func(absp,E)) = const(v(abs(I)))
+  if const(v(I)) := eval(C,PL,E) .
+
+ ceq eval(C,PL,func(absp,E)) = const(v(abs(F)))
+  if const(v(F)) := eval(C,PL,E) .
+
+ ceq eval(C,PL,func(sqrt,E)) = const(v(sqrt(F)))
+  if const(v(F)) := eval(C,PL,E) .
+
+ ceq eval(C,PL,func(notp,E)) = const(v(not(B)))
+  if const(v(B)) := eval(C,PL,E) .
+
+*** Predicates on Processes
+ eq eval(C, [ < Q : (X:Cid) | NA, status: S' > PS ], isStatus?(Q,S)) = const(v(S == S')) .
+ eq eval(C, [ < Q : (X:Cid) | NA, outcome: O' > PS ], isOutcome?(Q,O)) = const(v(O == O')) .
+ eq eval(C, [ < Q : (X:Cid) | NA, outcome: O' > PS ], isOutcomeFailure?(Q)) = const(v(isFailure?(O'))) .
+ eq eval(C, [ PS ], areChildren?(Q,S)) = const(v(processesWithStatus?(childrenProcesses(Q,PS),S))) .
+
+ op isFailure? : Outcome -> Bool .
+ eq isFailure?(fail(Fa)) = true .
+ eq isFailure?(O) = false [owise] .
+
+*** Any other case 
+ eq eval(C,PL,E) = const(unknown) [owise] .
+
+******** Auxiliary functions
+
+*** Reset memory 
+ op resetMemory : Configuration -> Configuration .
+ eq resetMemory( < Q : memory | initVal: V', actVal: V, Ats > PS )
+  = < Q : memory | initVal: V', actVal: V', Ats > resetMemory(PS) .
+ eq resetMemory(PS) = PS [owise] .
+
+*** Do the given set of processes satisfy certain status?
+*** Precondition: Conf does not contain memory nodes
+ op processesWithStatus? : Configuration Status -> Bool .
+ eq processesWithStatus?(none,S) = true .
+ eq processesWithStatus?(< Q : Cd | Ats, status: S > PS, S) 
+  = processesWithStatus?(PS, S) .
+ eq processesWithStatus?(PS, S) = false [owise] .
+
+ *** Immediate children of a given node
+ op children : NeQualified Configuration -> Configuration .
+ op $children : NeQualified Configuration Configuration -> Configuration .
+ eq children(Q, PS) = $children(Q, PS, none) .
+ eq $children(Q, < iD . Q : Cd | Ats > PS, PS') 
+  = $children(Q, PS, < iD . Q : Cd | Ats > PS') .
+ eq $children(Q, PS, PS') = PS' [owise] .
+
+ *** Immediate children processes of a given node
+ op childrenProcesses : NeQualified Configuration -> Configuration .
+ op $childrenProcesses : NeQualified Configuration Configuration -> Configuration .
+ eq childrenProcesses(Q, PS) = $childrenProcesses(Q, PS, none) .
+ eq $childrenProcesses(Q, < iD . Q : Cd | Ats > PS, PS') 
+  = if Cd == memory or-else Cd == monitor then $childrenProcesses(Q, PS, PS') 
+    else $childrenProcesses(Q, PS, < iD . Q : Cd | Ats > PS') fi .
+ eq $childrenProcesses(Q, PS, PS') = PS' [owise] .
+
+ *** Memory nodes declared by a given node
+ op childrenMemories : NeQualified Configuration -> Configuration .
+ op $childrenMemories : NeQualified Configuration Configuration -> Configuration .
+ eq childrenMemories(Q, PS) = $childrenMemories(Q, PS, none) .
+ eq $childrenMemories(Q, < iD . Q : memory | Ats > PS, PS') 
+  = $childrenMemories(Q, PS, < iD . Q : memory | Ats > PS') .
+ eq $childrenMemories(Q, PS, PS') = PS' [owise] .
+endm
