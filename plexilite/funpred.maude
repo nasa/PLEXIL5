@@ -1,0 +1,247 @@
+----                                       Predicates and auxiliary definitions
+----                                                       author: Camilo Rocha
+
+mod FUNPRED is
+ protecting EVAL .
+ protecting ACTIONS .
+
+ var Acts         : Actions .
+ vars Ats Ats'    : AttributeSet .
+ vars B B'        : Bool .
+ var onChange?    : Bool .
+ var C            : Cid .
+ var CI           : CommandInfo .
+ vars PS PS'      : Configuration .
+ var Gamma        : Context .
+ var Gamma'       : Context .
+ var Sigma        : Context .
+ vars E E'        : Expression .
+ vars Es Es'      : ExpressionSet .
+ vars Fl Fl' Fl'' : Float .
+ vars F F'        : Function .
+ vars I I'        : Identifier .
+ vars iNt iNt'    : Int .
+ vars iNt''       : Int .
+ vars Q Q'        : NeQualified .
+ var O            : Outcome .
+ var P            : Parameters .
+ vars R R'        : Rat .
+ vars S S'        : Status .
+ var Tr           : Trace .
+ vars V V' V''    : Value .
+
+ op ancestorInv? : NeQualified Expression Context Configuration -> Bool .
+ eq ancestorInv?((I . Q), E, Gamma, < Q : C | inv: E' , Ats > PS)
+  = if eval(Gamma, [< Q : C | inv: E' , Ats > PS], E) == 
+       eval(Gamma, [< Q : C | inv: E' , Ats > PS], E')
+    then true else ancestorInv?(Q, E, Gamma, PS) fi .
+ eq ancestorInv?(Q, E, Gamma, PS) = false [owise] .
+
+*** Ancestor Invariant
+ op ancestorInvariantFalse : Context Processes Qualified -> Bool .
+ eq ancestorInvariantFalse(Gamma, [ < Q : C | inv: E , Ats > PS ],(I . Q)) 
+  = if (eval(Gamma,[PS],E) == const(v(false))) 
+    then true else ancestorInvariantFalse(Gamma,[PS],Q) fi .
+ eq ancestorInvariantFalse(Gamma,[PS],Q) = false [owise] .
+
+*** Ancestor end
+**** TODO: check semantics
+ op ancestorEndTrue : Context Processes Qualified -> Bool .
+
+ eq ancestorEndTrue(Gamma,[ < Q : list | endc: E , Ats > PS ],(I . Q))
+  = if (eval(Gamma,[ < Q : list | endc: E , Ats > PS ],E) == const(v(true)))
+	 then true
+	 else ancestorEndTrue(Gamma,[< Q : list | endc: E , Ats > PS],Q)
+	 fi .
+ eq ancestorEndTrue(Gamma,[PS],Q) = false [owise] .
+
+*** Parent waiting 
+ op parentWaiting : Processes NeQualified -> Bool .
+ eq parentWaiting([ < Q : list | status: waiting , Ats  > PS],(I . Q)) = true .
+ eq parentWaiting([PS], Q) = false [owise] .
+
+*** Parent executing
+ op parentExecuting : Processes NeQualified -> Bool .
+ eq parentExecuting( [ < Q : list | status: S, Ats > PS],(I . Q)) 
+  = if (S == executing) then true else false fi .
+ eq parentExecuting([PS],Q) = true [owise] .
+
+*** Children waiting or finished
+ op waitingOrFinished : Configuration -> Bool .
+ eq waitingOrFinished( < Q : C | status: S , Ats > PS) =
+    if ((S == waiting) or (S == finished)) 
+    then waitingOrFinished(PS)
+    else false
+    fi .
+ eq waitingOrFinished( PS ) = true [owise] .
+	
+ op childrenWaitingFinished : Context Processes Qualified -> Bool .
+ eq childrenWaitingFinished(Gamma,[PS],Q)
+  = waitingOrFinished(childrenProcesses(Q,PS)) .
+
+*** is Root ? 
+ op root : Qualified -> Expression .
+ eq root(Q) = const(v(size(Q) == 1)) .
+
+*** Expression to Value   
+ op expToVal : Expression -> Value .
+ eq expToVal(const(V)) = V .
+
+*** Evaluate parameters
+ op evalpar : Context Processes Parameters -> Arguments .
+ eq evalpar(Gamma,[PS],nilpar) = nilarg .
+ eq evalpar(Gamma,[PS],(E P))
+  = (expToVal(eval(Gamma,[PS],E)) evalpar(Gamma,[PS],P)) . 
+
+*** Type of node
+ op nodeType : Object -> Cid .
+ eq nodeType( < Q : list | Ats > ) = list .
+ eq nodeType( < Q : command | Ats > ) = command .
+ eq nodeType( < Q : assignment | Ats > ) = assignment .
+ eq nodeType( < Q : retCommand | Ats > ) = retCommand .
+ eq nodeType( < Q : empty | Ats > ) = empty .
+ eq nodeType( < Q : monitor | Ats > ) = monitor .
+
+*** Invoke command 
+ op invokeCommand : Context Processes Object -> Object .
+ eq invokeCommand(Gamma,[PS], < Q : command | command: (I / P), 
+    status: S, commandInfo: CI, Ats >)
+  = < Q : command | command: (I / P), status: executing, 
+      commandInfo: evalpar(Gamma,[PS],P) / I / invoked > .
+ eq invokeCommand(Gamma,[PS], < Q : retCommand | command: (I / P), 
+    status: S, commandInfo: CI, Ats >)
+  = < Q : retCommand | command: (I / P), status: executing, 
+      commandInfo: evalpar(Gamma,[PS],P) / I / invoked, Ats > .
+
+*** Declared variables in a process
+ op declaredVars : Configuration Qualified -> Configuration .
+ eq declaredVars( PS < (I . Q) : memory | Ats >, Q ) 
+  = < (I . Q) : memory | Ats > declaredVars(PS,Q) .
+ eq declaredVars(PS, Q) = none [owise] .
+
+
+*** Checks if the given priority is the 'highest' in order to make an assignment
+ op hasPriority : Configuration Qualified Rat -> Bool .
+ eq hasPriority(< Q' : C | (Q := E), status: executing, 
+    priority: R, Ats > PS, Q, R') 
+  = if (R' < R) 
+    then hasPriority(PS,Q,R') 
+    else false 
+    fi .
+ eq hasPriority(PS,Q,R') = true [owise] .
+
+ --- Set of expressions
+ sort ExpressionSet .
+ subsort Expression < ExpressionSet .
+ op mtexprs : -> ExpressionSet .
+ op _;_ : ExpressionSet ExpressionSet -> ExpressionSet [assoc comm id: mtexprs] .
+ eq E ; E = E .
+
+ --- Recursively computes the lookup expressions ocurring in any expression
+ op getLookups : ExpressionSet ExpressionSet Bool -> ExpressionSet .
+ eq getLookups(mtexprs, Es', onChange?) = Es' .
+ eq getLookups(lookup(Q) ; Es, Es', onChange?) 
+  = getLookups(Es, (Es' ; if onChange? == false then lookup(Q) else mtexprs fi), onChange?) .
+ eq getLookups(lookupOnChange(Q,V) ; Es, Es', onChange?) 
+  = getLookups(Es, (Es' ; if onChange? == true then lookupOnChange(Q,V) else mtexprs fi), onChange?) .
+ eq getLookups(const(V) ; Es, Es', onChange?) = getLookups(Es, Es', onChange?) .
+ eq getLookups(var(Q) ; Es, Es', onChange?) = getLookups(Es, Es', onChange?) .
+ eq getLookups(func(F,E) ; Es, Es', onChange?) = getLookups(E ; Es, Es', onChange?) .
+ eq getLookups(E + E' ; Es, Es', onChange?) = getLookups(E ; E' ; Es, Es', onChange?) .
+ eq getLookups(E - E' ; Es, Es', onChange?) = getLookups(E ; E' ; Es, Es', onChange?) .
+ eq getLookups(E * E' ; Es, Es', onChange?) = getLookups(E ; E' ; Es, Es', onChange?) .
+ eq getLookups(E < E' ; Es, Es', onChange?) = getLookups(E ; E' ; Es, Es', onChange?) .
+ eq getLookups(E > E' ; Es, Es', onChange?) = getLookups(E ; E' ; Es, Es', onChange?) .
+ eq getLookups(E <= E' ; Es, Es', onChange?) = getLookups(E ; E' ; Es, Es', onChange?) .
+ eq getLookups(E >= E' ; Es, Es', onChange?) = getLookups(E ; E' ; Es, Es', onChange?) .
+ eq getLookups(E equ E' ; Es, Es', onChange?) = getLookups(E ; E' ; Es, Es', onChange?) .
+ eq getLookups(E nequ E' ; Es, Es', onChange?) = getLookups(E ; E' ; Es, Es', onChange?) .
+ eq getLookups(E and E' ; Es, Es', onChange?) = getLookups(E ; E' ; Es, Es', onChange?) .
+ eq getLookups(E or E' ; Es, Es', onChange?) = getLookups(E ; E' ; Es, Es', onChange?) .
+ eq getLookups(not E ; Es, Es', onChange?) = getLookups(E ; Es, Es', onChange?) .
+ eq getLookups(isStatus?(Q,S) ; Es, Es', onChange?) = getLookups(Es, Es', onChange?) .
+ eq getLookups(isOutcome?(Q,O) ; Es, Es', onChange?) = getLookups(Es, Es', onChange?) .
+ eq getLookups(isOutcomeFailure?(Q) ; Es, Es', onChange?) = getLookups(Es, Es', onChange?) .
+ eq getLookups(areChildren?(Q,S) ; Es, Es', onChange?) = getLookups(Es, Es', onChange?) .
+ eq getLookups(areChildren?(S) ; Es, Es', onChange?) = getLookups(Es, Es', onChange?) .
+ eq getLookups(cmdHandleRcv?(Q) ; Es, Es', onChange?) = getLookups(Es, Es', onChange?) .
+ eq getLookups(cmdHandleRcv? ; Es, Es', onChange?) = getLookups(Es, Es', onChange?) .
+
+ eq hasLookupOnChange?(E)
+  = if getLookups(E, mtexprs, true) == mtexprs
+    then false
+    else true
+    fi .
+
+ op getMonitors  : Configuration -> Configuration .
+ op $getMonitors : Configuration Configuration -> Configuration .
+ eq getMonitors(PS)
+  = $getMonitors(PS,none) .
+ eq $getMonitors(none,PS')
+  = PS' .
+ eq $getMonitors( < Q : C | Ats > PS, PS')
+  = if C == monitor
+    then $getMonitors(PS, < Q : C | Ats > PS')
+    else $getMonitors(PS,PS')
+    fi .
+
+ --- Extracts the expressions from a list of parameters
+ op parametersToExpressionSet : Parameters ExpressionSet -> ExpressionSet .
+ eq parametersToExpressionSet(nilpar, Es) = Es .
+ eq parametersToExpressionSet(E P, Es) = parametersToExpressionSet(P, Es ; E) .
+
+ --- updates the local cash and the loops
+ op updateLocalCashAndMonitorFlags : Context Config -> Config .
+ eq updateLocalCashAndMonitorFlags(Sigma, Gamma |- [PS] Acts Tr)
+  = computeLocalCash(Sigma, Gamma, PS) |- [updateMonitorFlags(updateLoops(removeMonitors(PS),getMonitors(PS)))] Acts Tr .
+
+  op computeLocalCash : Context Context Configuration -> Context .
+ ceq computeLocalCash((Sigma, Q : v(iNt)), (Gamma, Q : v(iNt')), < Q : monitor | threshold: v(iNt''), Ats > PS)
+   = computeLocalCash((Sigma, Q : v(iNt)), (Gamma, Q : v(iNt)), PS)
+  if abs(iNt' - iNt) >= iNt'' .
+ ceq computeLocalCash((Sigma, Q : v(Fl)), (Gamma, Q : v(Fl')), < Q : monitor | threshold: v(Fl''), Ats > PS)
+   = computeLocalCash((Sigma, Q : v(Fl)), (Gamma, Q : v(Fl)), PS)
+  if abs(Fl' - Fl) >= Fl'' .
+  eq computeLocalCash((Sigma, Q : v(B)), (Gamma, Q : v(B')), < Q : monitor | Ats > PS)
+   = computeLocalCash((Sigma, Q : v(B)), (Gamma, Q : v(B)), PS) .
+ ceq computeLocalCash((Sigma, Q : V), (Gamma, Q : unknown), < Q : monitor | Ats > PS)
+   = computeLocalCash((Sigma, Q : V), (Gamma, Q : V), PS)
+  if V =/= unknown .
+  eq computeLocalCash(Sigma, Gamma, PS) = Gamma [owise] .
+
+  op computeUpdatedVars  : Context Context Configuration -> Context .
+  op $computeUpdatedVars : Context Context Configuration Context -> Context .
+  eq computeUpdatedVars(Sigma,Gamma,PS)
+   = $computeUpdatedVars(Sigma,Gamma,PS,mtcontext) .
+ ceq $computeUpdatedVars((Sigma, Q : v(iNt)), (Gamma, Q : v(iNt')), < Q : monitor | threshold: v(iNt''), Ats > PS, Gamma')
+   = $computeUpdatedVars(Sigma, Gamma, PS, (Gamma', Q : v(iNt)))
+  if abs(iNt' - iNt) >= iNt'' .
+ ceq $computeUpdatedVars((Sigma, Q : v(Fl)), (Gamma, Q : v(Fl')), < Q : monitor | threshold: v(Fl''), Ats > PS, Gamma')
+   = $computeUpdatedVars(Sigma, Gamma, PS, (Gamma', Q : v(Fl)))
+  if abs(Fl' - Fl) >= Fl'' .
+  eq $computeUpdatedVars((Sigma, Q : v(B)), (Gamma, Q : v(B')), < Q : monitor | Ats > PS, Gamma')
+   = $computeUpdatedVars(Sigma, Gamma, PS, (Gamma' , Q : v(B))) .
+ ceq $computeUpdatedVars((Sigma, Q : V), (Gamma, Q : unknown), < Q : monitor | Ats > PS, Gamma')
+   = $computeUpdatedVars(Sigma, Gamma, PS, (Gamma', Q : V))
+  if V =/= unknown .
+  eq $computeUpdatedVars(Sigma, Gamma, PS, Gamma') = Gamma' [owise] .
+
+  --- removes all monitors from the configuration
+  op removeMonitors : Configuration -> Configuration .
+  eq removeMonitors(PS < Q : monitor | Ats >)
+   = removeMonitors(PS) .
+  eq removeMonitors(PS) 
+   = PS [owise] .
+
+ op updateLoops : Configuration Configuration -> Configuration .
+ eq updateLoops(PS < Q : C | loopenabled: false, Ats >, < Q' : monitor | node: name(Q), fromrepeat: true, Ats' > PS') 
+  = updateLoops(PS < Q : C | loopenabled: true, Ats >, PS') .
+ eq updateLoops(PS,PS') 
+  = PS [owise] .
+
+ op updateMonitorFlags : Configuration -> Configuration .
+ eq updateMonitorFlags(PS < Q : C | monscrtd: true, Ats >)
+  = updateMonitorFlags(PS < Q : C | monscrtd: false, Ats >) .
+ eq updateMonitorFlags(PS)
+  = PS [owise] .
+endm

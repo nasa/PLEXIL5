@@ -1,0 +1,22 @@
+testseq:
+{
+  Integer x = 0;
+
+  Sequence:
+
+    Action1:
+    {
+      Command: routine1();
+    }
+  
+    Action2:
+    {
+      Command: routine2();
+    }
+  
+    Action3:
+    {
+      Command: routine3();
+    }
+  
+}

@@ -1,0 +1,29 @@
+Sync:
+{
+
+    Integer x = 0;
+    Integer y = 0;
+
+    Invariant: x == y;
+    
+    NodeList: 
+
+      S : 
+
+      { 
+        Repeat: x < 10;
+
+	NodeList:	
+
+		X:
+		{
+			Assignment: x = x + 1;
+		}
+
+		Y:
+		{
+			Assignment: y = y + 1;
+     		}	
+      }
+
+}

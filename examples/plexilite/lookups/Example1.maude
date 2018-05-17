@@ -1,0 +1,57 @@
+***(
+In all the examples, assume we are just before a macro-step where a node N
+is in state waiting
+
+1. Assume that N is
+
+Node N {
+  x:= LookUpNow(X);
+}
+
+and that there are no other Lookups of any kind on X. The execution of N
+ends with x having the value of Sigma(i,X).
+
+Explanation:
+Since there are no monitors on the variable X, at the current time step
+Gamma(i,X) gets the value Sigma(i,X). By definition, LookUpNow(X) evaluates
+to Gamma(i,X).
+***)
+
+mod EXAMPLE1 is
+ protecting PLEXILITE-PREDS .
+
+ op Example1 : -> Plexil .
+ eq Example1 = assignment(
+                 'N,
+                  ('x : v(0)),
+                  (
+                    (startc:   const(v(true))),
+                    (endc:     const(v(true))),
+                    (repeatc:  const(v(false))),
+                    (inv:      const(v(true))),
+                    (post:     const(v(true))),
+                    (pre:      const(v(true))),
+                    (skip:     const(v(false))),
+                    (priority: 1)
+                  ),
+                  (('x . 'N) := (lookup('X)))
+               ) .
+
+
+ op Example1Env : -> ContextList .
+ eq Example1Env = ('X : v(1)) .
+
+ op stateN : -> GlobalConfig .
+ eq stateN 
+  = {nilcontexts} > 'X : v(1) |- 
+    [
+ < 'N : assignment | status: waiting,outcome: none,active: true,repeatc: const(v(false)),startc:
+    const(v(true)),endc: const(v(true)),post: const(v(true)),skip: const(v(false)),pre: const(v(
+    true)),inv: const(v(true)),priority: 1,loopenabled: true,('x . 'N) := lookup('X) >  
+ < 'x . 'N : memory | initVal: v(0),actVal: v(0) > ]
+    {mtactions} {"inactive-03"} .
+endm
+
+eof
+
+srew stateN using micro ! .

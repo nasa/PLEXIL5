@@ -1,0 +1,221 @@
+mod DRIVETOTARGET is
+ protecting PLEXILITE-PREDS .
+
+
+op DriveToTarget : -> Plexil .
+eq DriveToTarget = list(
+			'DriveToTarget,
+			(('drive-done : v(false)) ('timeout : v(false)) ),
+			(
+  			(endc:	areChildren?('DriveToTarget, finished)),
+  			(inv:	const(v(true))),
+  			(post:	(var(('drive-done . 'DriveToTarget)) equ const(v(true)))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true)))
+  			),
+  			(T1 Drive StopForTimeout StopForTarget TakeNavcam TakePancam Heater)
+			) .
+
+
+op T1 : -> Plexil .
+eq T1 = assignment(
+			'T1,
+			(('x : v(0)) ),
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true))),
+  			(priority: 1)
+  			),
+			(('x . 'T1 . 'DriveToTarget) := lookup ('DriveToTarget . 'temperature))
+			) .
+
+
+op Drive : -> Plexil .
+eq Drive = command(
+			'Drive,
+nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true)))
+  			),
+			('rover-drive) / const(v(10))
+			) .
+
+
+op StopForTimeout : -> Plexil .
+eq StopForTimeout = list(
+			'StopForTimeout,
+			nilocdecl,
+			(
+  			(endc:	areChildren?('StopForTimeout . 'DriveToTarget, finished)),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	lookupOnChange ('DriveToTarget . 'time,v(0)) >= const(v(10)))
+  			),
+  			(Stop SetTimeoutFlag)
+			) .
+
+
+op Stop : -> Plexil .
+eq Stop = command(
+			'Stop,
+nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true)))
+  			),
+			('rover-stop) / nilpar
+			) .
+
+
+op SetTimeoutFlag : -> Plexil .
+eq SetTimeoutFlag = assignment(
+			'SetTimeoutFlag,
+			nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true))),
+  			(priority: 1)
+  			),
+			(('timeout . 'DriveToTarget) := const(v(true)))
+			) .
+
+
+op StopForTarget : -> Plexil .
+eq StopForTarget = list(
+			'StopForTarget,
+			nilocdecl,
+			(
+  			(endc:	areChildren?('StopForTarget . 'DriveToTarget, finished)),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	(var(('timeout . 'DriveToTarget)) equ const(v(true)))),
+  			(startc:	lookupOnChange ('DriveToTarget . 'target-in-view,v(0)))
+  			),
+  			(Stop SetDriveFlag)
+			) .
+
+
+op Stop : -> Plexil .
+eq Stop = command(
+			'Stop,
+nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true)))
+  			),
+			('rover-stop) / nilpar
+			) .
+
+
+op SetDriveFlag : -> Plexil .
+eq SetDriveFlag = assignment(
+			'SetDriveFlag,
+			nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true))),
+  			(priority: 1)
+  			),
+			(('drive-done . 'DriveToTarget) := const(v(true)))
+			) .
+
+
+op TakeNavcam : -> Plexil .
+eq TakeNavcam = command(
+			'TakeNavcam,
+nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	(var(('drive-done . 'DriveToTarget)) equ const(v(true)))),
+  			(startc:	(var(('timeout . 'DriveToTarget)) equ const(v(true))))
+  			),
+			('take-navcam) / nilpar
+			) .
+
+
+op TakePancam : -> Plexil .
+eq TakePancam = command(
+			'TakePancam,
+nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	(var(('timeout . 'DriveToTarget)) equ const(v(true)))),
+  			(startc:	(var(('drive-done . 'DriveToTarget)) equ const(v(true))))
+  			),
+			('take-pancam) / nilpar
+			) .
+
+
+op Heater : -> Plexil .
+eq Heater = command(
+			'Heater,
+nilocdecl,
+			(
+  			(endc:	lookupOnChange ('DriveToTarget . 'temperature,v(0)) >= const(v(10))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	(var(('timeout . 'DriveToTarget)) equ const(v(true)))),
+  			(startc:	lookupOnChange ('DriveToTarget . 'temperature,v(0)) < const(v(0)))
+  			),
+			('turn-on-heater) / nilpar
+			) .
+
+
+op DriveToTargetEnv : -> ContextList .
+eq DriveToTargetEnv = (('DriveToTarget . 'temperature) : v(441.0) ,('DriveToTarget . 'time) : v(6) ,('DriveToTarget . 'target_in_view) : v(false))
+	# (('DriveToTarget . 'temperature) : v(440) ,('DriveToTarget . 'time) : v(10) ,('DriveToTarget . 'target_in_view) : v(true))
+	# (('DriveToTarget . 'temperature) : v(3) ,('DriveToTarget . 'time) : v(20) ,('DriveToTarget . 'target_in_view) : v(false))
+	# (('DriveToTarget . 'temperature) : v(3) ,('DriveToTarget . 'time) : v(30) ,('DriveToTarget . 'target_in_view) : v(true)) .
+
+
+endm
+
+eof

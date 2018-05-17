@@ -1,0 +1,24 @@
+<PLEXILScript>
+ <Step>
+   <State name="WheelStuck" type="bool" >
+      <Value>true</Value>
+   </State>
+   <State name="LowOnBattery" type="bool" >
+      <Value>false</Value>
+   </State>
+ </Step>
+ 
+ <Step/>
+ <Step/>
+ <Step/>
+ 
+ <Step>
+   <State name="WheelStuck" type="bool" >
+      <Value>true</Value>
+   </State>
+   <State name="LowOnBattery" type="bool" >
+      <Value>true</Value>
+   </State>
+ </Step> 
+
+</PLEXILScript>

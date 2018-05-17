@@ -1,0 +1,63 @@
+mod REPEATEDSIMPLEASSIGNMENT2 is
+ protecting PLEXILITE .
+
+
+op RepeatedSimpleAssignment2 : -> Plexil .
+eq RepeatedSimpleAssignment2 = list(
+			'RepeatedSimpleAssignment2,
+			(('x : v(0)) ),
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true)))
+  			),
+  			(X)
+			) .
+
+
+op X : -> Plexil .
+eq X = list(
+			'X,
+			nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	var(('x . 'RepeatedSimpleAssignment2)) >= const(v(5))),
+  			(pre:	const(v(true))),
+  			(repeatc:	var(('x . 'RepeatedSimpleAssignment2)) <= const(v(5))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true)))
+  			),
+  			(Y)
+			) .
+
+
+op Y : -> Plexil .
+eq Y = assignment(
+			'Y,
+			nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(false))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true))),
+  			(priority: 1)
+  			),
+			(('x . 'RepeatedSimpleAssignment2) := (var(('x . 'RepeatedSimpleAssignment2)) + const(v(1))))
+			) .
+
+
+op RepeatedSimpleAssignment2Env : -> ContextList .
+eq RepeatedSimpleAssignment2Env = mtcontext .
+
+
+endm
+
+eof

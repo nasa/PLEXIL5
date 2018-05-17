@@ -1,0 +1,38 @@
+ztestconc:
+{
+  Integer distance = 5;
+
+  Integer x;
+
+  Concurrence:
+    Inform:
+    {
+      Command: inform("Plan executing...");
+    }
+
+    Init:
+    {
+      Command: x = GetX();
+    }
+
+    Commence:
+    {
+      Boolean result;
+      StartCondition: Init.state == FINISHED;
+      EndCondition: isKnown(result); 
+      PostCondition: result;
+      Command: result = DoIt(x);
+    }
+
+    InformSuccess:
+    {
+      StartCondition: Commence.outcome == SUCCESS;
+      Command: inform("Operation succeeded!");
+    }
+
+    InformFailure:
+    {
+      StartCondition: Commence.outcome == FAILURE;
+      Command: inform("Operation failed!");
+    }
+}

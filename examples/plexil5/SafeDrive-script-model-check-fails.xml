@@ -1,0 +1,16 @@
+<PLEXILScript>
+
+ <Step>
+   <State name="Rover.WheelStuck" type="boolean" >
+      <Value>false</Value>
+    </State>
+ </Step>
+ 
+ <Step>
+   <State name="Rover.WheelStuck" type="boolean" >
+      <Value>true</Value>
+    </State>
+ </Step>
+ 
+ 
+</PLEXILScript>

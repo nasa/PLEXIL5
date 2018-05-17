@@ -1,0 +1,14 @@
+#Fat Jar Configuration File
+#Thu Sep 22 00:07:36 COT 2011
+onejar.license.required=true
+manifest.classpath=
+manifest.removesigners=true
+onejar.checkbox=false
+jarname=dist/Plexil5-Sept2011.jar
+manifest.mergeall=true
+manifest.mainclass=org.nianet.plexil.stateviewer.view.Plexil5
+manifest.file=<createnew>
+jarname.isextern=false
+onejar.expand=
+excludes=
+includes=

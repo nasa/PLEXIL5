@@ -1,0 +1,38 @@
+DigitalClock:
+{
+
+    Integer h = 0;
+    Integer m = 0;
+
+    NodeList: 
+
+      Clock : 
+
+      { 
+
+        RepeatCondition: LookupOnChange(DigitalClock.Click) == true;
+
+	NodeList:	
+
+                H:
+                {
+		       Integer x=12;
+                       Start: m == 59;
+                       Assignment: h = h + 1;
+                }
+
+		M1:
+		{
+			Integer x=5;
+                        Repeat: m < 59;
+			Assignment: m = m + x;
+		}
+
+		M2:
+		{
+		        Start: m == 59;
+			Assignment: m = 0;
+     		}	
+      }
+
+}

@@ -1,0 +1,16 @@
+<PLEXILScript>
+  <Step>
+    <State name="DigitalClock.Click" type="boolean" >
+       <RandomValue/>
+    </State>
+  </Step>
+  <Step/>
+  <Step/>
+  <Step/>
+  <Step>
+    <State name="DigitalClock.Click" type="boolean" >
+       <Value>true</Value>
+    </State>
+  </Step>
+  <Step/>
+</PLEXILScript>

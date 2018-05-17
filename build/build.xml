@@ -1,0 +1,50 @@
+<project name="Plexil5" basedir="../plexil5" default="run">
+
+  <property name="src.dir"    value="src"/>
+  <property name="bin.dir"    value="bin"/>
+  <property name="lib.dir"    value="lib"/>
+  <property name="grm.dir"    value="grammars"/>
+  <property name="dist.dir"   value="dist"/>
+  <property name="xml.dir"    value="schemas"/>
+  <property name="main-class" value="org.nianet.plexil.stateviewer.view.Plexil5"/>
+  <property name="maude"      value="../plexilite/maude.intelDarwin"/>
+  <property name="maude-lib"  value="../plexilite"/>
+
+  <path id="classpath">
+    <pathelement location="${bin.dir}"/>
+    <fileset dir="${lib.dir}" includes="**/*.jar"/>
+  </path>
+
+  <target name="clean">
+    <delete dir="${bin.dir}"/>
+  </target>
+
+  <target name="javacc">
+    <java fork="true" classname="javacc">
+      <classpath>
+        <path refid="classpath"/>
+      </classpath>
+      <arg value="${grm.dir}/plexilite.jj"/>
+    </java>
+  </target>
+
+  <target name="copy-icons">
+    <copy todir="${bin.dir}/org/nianet/plexil/stateviewer/view/outlineview/">
+      <fileset dir="${basedir}/icons"/>
+    </copy>
+  </target>
+
+  <target name="compile" depends="clean,javacc">
+    <mkdir dir="${bin.dir}"/>
+    <javac srcdir="${src.dir}" destdir="${bin.dir}" classpathref="classpath"/>
+    <copy file="${src.dir}/org/nianet/plexil/plexilxml2maude/extendedplexil2coreplexiltranslate.xsl" todir="${bin.dir}/org/nianet/plexil/plexilxml2maude"/>
+  </target>
+
+  <target name="run" depends="compile,copy-icons">
+    <java fork="true" classname="${main-class}">
+      <classpath refid="classpath"/>
+      <env key="MAUDE_EXECUTABLE" path="${maude}"/>
+    </java>
+  </target>
+
+</project>

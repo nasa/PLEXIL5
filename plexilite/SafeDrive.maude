@@ -1,0 +1,108 @@
+mod SAFEDRIVE is
+ protecting PLEXILITE-PREDS .
+
+
+op SafeDrive : -> Plexil .
+eq SafeDrive = list(
+			'SafeDrive,
+			(('pictures : v(0)) ),
+			(
+  			(endc:	(lookupOnChange ('Rover . 'WheelStuck,v(0)) or (var(('pictures . 'SafeDrive)) equ const(v(10))))and areChildren?('SafeDrive, finished)),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true)))
+  			),
+  			(Loop)
+			) .
+
+
+op Loop : -> Plexil .
+eq Loop = list(
+			'Loop,
+			nilocdecl,
+			(
+  			(endc:	areChildren?('Loop . 'SafeDrive, finished)),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	(not (lookupOnChange ('Rover . 'WheelStuck,v(0))))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true)))
+  			),
+  			(OneMeter TakePic Counter)
+			) .
+
+
+op OneMeter : -> Plexil .
+eq OneMeter = command(
+			'OneMeter,
+nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	const(v(true)))
+  			),
+			('Rover . 'Drive) / const(v(1))
+			) .
+
+
+op TakePic : -> Plexil .
+eq TakePic = command(
+			'TakePic,
+nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	var(('pictures . 'SafeDrive)) > const(v(1))),
+  			(post:	const(v(true))),
+  			(pre:	const(v(true))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	((isStatus?(('OneMeter . 'Loop . 'SafeDrive),finished))) and (var(('pictures . 'SafeDrive)) < const(v(10))))
+  			),
+			('Rover . 'TakePicture) / nilpar
+			) .
+
+
+op Counter : -> Plexil .
+eq Counter = assignment(
+			'Counter,
+			nilocdecl,
+			(
+  			(endc:	const(v(true))),
+  			(inv:	const(v(true))),
+  			(post:	const(v(true))),
+  			(pre:	var(('pictures . 'SafeDrive)) < const(v(10))),
+  			(repeatc:	const(v(false))),
+  			(skip:	const(v(false))),
+  			(startc:	(isStatus?(('TakePic . 'Loop . 'SafeDrive),finished))),
+  			(priority: 1)
+  			),
+			(('pictures . 'SafeDrive) := (var(('pictures . 'SafeDrive)) + const(v(1))))
+			) .
+
+
+op SafeDriveEnv : -> ContextList .
+eq SafeDriveEnv = (('Rover . 'WheelStuck) : v(false) ,('Rover . 'LowOnBattery) : v(true))
+	# (('Rover . 'WheelStuck) : v(false) ,('Rover . 'LowOnBattery) : v(true))
+	# (('Rover . 'WheelStuck) : v(false) ,('Rover . 'LowOnBattery) : v(false))
+	# (('Rover . 'WheelStuck) : v(false) ,('Rover . 'LowOnBattery) : v(false))
+	# (('Rover . 'WheelStuck) : v(false) ,('Rover . 'LowOnBattery) : v(false))
+	# (('Rover . 'WheelStuck) : v(false) ,('Rover . 'LowOnBattery) : v(false))
+	# (('Rover . 'WheelStuck) : v(true) ,('Rover . 'LowOnBattery) : v(false))
+	# (('Rover . 'WheelStuck) : v(true) ,('Rover . 'LowOnBattery) : v(false))
+	# (('Rover . 'WheelStuck) : v(true) ,('Rover . 'LowOnBattery) : v(false))
+	# (('Rover . 'WheelStuck) : v(true) ,('Rover . 'LowOnBattery) : v(false))
+	# (('Rover . 'WheelStuck) : v(true) ,('Rover . 'LowOnBattery) : v(false))
+	# (('Rover . 'WheelStuck) : v(true) ,('Rover . 'LowOnBattery) : v(false)) .
+
+
+endm
+
+eof

@@ -1,0 +1,23 @@
+<PLEXILScript>
+ <Step>
+   <State name="MergingTraffic" type="boolean" >
+      <RandomValue></RandomValue>
+   </State>
+   <State name="LetBehind" type="boolean" >
+      <RandomValue></RandomValue>
+   </State>
+   <State name="RollStop" type="boolean" >
+      <RandomValue></RandomValue>
+   </State>
+ </Step>
+
+ <Step>
+ </Step>
+
+ <Step>
+ </Step>
+
+ <Step>
+ </Step>
+
+</PLEXILScript>

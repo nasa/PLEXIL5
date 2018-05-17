@@ -1,0 +1,16 @@
+<PLEXILScript>
+  <Step>
+    <State name="DigitalClock.Click" type="int" >
+       <Value>1</Value>
+    </State>
+  </Step>
+  <Step/>
+  <Step/>
+  <Step/>
+  <Step>
+    <State name="DigitalClock.Click" type="int" >
+       <Value>0</Value>
+    </State>
+  </Step>
+  <Step/>
+</PLEXILScript>

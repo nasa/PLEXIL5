@@ -1,0 +1,48 @@
+<PLEXILScript>
+ <Step>
+<<<<<<< .mine
+   <State name="Rover.WheelStuck" type="boolean" >
+      <RandomValue ></RandomValue>
+    </State>
+   <State name="Rover.LowOnBattery" type="boolean" >
+=======
+   <State name="WheelStuck" type="bool" >
+>>>>>>> .r1172
+      <RandomValue ></RandomValue>
+   </State>
+   <State name="LowOnBattery" type="bool" >
+      <Value>false</Value>
+   </State>
+ </Step>
+ 
+<<<<<<< .mine
+ <Step>
+   <State name="Rover.WheelStuck" type="boolean" >
+		<RandomValue ></RandomValue>
+    </State>
+ </Step>
+=======
+ <Step/>
+ <Step/>
+ <Step/>
+>>>>>>> .r1172
+ 
+ <Step>
+<<<<<<< .mine
+   <State name="Rover.WheelStuck" type="boolean" >
+      <Value>false</Value>
+    </State>
+   <State name="Rover.LowOnBattery" type="boolean" >
+      <RandomValue ></RandomValue>
+    </State>
+=======
+   <State name="WheelStuck" type="bool" >
+      <Value>true</Value>
+   </State>
+   <State name="LowOnBattery" type="bool" >
+      <Value>true</Value>
+   </State>
+>>>>>>> .r1172
+ </Step> 
+
+</PLEXILScript>

@@ -1,0 +1,14 @@
+#Fat Jar Configuration File
+#Mon Jun 20 15:20:45 EDT 2011
+onejar.license.required=true
+manifest.classpath=
+manifest.removesigners=true
+onejar.checkbox=false
+jarname=PLEXIL5UE.jar
+manifest.mergeall=true
+manifest.mainclass=org.nianet.plexil.luvintegration.PLEXIL5UEMain
+manifest.file=<createnew>
+jarname.isextern=false
+onejar.expand=
+excludes=
+includes=

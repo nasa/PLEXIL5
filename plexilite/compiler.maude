@@ -1,0 +1,91 @@
+----                       Compilation of a PLEXIL plan into a set of Processes
+----                                                       author: Camilo Rocha
+
+mod COMPILER is
+ protecting PLEXIL .
+ protecting FUNPRED .
+
+ vars B B'     : AttributeSet .
+ vars Bl       : Bool .
+ var  Cd       : Cid .
+ vars C C'     : Command .
+ var GAMMA     : Context .
+ var CL        : ContextList .
+ vars E E'     : Expression .
+ vars I I'     : Identifier .
+ vars LD LD'   : LocalDecls .
+ var PL        : Plexil .
+ vars PLL      : PrePlexilList .
+ vars PP PP'   : Processes .
+ vars Q Q' Q'' : Qualified .
+ vars NQ NQ'   : NeQualified .
+ vars V V'     : Value .
+ 
+*** Functions transforming a PLEXIL plan into a
+*** configuration of processes
+
+*** Function that creates a set of memory processes
+*** from a list of local declarations
+ op createLocalVars : Qualified LocalDecls -> Configuration . 
+ eq createLocalVars(Q,nilocdecl) = none .
+ eq createLocalVars(Q,((I : V) LD)) 
+  = < (I . Q) : memory | initVal: V , actVal: V > createLocalVars(Q,LD) .
+
+ op compile : Plexil -> GlobalConfig .
+ eq compile(PL) = compile(mtcontext,PL) .
+ op compile : ContextList Plexil -> GlobalConfig .
+ eq compile(GAMMA # CL,PL) = {CL} > GAMMA |- [compileaux(PL,nilq)] {mtactions} {niltrace} .
+ eq compile(nilcontexts,PL) = {nilcontexts} > mtcontext |- [compileaux(PL,nilq)] {mtactions} {niltrace} .
+ eq compile(CL,PL) = {mtcontext} > CL |- [compileaux(PL,nilq)] {mtactions} {niltrace} [owise] .
+
+ op compileaux : Plexil Qualified -> Configuration .
+ eq compileaux(list(I, LD, (B), nil), Q)
+  = < (I . Q) : list | (B), status: statusdef, outcome: outcomedef, active: true, loopenabled: not(hasLookupOnChange?(getRepeatCondition(B))), monscrtd: false > 
+    createLocalVars((I . Q), LD) .
+ eq compileaux(list(I, LD, (B), (PL PLL)), Q)
+    = (compileaux(PL, (I . Q)) compileaux(list(I, LD, (B), PLL), Q)) . 
+ eq compileaux(command(I, LD, (B), C), Q)
+  = < (I . Q) : command | (B), status: statusdef, outcome: outcomedef, command: C, 
+      commandInfo: commDefault(I), active: true, loopenabled: not(hasLookupOnChange?(getRepeatCondition(B))), monscrtd: false > 
+    createLocalVars((I . Q),LD) .
+ eq compileaux(retCommand(I, LD, (B), Q', Q'', C), Q) 
+  = < (I . Q) : retCommand | (B), status: statusdef, outcome: outcomedef, command: C, 
+      locVar: Q', extVar: Q'', commandInfo: commDefault(I), active: true , loopenabled: not(hasLookupOnChange?(getRepeatCondition(B))), monscrtd: false > 
+    createLocalVars((I . Q),LD) .
+ eq compileaux(assignment(I, LD, (B), (Q' := E)), Q)
+  = < (I . Q) : assignment | (B), (Q' := E), status: statusdef, outcome: outcomedef, 
+      active: true, loopenabled: not(hasLookupOnChange?(getRepeatCondition(B))), monscrtd: false > 
+    createLocalVars((I . Q), LD) .
+ eq compileaux(empty(I, LD, B), Q) 
+  = < (I . Q) : empty | (B), status: statusdef, outcome: outcomedef, active: true, 
+      loopenabled: not(hasLookupOnChange?(getRepeatCondition(B))), monscrtd: false > 
+    createLocalVars((I . Q),LD) .
+
+ --- equations for initializing by-default condition expressions and
+ --- by-default initial values for variables
+ ---- by-default expressions common for all node types
+ eq < NQ : Cd | startc: default, B >
+  = < NQ : Cd | startc: const(v(true)), B > .
+ eq < NQ : Cd | skip: default, B >
+  = < NQ : Cd | skip: const(v(false)), B > .
+ eq < NQ : Cd | pre: default, B >
+  = < NQ : Cd | pre: const(v(true)), B > .
+ eq < NQ : Cd | inv: default, B >
+  = < NQ : Cd | inv: const(v(true)), B > .
+ eq < NQ : Cd | repeatc: default, loopenabled: Bl, B >
+  = < NQ : Cd | repeatc: const(v(false)), loopenabled: true, B > .
+ eq < NQ : Cd | post: default, B >
+  = < NQ : Cd | post: const(v(true)), B > .
+ ---- by-default expressions for each node type
+ eq < NQ : empty | endc: default, B >
+  = < NQ : empty | endc: const(v(true)), B > .
+ eq < NQ : list | endc: default, B >
+  = < NQ : list | endc: areChildren?(NQ,finished), B > .
+ eq < NQ : command | endc: default, B >
+  = < NQ : command | endc: const(v(true)), B > .  --- TODO this needs revision and be dealt with once the semantics of commands is completed
+ eq < NQ : assignment | endc: default, B >
+  = < NQ : assignment | endc: const(v(true)), B > .
+
+ --- uninitialized variables of types Boolean, Integer, Real, and String
+ --- are given the value Unknown
+endm

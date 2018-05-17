@@ -1,0 +1,24 @@
+Exchange:
+{
+
+	Integer x = 1;
+	Integer y = 2;
+
+        Invariant: x + y == 3;
+
+        Post: !(x == y);	
+
+	NodeList:	
+		X:
+		{
+			Integer x = 22;
+			Integer w = 99;
+			Assignment: x = w;
+		}
+
+		Y:
+		{
+			Assignment: y = x;
+		}	
+
+}
