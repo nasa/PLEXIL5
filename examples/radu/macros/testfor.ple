@@ -1,6 +1,0 @@
-testfor:
-{
-      For ( Integer x = 0; x < 3; x + 1 )
-	DoSomething: { Command: action1(); }
-}
-
