@@ -1,7 +1,0 @@
-RepeatedSimpleAssignment:
-{
-  Integer x = 0 ;
-  PreCondition: false;
-  RepeatCondition: x <= 6;
-  Assignment: x = x + 1;
-}

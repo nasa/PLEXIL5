@@ -1,7 +1,0 @@
-<PLEXILScript>
- <Step>
-   <State name="Dummy.dummy" type="boolean" >
-      <Value>false</Value>
-   </State>
- </Step>
-</PLEXILScript>

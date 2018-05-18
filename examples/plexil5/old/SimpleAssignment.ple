@@ -1,6 +1,0 @@
-SimpleAssignment:
-{
-  Integer x = 0;
-  PostCondition: x==1 && false;
-  Assignment: x = 1;
-}
