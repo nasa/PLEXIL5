@@ -70,8 +70,8 @@ Agreement.  See the directory [`LICENSES`](LICENSES); see also the copyright not
 ### Authors
 
 * [C&eacute;sar A. Mu&ntilde;oz](http://shemesh.larc.nasa.gov/people/cam) (cesar.a.munoz@nasa.gov), NASA Langley Research Center, USA. 
-* Hector Cadavid, Escuela Colombiana de Ingenieria, Colombia.
-* Camilo Rocha, Potificia Universidad Javeriana de Cali, Colombia.
+* Hector Cadavid, Escuela Colombiana de Ingenier&iacute;a, Colombia.
+* Camilo Rocha, Pontificia Universidad Javeriana de Cali, Colombia.
 * Marco Feli&uacute;, National Institute of Aerospace, USA. 
 
 ### Copyright Notice
