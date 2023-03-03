@@ -1,0 +1,34 @@
+mod TRAFFIC-RESOLUTION-PLAN is
+
+protecting PLEXILITE-PREDS .
+
+op rootNode : -> Plexil .
+eq rootNode =
+
+  list(
+      'TRAFFIC-RESOLUTION,
+      decls,
+      attributes,
+      (
+            nil
+      )
+  ) .
+
+  op aNode : -> Plexil .
+  eq aNode =  assignment('ASSIGNMENT--0,nilocdecl,(none),('acVelocity := lookup('velocity))) .
+
+  op attributes : -> AttributeSet .
+  eq attributes = ((inv: (not_(_or_(_or_(_and_(isOutcomeFailure?('ASSIGNMENT__0),isStatus?('ASSIGNMENT__0,finished)), _and_(isOutcomeFailure?('ASSIGNMENT__1), isStatus?('ASSIGNMENT__1,finished))), _or_(_or_(_and_(isOutcomeFailure?('ASSIGNMENT__2), isStatus?('ASSIGNMENT__2,finished)), _and_(isOutcomeFailure?('ASSIGNMENT__3), isStatus?('ASSIGNMENT__3,finished))), _or_(_or_(_and_(isOutcomeFailure?('ASSIGNMENT__4), isStatus?('ASSIGNMENT__4,finished)), _and_(isOutcomeFailure?('ASSIGNMENT__5), isStatus?('ASSIGNMENT__5,finished))), _or_(_or_(_and_(isOutcomeFailure?('ASSIGNMENT__6), isStatus?('ASSIGNMENT__6,finished)), _and_(isOutcomeFailure?('ASSIGNMENT__7), isStatus?('ASSIGNMENT__7,finished))), _or_(_or_(_and_(isOutcomeFailure?('ASSIGNMENT__8), isStatus?('ASSIGNMENT__8,finished)), _and_(isOutcomeFailure?('ASSIGNMENT__9), isStatus?('ASSIGNMENT__9,finished))), _or_(_and_(isOutcomeFailure?('BLOCK__10), isStatus?('BLOCK__10,finished)), _and_(isOutcomeFailure?('ASSIGNMENT__81), isStatus?('ASSIGNMENT__81,finished)))))))))))) .
+
+  op decls : -> LocalDecls .
+  eq decls = ( ('acVelocity : unknownRealArray(3)) ('velCmd : unknownRealArray(3)) ('prevSpeedResCmd : unknownRealArray(3)) ('prevTrackResCmd : unknownRealArray(3)) ('prevAltResCmd : unknownRealArray(3)) ('returnVel : val(0.0)) ('trackPref : val(0.0)) ('speedPref : val(0.0)) ('altPref : val(0.0)) ('returnSafe : val(false)) ('statusTF : val(false)) ('statusTF_Speed : val(false)) ('statusTF_Altitude : val(false)) ('statusTF_Track : val(false)) ('SpeedResolution : val(false)) ('AltResolution : val(false)) ('TrackResolution : val(false))) .
+
+    op decl1 : -> Local .
+    eq decl1 = ('acPosition : unknownRealArray(3)) .
+
+    op qualified1 : -> Qualified .
+    eq qualified1 = 'acPosition .
+
+    op value1 : -> Value .
+    eq value1 = unknownRealArray(3) .
+endm
