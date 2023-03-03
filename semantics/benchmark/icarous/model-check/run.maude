@@ -1,0 +1,8 @@
+--- set print attribute on .
+set print color on .
+
+rew pretty2(model-check(run(compile(rootNode,input)),<> hasStatus('TRAFFIC-RESOLUTION,finished))) .
+--- rew pretty(model-check(run(compile(rootNode,input)),<> hasStatus('TRAFFIC-RESOLUTION,finished))) .
+--- rew model-check(run(compile(rootNode,input)),<> hasStatus('TRAFFIC-RESOLUTION,finished)) .
+--- rew model-check-lite(run(compile(rootNode,input)),<> hasStatus('TRAFFIC-RESOLUTION,finished)) .
+q

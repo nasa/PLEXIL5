@@ -1,0 +1,122 @@
+fmod PRIMITIVE-VALUE is
+ protecting INT .
+ protecting FLOAT .
+ protecting STRING .
+ sort PrimitiveValue .
+ sorts   IntValue BoolValue FloatValue StringValue .
+ subsort IntValue BoolValue FloatValue StringValue < PrimitiveValue .
+
+ sort Value .
+ subsort PrimitiveValue < Value .
+
+ op val : Int    -> IntValue .
+ op val : Bool   -> BoolValue .
+ op val : Float  -> FloatValue .
+ op val : String -> StringValue .
+
+ ops unknownInt abortedInt defaultInt : -> IntValue .
+ ops unknownBool abortedBool defaultBool : -> BoolValue .
+ ops unknownFloat abortedFloat defaultFloat : -> FloatValue .
+ ops unknownString abortedString defaultString : -> StringValue .
+ ops unknown aborted default : -> PrimitiveValue .
+ op unknownUnknown : -> Value .
+endfm
+
+view PrimitiveValue from TRIV to PRIMITIVE-VALUE is
+ sort Elt to PrimitiveValue .
+endv
+
+fmod VALUE is
+ protecting PRIMITIVE-VALUE .
+ protecting CONVERSION .
+
+ sort ArrayValue .
+ subsort ArrayValue < Value .
+
+ sort IntArray .
+ subsort IntValue < IntArray .
+ op _#_ : IntArray IntArray -> IntArray [assoc] .
+
+ sort BoolArray .
+ subsort BoolValue < BoolArray .
+ op _#_ : BoolArray BoolArray -> BoolArray [assoc] .
+
+ sort FloatArray .
+ subsort FloatValue < FloatArray .
+ op _#_ : FloatArray FloatArray -> FloatArray [assoc] .
+
+ sort StringArray .
+ subsort StringValue < StringArray .
+ op _#_ : StringArray StringArray -> StringArray [assoc] .
+
+ op array : IntArray    -> ArrayValue .
+ op array : BoolArray   -> ArrayValue .
+ op array : FloatArray  -> ArrayValue .
+ op array : StringArray -> ArrayValue .
+ *** sorts   BoolArrayValue IntArrayValue FloatArrayValue StringArrayValue .
+ *** subsort BoolArrayValue IntArrayValue FloatArrayValue StringArrayValue < ArrayValue .
+
+ *** op val : Array       -> ArrayValue       .
+ *** op val : IntArray    -> IntArrayValue    .
+ *** op val : BoolArray   -> BoolArrayValue   .
+ *** op val : FloatArray  -> FloatArrayValue  .
+ *** op val : StringArray -> StringArrayValue .
+
+ *** sorts Array IntArray BoolArray FloatArray StringArray .
+ *** subsort IntArray BoolArray FloatArray StringArray < Array .
+ *** op array : List{PrimitiveValue} NzNat -> Array .
+ *** op array : List{IntValue} NzNat -> IntArray .
+
+ op unknownIntArray : NzNat -> ArrayValue .
+ --- eq unknownIntArray(N:NzNat) = unknownInt .
+ op unknownBoolArray : NzNat -> ArrayValue .
+ --- eq unknownBoolArray(N:NzNat) = unknownBool .
+ op unknownRealArray : NzNat -> ArrayValue .
+ eq unknownRealArray(Nz) = array(unknownRealArray'(Nz)) .
+ op unknownRealArray' : NzNat -> FloatArray .
+ eq unknownRealArray'(s Nz) = unknownFloat # unknownRealArray'(Nz) .
+ eq unknownRealArray'(s 0) = unknownFloat .
+
+ --- eq unknownRealArray(N:NzNat) = unknownFloat .
+ op unknownFloatArray : NzNat -> ArrayValue .
+ --- eq unknownFloatArray(N:NzNat) = unknownFloat .
+ op unknownStringArray : NzNat -> ArrayValue .
+ --- eq unknownStringArray(N:NzNat) = unknownString .
+
+ vars FV FV' : FloatValue .
+ vars IV IV' : IntValue .
+ vars FArr : FloatArray .
+ vars N N' : Nat .
+ vars Nz Nz' : NzNat .
+ vars I I' : Int .
+ vars Arr : ArrayValue .
+
+ op updateArray : ArrayValue Nat PrimitiveValue -> ArrayValue .
+ eq updateArray(array(FArr),N,FV) = array(updateFloatArray(FArr,N,FV)) .
+ eq updateArray(array(FArr),N,val(I)) = array(updateFloatArray(FArr,N,val(float(I)))) . --- [print "\n\n\nupdateArray(array(" FArr ")," N ",val(" I "))\n\n\n" ] .
+ *** eq updateArray(array(FArr),N,FV) = array(updateStringArray(FArr,N,FV)) .
+ *** eq updateArray(array(FArr),N,FV) = array(updateBoolArray(FArr,N,FV)) .
+ *** eq updateArray(array(FArr),N,FV) = array(updateIntArray(FArr,N,FV)) .
+
+ op updateFloatArray : FloatArray Nat FloatValue -> FloatArray .
+ eq updateFloatArray(FV,0, FV') = FV' .
+ eq updateFloatArray(FV # FArr, s N, FV') = FV # updateFloatArray(FArr, N, FV') .
+ eq updateFloatArray(FV # FArr,   0, FV') = FV' # FArr .
+
+ op nth : ArrayValue Int -> PrimitiveValue .
+ eq nth(Arr,I) = nth'(Arr,abs(I)) .
+ op nth' : ArrayValue Nat -> PrimitiveValue .
+ eq nth'(array(FV),0) = FV .
+ eq nth'(array(FV # FArr),0) = FV .
+ eq nth'(array(FV # FArr),s N) = nth'(array(FArr),N) .
+
+endfm
+
+view Value from TRIV to VALUE is
+ sort Elt to Value .
+endv
+
+fmod ARGUMENTS is
+ protecting LIST{Value} * ( sort List{Value} to Arguments ,
+                            op nil to nilarg ) .
+endfm

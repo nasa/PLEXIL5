@@ -1,0 +1,29 @@
+in empty-node.maude
+in assignment-node.maude
+in command-node.maude
+in update-node.maude
+in list-node.maude
+in library-node.maude
+
+mod TEST--ATOMIC--EXECUTING is
+
+  pr TEST--ATOMIC--EXECUTING--EMPTY-NODE .
+  pr TEST--ATOMIC--EXECUTING--ASSIGNMENT-NODE .
+  pr TEST--ATOMIC--EXECUTING--COMMAND-NODE .
+  pr TEST--ATOMIC--EXECUTING--UPDATE-NODE .
+  pr TEST--ATOMIC--EXECUTING--LIST-NODE .
+  pr TEST--ATOMIC--EXECUTING--LIBRARY-NODE .
+
+
+  op tests--atomic--executing : -> TestResults .
+
+  eq tests--atomic--executing =
+    tests--atomic--executing--empty-node
+    + tests--atomic--executing--assignment-node
+    --- TODO: + tests--atomic--executing--command-node
+    --- TODO: + tests--atomic--executing--update-node
+    + tests--atomic--executing--list-node
+    + tests--atomic--executing--library-node
+    .
+
+endm

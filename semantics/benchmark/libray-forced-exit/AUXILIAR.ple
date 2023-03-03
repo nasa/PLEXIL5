@@ -1,0 +1,7 @@
+Command pprint(...);
+
+AUXILIAR : {
+  Repeat true;
+
+  pprint("Repeating myself");
+}

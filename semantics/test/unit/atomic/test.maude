@@ -1,0 +1,25 @@
+in inactive.maude
+in waiting.maude
+in executing/test.maude
+in failing/test.maude
+in finishing/test.maude
+
+mod TEST--ATOMIC is
+
+  pr TEST--ATOMIC--INACTIVE .
+  pr TEST--ATOMIC--WAITING .
+  pr TEST--ATOMIC--EXECUTING .
+  pr TEST--ATOMIC--FAILING .
+  pr TEST--ATOMIC--FINISHING .
+
+  op atomic--tests : -> TestResults .
+
+  eq atomic--tests =
+    inactive--atomic--tests
+    + waiting--atomic--tests
+    + tests--atomic--executing
+    + tests--atomic--failing
+    + tests--atomic--finishing
+    .
+
+endm

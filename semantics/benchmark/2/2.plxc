@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PlexilPlan xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xmlns:tr="extended-plexil-translator">
+   <GlobalDeclarations LineNo="2" ColNo="5">
+      <CommandDeclaration LineNo="2" ColNo="5">
+         <Name>get-real</Name>
+         <Return>
+            <Name>-return-0</Name>
+            <Type>Real</Type>
+         </Return>
+      </CommandDeclaration>
+      <CommandDeclaration LineNo="3" ColNo="0">
+         <Name>pprint</Name>
+         <AnyParameters/>
+      </CommandDeclaration>
+      <StateDeclaration LineNo="4" ColNo="5">
+         <Name>r1</Name>
+         <Return>
+            <Name>-return-0</Name>
+            <Type>Real</Type>
+         </Return>
+      </StateDeclaration>
+      <StateDeclaration LineNo="5" ColNo="5">
+         <Name>r2</Name>
+         <Return>
+            <Name>-return-0</Name>
+            <Type>Real</Type>
+         </Return>
+      </StateDeclaration>
+   </GlobalDeclarations>
+   <Node NodeType="NodeList" LineNo="9" ColNo="2">
+      <NodeId>TestUnknown</NodeId>
+      <VariableDeclarations>
+         <DeclareVariable LineNo="8" ColNo="2">
+            <Name>r</Name>
+            <Type>Real</Type>
+         </DeclareVariable>
+         <DeclareVariable LineNo="8" ColNo="2">
+            <Name>r1</Name>
+            <Type>Real</Type>
+         </DeclareVariable>
+         <DeclareVariable LineNo="8" ColNo="2">
+            <Name>r2</Name>
+            <Type>Real</Type>
+         </DeclareVariable>
+      </VariableDeclarations>
+      <InvariantCondition>
+         <NOT>
+            <OR>
+               <AND>
+                  <EQInternal>
+                     <NodeOutcomeVariable>
+                        <NodeRef dir="child">TestVars1</NodeRef>
+                     </NodeOutcomeVariable>
+                     <NodeOutcomeValue>FAILURE</NodeOutcomeValue>
+                  </EQInternal>
+                  <EQInternal>
+                     <NodeStateVariable>
+                        <NodeRef dir="child">TestVars1</NodeRef>
+                     </NodeStateVariable>
+                     <NodeStateValue>FINISHED</NodeStateValue>
+                  </EQInternal>
+               </AND>
+               <AND>
+                  <EQInternal>
+                     <NodeOutcomeVariable>
+                        <NodeRef dir="child">TestReal1</NodeRef>
+                     </NodeOutcomeVariable>
+                     <NodeOutcomeValue>FAILURE</NodeOutcomeValue>
+                  </EQInternal>
+                  <EQInternal>
+                     <NodeStateVariable>
+                        <NodeRef dir="child">TestReal1</NodeRef>
+                     </NodeStateVariable>
+                     <NodeStateValue>FINISHED</NodeStateValue>
+                  </EQInternal>
+               </AND>
+               <AND>
+                  <EQInternal>
+                     <NodeOutcomeVariable>
+                        <NodeRef dir="child">TestReal2</NodeRef>
+                     </NodeOutcomeVariable>
+                     <NodeOutcomeValue>FAILURE</NodeOutcomeValue>
+                  </EQInternal>
+                  <EQInternal>
+                     <NodeStateVariable>
+                        <NodeRef dir="child">TestReal2</NodeRef>
+                     </NodeStateVariable>
+                     <NodeStateValue>FINISHED</NodeStateValue>
+                  </EQInternal>
+               </AND>
+               <AND>
+                  <EQInternal>
+                     <NodeOutcomeVariable>
+                        <NodeRef dir="child">Printer0</NodeRef>
+                     </NodeOutcomeVariable>
+                     <NodeOutcomeValue>FAILURE</NodeOutcomeValue>
+                  </EQInternal>
+                  <EQInternal>
+                     <NodeStateVariable>
+                        <NodeRef dir="child">Printer0</NodeRef>
+                     </NodeStateVariable>
+                     <NodeStateValue>FINISHED</NodeStateValue>
+                  </EQInternal>
+               </AND>
+               <AND>
+                  <EQInternal>
+                     <NodeOutcomeVariable>
+                        <NodeRef dir="child">Printer1</NodeRef>
+                     </NodeOutcomeVariable>
+                     <NodeOutcomeValue>FAILURE</NodeOutcomeValue>
+                  </EQInternal>
+                  <EQInternal>
+                     <NodeStateVariable>
+                        <NodeRef dir="child">Printer1</NodeRef>
+                     </NodeStateVariable>
+                     <NodeStateValue>FINISHED</NodeStateValue>
+                  </EQInternal>
+               </AND>
+               <AND>
+                  <EQInternal>
+                     <NodeOutcomeVariable>
+                        <NodeRef dir="child">Printer2</NodeRef>
+                     </NodeOutcomeVariable>
+                     <NodeOutcomeValue>FAILURE</NodeOutcomeValue>
+                  </EQInternal>
+                  <EQInternal>
+                     <NodeStateVariable>
+                        <NodeRef dir="child">Printer2</NodeRef>
+                     </NodeStateVariable>
+                     <NodeStateValue>FINISHED</NodeStateValue>
+                  </EQInternal>
+               </AND>
+            </OR>
+         </NOT>
+      </InvariantCondition>
+      <NodeBody>
+         <NodeList>
+            <Node NodeType="NodeList" LineNo="11" ColNo="13">
+               <NodeId>TestVars1</NodeId>
+               <PostCondition>
+                  <AND>
+                     <EQNumeric>
+                        <RealVariable>r1</RealVariable>
+                        <RealValue>0.0</RealValue>
+                     </EQNumeric>
+                     <EQNumeric>
+                        <RealVariable>r2</RealVariable>
+                        <RealValue>1.0</RealValue>
+                     </EQNumeric>
+                  </AND>
+               </PostCondition>
+               <NodeBody>
+                  <NodeList>
+                     <Node NodeType="Assignment" LineNo="13" ColNo="4">
+                        <NodeId>ASSIGNMENT--0</NodeId>
+                        <NodeBody>
+                           <Assignment>
+                              <RealVariable>r1</RealVariable>
+                              <NumericRHS>
+                                 <LookupNow>
+                                    <Name>
+                                       <StringValue>r1</StringValue>
+                                    </Name>
+                                 </LookupNow>
+                              </NumericRHS>
+                           </Assignment>
+                        </NodeBody>
+                     </Node>
+                     <Node NodeType="Assignment" LineNo="15" ColNo="4">
+                        <NodeId>ASSIGNMENT--1</NodeId>
+                        <NodeBody>
+                           <Assignment>
+                              <RealVariable>r2</RealVariable>
+                              <NumericRHS>
+                                 <LookupNow>
+                                    <Name>
+                                       <StringValue>r2</StringValue>
+                                    </Name>
+                                 </LookupNow>
+                              </NumericRHS>
+                           </Assignment>
+                        </NodeBody>
+                     </Node>
+                  </NodeList>
+               </NodeBody>
+            </Node>
+            <Node NodeType="Command" LineNo="21" ColNo="8">
+               <NodeId>TestReal1</NodeId>
+               <StartCondition>
+                  <EQInternal>
+                     <NodeStateVariable>
+                        <NodeRef dir="sibling">TestVars1</NodeRef>
+                     </NodeStateVariable>
+                     <NodeStateValue>FINISHED</NodeStateValue>
+                  </EQInternal>
+               </StartCondition>
+               <PostCondition>
+                  <EQNumeric>
+                     <RealVariable>r</RealVariable>
+                     <RealValue>1.0</RealValue>
+                  </EQNumeric>
+               </PostCondition>
+               <NodeBody>
+                  <Command>
+                     <RealVariable>r</RealVariable>
+                     <Name>
+                        <StringValue>get-real</StringValue>
+                     </Name>
+                  </Command>
+               </NodeBody>
+            </Node>
+            <Node NodeType="Command" LineNo="27" ColNo="8">
+               <NodeId>TestReal2</NodeId>
+               <StartCondition>
+                  <EQInternal>
+                     <NodeStateVariable>
+                        <NodeRef dir="sibling">TestReal1</NodeRef>
+                     </NodeStateVariable>
+                     <NodeStateValue>FINISHED</NodeStateValue>
+                  </EQInternal>
+               </StartCondition>
+               <PostCondition>
+                  <EQNumeric>
+                     <RealVariable>r</RealVariable>
+                     <RealValue>0.0</RealValue>
+                  </EQNumeric>
+               </PostCondition>
+               <NodeBody>
+                  <Command>
+                     <RealVariable>r</RealVariable>
+                     <Name>
+                        <StringValue>get-real</StringValue>
+                     </Name>
+                  </Command>
+               </NodeBody>
+            </Node>
+            <Node NodeType="Command" LineNo="32" ColNo="4">
+               <NodeId>Printer0</NodeId>
+               <StartCondition>
+                  <AND>
+                     <EQInternal>
+                        <NodeStateVariable>
+                           <NodeRef dir="sibling">TestReal2</NodeRef>
+                        </NodeStateVariable>
+                        <NodeStateValue>FINISHED</NodeStateValue>
+                     </EQInternal>
+                     <EQInternal>
+                        <NodeStateVariable>
+                           <NodeId>TestVars1</NodeId>
+                        </NodeStateVariable>
+                        <NodeStateValue>FINISHED</NodeStateValue>
+                     </EQInternal>
+                  </AND>
+               </StartCondition>
+               <NodeBody>
+                  <Command>
+                     <Name>
+                        <StringValue>pprint</StringValue>
+                     </Name>
+                     <Arguments LineNo="33" ColNo="11">
+                        <StringValue>r1:</StringValue>
+                        <RealVariable>r1</RealVariable>
+                        <StringValue>r2:</StringValue>
+                        <RealVariable>r2</RealVariable>
+                     </Arguments>
+                  </Command>
+               </NodeBody>
+            </Node>
+            <Node NodeType="Command" LineNo="37" ColNo="4">
+               <NodeId>Printer1</NodeId>
+               <StartCondition>
+                  <AND>
+                     <EQInternal>
+                        <NodeStateVariable>
+                           <NodeRef dir="sibling">Printer0</NodeRef>
+                        </NodeStateVariable>
+                        <NodeStateValue>FINISHED</NodeStateValue>
+                     </EQInternal>
+                     <EQInternal>
+                        <NodeStateVariable>
+                           <NodeId>TestReal1</NodeId>
+                        </NodeStateVariable>
+                        <NodeStateValue>FINISHED</NodeStateValue>
+                     </EQInternal>
+                  </AND>
+               </StartCondition>
+               <NodeBody>
+                  <Command>
+                     <Name>
+                        <StringValue>pprint</StringValue>
+                     </Name>
+                     <Arguments LineNo="38" ColNo="11">
+                        <StringValue>r:</StringValue>
+                        <RealVariable>r</RealVariable>
+                     </Arguments>
+                  </Command>
+               </NodeBody>
+            </Node>
+            <Node NodeType="Command" LineNo="42" ColNo="4">
+               <NodeId>Printer2</NodeId>
+               <StartCondition>
+                  <AND>
+                     <EQInternal>
+                        <NodeStateVariable>
+                           <NodeRef dir="sibling">Printer1</NodeRef>
+                        </NodeStateVariable>
+                        <NodeStateValue>FINISHED</NodeStateValue>
+                     </EQInternal>
+                     <EQInternal>
+                        <NodeStateVariable>
+                           <NodeId>TestReal2</NodeId>
+                        </NodeStateVariable>
+                        <NodeStateValue>FINISHED</NodeStateValue>
+                     </EQInternal>
+                  </AND>
+               </StartCondition>
+               <NodeBody>
+                  <Command>
+                     <Name>
+                        <StringValue>pprint</StringValue>
+                     </Name>
+                     <Arguments LineNo="43" ColNo="11">
+                        <StringValue>r:</StringValue>
+                        <RealVariable>r</RealVariable>
+                     </Arguments>
+                  </Command>
+               </NodeBody>
+            </Node>
+         </NodeList>
+      </NodeBody>
+   </Node>
+</PlexilPlan>

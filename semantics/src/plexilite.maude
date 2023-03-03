@@ -1,0 +1,186 @@
+----                          Main theory gathering the specification of PLEXIL
+----                                                       author: Marco A. Feliu
+
+*** Load PLEXIL specification
+*** in prelude.maude
+in utils.maude
+in identifiers.maude
+in values.maude
+in expressions.maude
+in commands.maude
+in nodes.maude
+in environment.maude
+in declarations.maude
+in action.maude
+in traces.maude
+in generator.maude
+in system.maude
+in defs.maude
+in plexil.maude
+in runtime.maude
+in evaluation.maude
+in funpred.maude
+in compiler.maude
+in syncred.maude
+in atomic.maude
+in interface.maude
+in reductions.maude
+
+mod PLEXILITE is
+  pr PLEXIL .
+  pr COMPILER .
+  pr RUNTIME .
+  pr INTERFACE .
+  pr REDUCTIONS .
+endm
+
+in model-checker.maude
+
+mod PLEXILITE-PREDS is
+  pr PLEXILITE .
+  inc MODEL-CHECKER .
+  subsort GlobalConfig < State .
+
+  vars Rl     : RuleName .
+  vars T      : Transition .
+  vars Ts Ts' : TransitionList .
+
+  op prettyCounterexample : ModelCheckResult -> ModelCheckResult .
+  eq prettyCounterexample(counterexample(Ts,Ts'))
+   = counterexample(prettyTransitionList(Ts),prettyTransitionList(Ts'))
+  [print "\n\nCOUNTEREXAMPLE:\n"]
+  .
+
+  op prettyTransitionList : TransitionList -> TransitionList .
+  eq prettyTransitionList(T Ts) = prettyTransition(T) prettyTransitionList(Ts) .
+  eq prettyTransitionList(nil) = nil .
+
+  op prettyTransition : Transition -> Transition .
+  ceq prettyTransition({St,Rl}) = {St,Rl}
+  if B:Bool := true
+  [print Rl "\n\t" St "\n\n->\n\n"]
+  .
+
+
+  *** Predicates ****************************************
+
+  op commandIsExecuting : Identifier -> Prop .
+  eq ( Op | [ nodes : < Q : command | status: executing, AtS' > NdS' ]
+            [ interface : < Id . Q : command-on-execution | AtS > NdS ] Conf)
+    |= commandIsExecuting(Id)
+    = true .
+
+  op inConflict : -> Prop .
+  eq ( Op | [ environment : GAMMA' , ('inConflict (nilarg) : val(true), GAMMA) ] Conf )
+    |= inConflict
+    = true .
+
+  op varIs : Identifier Value -> Prop .
+  eq ( Op | [ memory : < Id . Q : memory | actVal: V, AtS > MEM ] Conf )
+    |= varIs(Id,V)
+    = true .
+
+  var E : Expression .
+  var IFACE : Configuration .
+  var ENV : Environment .
+
+  op isTrue? : Expression -> Prop .
+  ceq [propIsTrue] : ( Op | [ memory : MEM ] [ interface : IFACE ] [ environment : ENV ] Conf)
+    |= isTrue?(E)
+    = V == val(true)
+  if V := expToVal(eval(ENV, MEM IFACE,E)) .
+
+  op isFalse? : Expression -> Prop .
+  ceq [propIsFalse] : ( Op | [ memory : MEM ] [ interface : IFACE ] [ environment : ENV ] Conf)
+    |= isFalse?(E)
+    = V == val(false)
+  if V := expToVal(eval(ENV, MEM IFACE,E)) .
+
+
+  *** TODO: Enforce assumptions or change property
+  ***   Assumptions:
+  ***      - (not enforced) Only one command of a certain type can be executed at a specific time
+  ***      - (not enforced) A command cannot finish execution at the same time that another command of the same type starts executing
+  --- op commandIsExecutedAtMostOnce : Identifier -> Formula .
+  --- eq commandIsExecutedAtMostOnce(Id) = True W (commandIsExecuting(Id) U ([] ~ commandIsExecuting(Id))) .
+
+  op hasStatus : NeQualified Status -> Prop .
+  eq (Op | [ nodes : < Id . Q : C | AtS, status: S > NdS ] Conf) |= hasStatus(Id . Q, S)
+    = true .
+
+  eq St |= P = false [owise] .
+
+  vars AtS AtS'     : AttributeSet .
+  vars C            : Cid .
+  vars Conf         : Config .
+  vars GAMMA GAMMA' : Environment .
+  vars Id           : Identifier .
+  vars NdS NdS' MEM : Configuration .
+  vars Op           : Operation .
+  vars P            : Prop .
+  vars Q            : Qualified .
+  vars S            : Status .
+  vars St           : State .
+  vars V            : Value .
+
+  sort CustomModelCheckResult .
+  subsort Bool < CustomModelCheckResult .
+
+  op counterexample : EInputsList EInputsList -> CustomModelCheckResult [ctor format (c! o)] .
+
+  op customModelCheck : State Formula ~> CustomModelCheckResult .
+  eq customModelCheck(St,F) = customModelCheck'(modelCheck(St,F)) .
+
+    op customModelCheck' : ModelCheckResult ~> CustomModelCheckResult .
+    eq customModelCheck'(true) = true .
+    eq customModelCheck'(false) = false .
+    eq customModelCheck'(counterexample(TS1,TS2))
+    = counterexample(extractInterfaceHistory(TS1),extractInterfaceHistory(TS2)) .
+
+      op extractInterfaceHistory : TransitionList -> EInputsList .
+      eq extractInterfaceHistory((nil).TransitionList) = nilEInputsList .
+      eq extractInterfaceHistory(({St,RN} TransList)) = extractInterfaceHistory'(St) # extractInterfaceHistory(TransList) .
+
+        op extractInterfaceHistory' : State -> ExternalInputs .
+        eq extractInterfaceHistory'(Op | [ interface-history : EInput ] Conf) = EInput .
+        eq extractInterfaceHistory'(Op | Conf) = noExternalInputs [owise] .
+
+  sort CustomModelCheckResultEI .
+  subsort Bool < CustomModelCheckResultEI .
+
+  sort CounterexamplesTypes .
+  op transitionCounterexample : -> CounterexamplesTypes .
+
+  sorts EnvInput TransitionCounterexample .
+  subsort EnvInput < TransitionCounterexample < CustomModelCheckResultEI .
+  op Input : ExternalInputs -> EnvInput [ctor format (y! o)] .
+  op Loop{_} : TransitionCounterexample -> EnvInput [ctor format (nr! o+ ni n-i o)] .
+  op NoTransitionCounterexample : -> TransitionCounterexample .
+  op _-->_ : TransitionCounterexample TransitionCounterexample -> TransitionCounterexample [assoc format (ny! no g o) id: NoTransitionCounterexample] .
+
+  op customModelCheck : State Formula CounterexamplesTypes -> CustomModelCheckResultEI .
+  eq customModelCheck(St,F,transitionCounterexample) = customModelCheckEI(St,F) .
+
+  op customModelCheckEI : State Formula ~> CustomModelCheckResult .
+  eq customModelCheckEI(St,F) = customModelCheckEI'(modelCheck(St,F)) .
+
+    op customModelCheckEI' : ModelCheckResult ~> CustomModelCheckResultEI .
+    eq customModelCheckEI'(true) = true .
+    eq customModelCheckEI'(false) = false .
+    eq customModelCheckEI'(counterexample(TS1,TS2))
+    = extractInterfaceHistoryEI(TS1) --> Loop{extractInterfaceHistoryEI(TS2)} .
+
+      op extractInterfaceHistoryEI : TransitionList -> TransitionCounterexample .
+      eq extractInterfaceHistoryEI((nil).TransitionList) = NoTransitionCounterexample .
+      eq extractInterfaceHistoryEI(({St,RN} TransList)) = extractInterfaceHistoryEI'(St) --> extractInterfaceHistoryEI(TransList) .
+
+        op extractInterfaceHistoryEI' : State -> EnvInput .
+        eq extractInterfaceHistoryEI'(Op | [ interface-history : EInput ] Conf) = Input(EInput) .
+        eq extractInterfaceHistoryEI'(Op | Conf) = Input(noExternalInputs) [owise] .
+
+  vars EInput : ExternalInputs .
+  vars F : Formula .
+  vars McR : ModelCheckResult .
+  vars RN : RuleName .
+  vars TS1 TS2 TransList : TransitionList .
+endm

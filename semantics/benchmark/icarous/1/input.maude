@@ -1,0 +1,83 @@
+mod INPUT is
+  protecting TRAFFIC-RESOLUTION-PLAN .
+
+  op input : -> ExternalInputGenerator .
+  eq input = sequenceGenerator(
+    (
+    stateLookup('time,nilarg,val(0))
+    stateLookup('nextWP,nilarg,val(0))
+    stateLookup('trafficConflict,nilarg,val(true))
+    stateLookup('trafficSpeedConflict,nilarg,val(true))
+    stateLookup('preferredSpeed,nilarg,val(-100))
+    stateLookup('velocity,nilarg,array(val(0) # val(0) # val(0)))
+    )
+    #
+    stateLookup('time,nilarg,val(1))
+    #
+    stateLookup('time,nilarg,val(2))
+    #
+    stateLookup('time,nilarg,val(3))
+    #
+    stateLookup('time,nilarg,val(4))
+    #
+    stateLookup('time,nilarg,val(5))
+    #
+    stateLookup('time,nilarg,val(6))
+    #
+    stateLookup('time,nilarg,val(7))
+    #
+    stateLookup('time,nilarg,val(8))
+    #
+    stateLookup('time,nilarg,val(9))
+    #
+    stateLookup('time,nilarg,val(10))
+    #
+    stateLookup('time,nilarg,val(11))
+    #
+    stateLookup('time,nilarg,val(12))
+    #
+    stateLookup('time,nilarg,val(13))
+    #
+    stateLookup('time,nilarg,val(14))
+    #
+    stateLookup('time,nilarg,val(15))
+    #
+    stateLookup('time,nilarg,val(16))
+    #
+    stateLookup('time,nilarg,val(17))
+    #
+    stateLookup('time,nilarg,val(18))
+    #
+    stateLookup('time,nilarg,val(19))
+    #
+    (
+    commandAck('SetVel,(val(-100000.0) val(-100000.0) val(-100000.0)),CommandSentToSystem)
+    stateLookup('time,nilarg,val(20))
+    )
+    #
+    stateLookup('time,nilarg,val(21))
+    #
+    stateLookup('time,nilarg,val(22))
+    #
+    (
+    stateLookup('trafficConflict,nilarg,val(false))
+    stateLookup('trafficSpeedConflict,nilarg,val(false))
+    stateLookup('time,nilarg,val(23))
+    )
+    #
+    stateLookup('time,nilarg,val(24))
+    #
+    stateLookup('time,nilarg,val(25))
+    #
+    stateLookup('time,nilarg,val(26))
+    #
+    stateLookup('time,nilarg,val(27))
+    #
+    stateLookup('time,nilarg,val(28))
+    #
+    stateLookup('time,nilarg,val(29))
+    #
+    stateLookup('time,nilarg,val(30))
+  ) .
+
+endm

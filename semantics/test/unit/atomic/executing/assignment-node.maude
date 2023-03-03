@@ -1,0 +1,276 @@
+mod TEST--ATOMIC--EXECUTING--ASSIGNMENT-NODE is
+
+  pr TEST-BASE .
+
+
+  op tests--atomic--executing--assignment-node : -> TestResults .
+
+  eq tests--atomic--executing--assignment-node = begin tests
+
+    assert "Executing assignment node follows path 1 (executing--assignment--01)" from
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list       | inv: const(unknown),
+                                   exitc: const(val(true)) >
+            < B . A : assignment | status: executing,
+                                   active: true,
+                                   inv: const(unknown),
+                                   post: const(unknown),
+                                   endc: const(unknown),
+                                   exitc: const(unknown),
+                                   (M . A := const(val(2))) > ]
+        [ microacts : mtactions ]
+        [ macroacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list       | inv: const(unknown),
+                                   exitc: const(val(true)) >
+            < B . A : assignment | status: executing,
+                                   active: false,
+                                   inv: const(unknown),
+                                   post: const(unknown),
+                                   endc: const(unknown),
+                                   exitc: const(unknown),
+                                   (M . A := const(val(2))) > ]
+        [ microacts : setOutcome(B . A,interrupted(parentExited)),
+                      setStatus(B . A,failing),
+                      logTransition(B . A, executing, failing, 1) ]
+        [ macroacts : undoMem(M . A) ]
+        [ memory : none ]
+      )
+    end
+
+    assert "Executing assignment node follows path 2 (executing--assignment--02)" from
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list       | inv: const(unknown),
+                                   exitc: const(unknown) >
+            < B . A : assignment | status: executing,
+                                   active: true,
+                                   inv: const(unknown),
+                                   post: const(unknown),
+                                   endc: const(unknown),
+                                   exitc: const(val(true)),
+                                   (M . A := const(val(2))) > ]
+        [ microacts : mtactions ]
+        [ macroacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list       | inv: const(unknown),
+                                   exitc: const(unknown) >
+            < B . A : assignment | status: executing,
+                                   active: false,
+                                   inv: const(unknown),
+                                   post: const(unknown),
+                                   endc: const(unknown),
+                                   exitc: const(val(true)),
+                                   (M . A := const(val(2))) > ]
+        [ microacts : setOutcome(B . A,interrupted(exited)),
+                      setStatus(B . A,failing),
+                      logTransition(B . A, executing, failing, 2) ]
+        [ macroacts : undoMem(M . A) ]
+        [ memory : none ]
+      )
+    end
+
+    assert "Executing assignment node follows path 3 (executing--assignment--03)" from
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list       | inv: const(val(false)),
+                                   exitc: const(unknown) >
+            < B . A : assignment | status: executing,
+                                   active: true,
+                                   inv: const(unknown),
+                                   post: const(unknown),
+                                   endc: const(unknown),
+                                   exitc: const(unknown),
+                                   (M . A := const(val(2))) > ]
+        [ microacts : mtactions ]
+        [ macroacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list       | inv: const(val(false)),
+                                   exitc: const(unknown) >
+            < B . A : assignment | status: executing,
+                                   active: false,
+                                   inv: const(unknown),
+                                   post: const(unknown),
+                                   endc: const(unknown),
+                                   exitc: const(unknown),
+                                   (M . A := const(val(2))) > ]
+        [ microacts : setOutcome(B . A,failure(parentFailed)),
+                      setStatus(B . A,failing),
+                      logTransition(B . A, executing, failing, 3) ]
+        [ macroacts : undoMem(M . A) ]
+        [ memory : none ]
+      )
+    end
+
+    assert "Executing assignment node follows path 4 (executing--assignment--04)" from
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list       | inv: const(unknown),
+                                   exitc: const(unknown) >
+            < B . A : assignment | status: executing,
+                                   active: true,
+                                   inv: const(val(false)),
+                                   post: const(unknown),
+                                   endc: const(unknown),
+                                   exitc: const(unknown),
+                                   (M . A := const(val(2))) > ]
+        [ microacts : mtactions ]
+        [ macroacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list       | inv: const(unknown),
+                                   exitc: const(unknown) >
+            < B . A : assignment | status: executing,
+                                   active: false,
+                                   inv: const(val(false)),
+                                   post: const(unknown),
+                                   endc: const(unknown),
+                                   exitc: const(unknown),
+                                   (M . A := const(val(2))) > ]
+        [ microacts : setOutcome(B . A,failure(invariantFailed)),
+                      setStatus(B . A,failing),
+                      logTransition(B . A, executing, failing, 4) ]
+        [ macroacts : undoMem(M . A) ]
+        [ memory : none ]
+      )
+    end
+
+    assert "Executing assignment node follows path 5 (executing--assignment--05)" from
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list       | inv: const(unknown),
+                                   exitc: const(unknown) >
+            < B . A : assignment | status: executing,
+                                   active: true,
+                                   inv: const(unknown),
+                                   post: const(unknown),
+                                   endc: const(val(true)),
+                                   exitc: const(unknown),
+                                   (M . A := const(val(2))) > ]
+        [ microacts : mtactions ]
+        [ macroacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list       | inv: const(unknown),
+                                   exitc: const(unknown) >
+            < B . A : assignment | status: executing,
+                                   active: false,
+                                   inv: const(unknown),
+                                   post: const(unknown),
+                                   endc: const(val(true)),
+                                   exitc: const(unknown),
+                                   (M . A := const(val(2))) > ]
+        [ microacts : setOutcome(B . A,failure(postconditionFailed)),
+                      setStatus(B . A,iterationEnded),
+                      logTransition(B . A, executing, iterationEnded, 5) ]
+        [ macroacts : mtactions ]
+        [ memory : none ]
+      )
+    end
+
+    assert "Executing assignment node follows path 6 (executing--assignment--06)" from
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list       | inv: const(unknown),
+                                   exitc: const(unknown) >
+            < B . A : assignment | status: executing,
+                                   active: true,
+                                   inv: const(unknown),
+                                   post: const(val(true)),
+                                   endc: const(val(true)),
+                                   exitc: const(unknown),
+                                   (M . A := const(val(2))) > ]
+        [ microacts : mtactions ]
+        [ macroacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list       | inv: const(unknown),
+                                   exitc: const(unknown) >
+            < B . A : assignment | status: executing,
+                                   active: false,
+                                   inv: const(unknown),
+                                   post: const(val(true)),
+                                   endc: const(val(true)),
+                                   exitc: const(unknown),
+                                   (M . A := const(val(2))) > ]
+        [ microacts : setOutcome(B . A,success),
+                      setStatus(B . A,iterationEnded),
+                      logTransition(B . A, executing, iterationEnded, 6) ]
+        [ macroacts : mtactions ]
+        [ memory : none ]
+      )
+    end
+
+    assert "Executing assignment node follows path 7 (executing--assignment--07)" from
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list       | inv: const(unknown),
+                                   exitc: const(unknown) >
+            < B . A : assignment | status: executing,
+                                   active: true,
+                                   inv: const(unknown),
+                                   post: const(unknown),
+                                   endc: const(unknown),
+                                   exitc: const(unknown),
+                                   (M . A := const(val(2))) > ]
+        [ microacts : mtactions ]
+        [ macroacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list       | inv: const(unknown),
+                                   exitc: const(unknown) >
+            < B . A : assignment | status: executing,
+                                   active: false,
+                                   inv: const(unknown),
+                                   post: const(unknown),
+                                   endc: const(unknown),
+                                   exitc: const(unknown),
+                                   (M . A := const(val(2))) > ]
+        [ microacts : mtactions ]
+        [ macroacts : mtactions ]
+        [ memory : none ]
+      )
+    end
+
+  end tests .
+
+endm

@@ -1,0 +1,213 @@
+mod TEST--ATOMIC--EXECUTING--LIBRARY-NODE is
+
+  pr TEST-BASE .
+
+
+  op tests--atomic--executing--library-node : -> TestResults .
+
+  eq tests--atomic--executing--library-node = begin tests
+
+    assert "Executing library node follows path 1 (executing--library--01)" from
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : library | inv: const(unknown),
+                                exitc: const(val(true)) >
+            < B . A : library | status: executing,
+                                active: true,
+                                inv: const(unknown),
+                                post: const(unknown),
+                                endc: const(unknown),
+                                exitc: const(unknown) > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : library | inv: const(unknown),
+                                exitc: const(val(true)) >
+            < B . A : library | status: executing,
+                                active: false,
+                                inv: const(unknown),
+                                post: const(unknown),
+                                endc: const(unknown),
+                                exitc: const(unknown) > ]
+        [ microacts : setOutcome(B . A,interrupted(parentExited)),
+                      setStatus(B . A,failing),
+                      logTransition(B . A, executing, failing, 1) ]
+        [ memory : none ]
+      )
+    end
+
+    assert "Executing library node follows path 2 (executing--library--02)" from
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : library | inv: const(unknown),
+                                exitc: const(unknown) >
+            < B . A : library | status: executing,
+                                active: true,
+                                inv: const(unknown),
+                                post: const(unknown),
+                                endc: const(unknown),
+                                exitc: const(val(true)) > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : library | inv: const(unknown),
+                                exitc: const(unknown) >
+            < B . A : library | status: executing,
+                                active: false,
+                                inv: const(unknown),
+                                post: const(unknown),
+                                endc: const(unknown),
+                                exitc: const(val(true)) > ]
+        [ microacts : setOutcome(B . A,interrupted(exited)),
+                      setStatus(B . A,failing),
+                      logTransition(B . A, executing, failing, 2) ]
+        [ memory : none ]
+      )
+    end
+
+    assert "Executing library node follows path 3 (executing--library--03)" from
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : library | inv: const(val(false)),
+                                exitc: const(unknown) >
+            < B . A : library | status: executing,
+                                active: true,
+                                inv: const(unknown),
+                                post: const(unknown),
+                                endc: const(unknown),
+                                exitc: const(unknown) > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : library | inv: const(val(false)),
+                                exitc: const(unknown) >
+            < B . A : library | status: executing,
+                                active: false,
+                                inv: const(unknown),
+                                post: const(unknown),
+                                endc: const(unknown),
+                                exitc: const(unknown) > ]
+        [ microacts : setOutcome(B . A,failure(parentFailed)),
+                      setStatus(B . A,failing),
+                      logTransition(B . A, executing, failing, 3) ]
+        [ memory : none ]
+      )
+    end
+
+    assert "Executing library node follows path 4 (executing--library--04)" from
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : library | inv: const(unknown),
+                                exitc: const(unknown) >
+            < B . A : library | status: executing,
+                                active: true,
+                                inv: const(val(false)),
+                                post: const(unknown),
+                                endc: const(unknown),
+                                exitc: const(unknown) > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : library | inv: const(unknown),
+                                exitc: const(unknown) >
+            < B . A : library | status: executing,
+                                active: false,
+                                inv: const(val(false)),
+                                post: const(unknown),
+                                endc: const(unknown),
+                                exitc: const(unknown) > ]
+        [ microacts : setOutcome(B . A,failure(invariantFailed)),
+                      setStatus(B . A,failing),
+                      logTransition(B . A, executing, failing, 4) ]
+        [ memory : none ]
+      )
+    end
+
+    assert "Executing library node follows path 5 (executing--library--05)" from
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : library | inv: const(unknown),
+                                exitc: const(unknown) >
+            < B . A : library | status: executing,
+                                active: true,
+                                inv: const(unknown),
+                                post: const(unknown),
+                                endc: const(val(true)),
+                                exitc: const(unknown) > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : library | inv: const(unknown),
+                                exitc: const(unknown) >
+            < B . A : library | status: executing,
+                                active: false,
+                                inv: const(unknown),
+                                post: const(unknown),
+                                endc: const(val(true)),
+                                exitc: const(unknown) > ]
+        [ microacts : setStatus(B . A,finishing),
+                      logTransition(B . A, executing, finishing, 5) ]
+        [ memory : none ]
+      )
+    end
+
+    assert "Executing library node follows path 6 (executing--library--06)" from
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : library | inv: const(unknown),
+                                exitc: const(unknown) >
+            < B . A : library | status: executing,
+                                active: true,
+                                inv: const(unknown),
+                                post: const(unknown),
+                                endc: const(unknown),
+                                exitc: const(unknown) > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : library | inv: const(unknown),
+                                exitc: const(unknown) >
+            < B . A : library | status: executing,
+                                active: false,
+                                inv: const(unknown),
+                                post: const(unknown),
+                                endc: const(unknown),
+                                exitc: const(unknown) > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+      )
+    end
+
+  end tests .
+
+endm

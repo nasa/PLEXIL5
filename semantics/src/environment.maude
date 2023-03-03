@@ -1,0 +1,96 @@
+fmod VARIABLE-DECLARATION is
+  protecting QUALIFIED .
+  protecting VALUE .
+  sort Variable .
+
+  op _:_  : Qualified Value -> Variable [ctor prec 40] .
+endfm
+
+fmod STATE-ENTRY is
+  protecting QUALIFIED .
+  protecting VALUE .
+  protecting ARGUMENTS .
+  sort StateEntry .
+
+  op _(_):_  : Qualified Arguments Value -> StateEntry [ctor prec 40] .
+endfm
+
+*** Global variable
+fmod GLOBAL is
+  protecting STATE-ENTRY .
+  protecting COMMANDINFO .
+  sort Global .
+  subsort StateEntry < Global .
+  subsort CommandInfo < Global .
+endfm
+
+view Global from TRIV to GLOBAL is
+  sort Elt to Global .
+endv
+
+fmod SINGLE-INPUT is
+  protecting QUALIFIED .
+  protecting PARAMETER .
+  protecting VALUE .
+  protecting COMMAND-HANDLE .
+
+  sort Input StateInput CommandInput .
+  subsort StateInput CommandInput < Input .
+
+  op stateLookup   : Identifier Arguments Value         -> StateInput   .
+  op commandResult : Identifier Arguments Value         -> CommandInput .
+  op commandAck    : Identifier Arguments CommandHandle -> CommandInput .
+endfm
+
+view Input from TRIV to SINGLE-INPUT is
+  sort Elt to Input .
+endv
+
+fmod EXTERNAL-INPUT is
+  protecting LIST{Input}
+    * ( sort NeList{Input} to NeExternalInputs,
+        sort List{Input} to ExternalInputs,
+        op nil to noExternalInputs ) .
+endfm
+
+fmod EXTERNAL-INPUT-LIST is
+  protecting EXTERNAL-INPUT .
+  sort EInputsList NeEInputsList .
+  subsort ExternalInputs < NeEInputsList < EInputsList .
+  op nilEInputsList : -> EInputsList .
+  op _#_ : EInputsList   EInputsList   -> EInputsList   [assoc id: nilEInputsList] .
+  op _#_ : NeEInputsList EInputsList   -> NeEInputsList [ditto] .
+  op _#_ : EInputsList   NeEInputsList -> NeEInputsList [ditto] .
+endfm
+
+*** Set of global variables
+fmod ENVIRONMENT is
+  protecting SET{Global} * ( sort NeSet{Global} to NeEnvironment,
+                             sort Set{Global} to Environment,
+                             op empty to mtenvironment ) .
+
+  vars E E' : Environment .
+  vars Q Q' : Qualified .
+  vars V V' : Value .
+  vars H H' : CommandHandle .
+  vars Args : Arguments .
+
+  *** TODO: To erase if it is not used
+  op _/_ : Environment Environment -> [Environment] [prec 80] .
+  eq (Q(Args) : V, E) / (Q(Args) : V', E') = (Q(Args) : V', E) / E' .
+  eq E / (Q(Args) : V', E') = (Q(Args) : V', E) / E' [owise] .
+  eq E / mtenvironment = E .
+
+endfm
+
+*** List of Environments TODO: Possibly convert into List{X}
+fmod ENVIRONMENTS is
+  protecting ENVIRONMENT .
+  sort EnvironmentList .
+  sort Environments .
+  subsort Environment < EnvironmentList .
+
+  op nilenvironments : -> EnvironmentList .
+  op _#_ : EnvironmentList EnvironmentList -> EnvironmentList [assoc id: nilenvironments] .
+  op `{_`} : EnvironmentList -> Environments .
+endfm

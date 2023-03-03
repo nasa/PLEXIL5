@@ -1,0 +1,116 @@
+*** Original: benchmarks/lookups/synchronous/Example1.ple
+mod EXAMPLE1 is
+ protecting PLEXILITE-PREDS .
+
+
+op Example1 : -> Plexil .
+eq Example1 = list(
+      'Example1,
+      (('guardTime : val(0.0)) ('asyncLookupTime : val(0.0)) ),
+      (
+        (endc:	areChildren?('Example1, finished)),
+        (inv:	const(val(true))),
+        (post:	const(val(true))),
+        (pre:	const(val(true))),
+        (repeatc:	const(val(false))),
+        (skip:	const(val(false))),
+        (startc:	const(val(true)))
+        ),
+        (Guard AsyncLookup Printer)
+      ) .
+
+
+op Guard : -> Plexil .
+eq Guard = assignment(
+      'Guard,
+      nilocdecl,
+      (
+        (endc:	const(val(true))),
+        (inv:	const(val(true))),
+        (post:	const(val(true))),
+        (pre:	const(val(true))),
+        (repeatc:	const(val(false))),
+        (skip:	const(val(false))),
+        (startc:	const(val(true))),
+        (priority: 1)
+        ),
+      (('guardTime . 'Example1) := lookup ('time))
+      ) .
+
+
+op AsyncLookup : -> Plexil .
+eq AsyncLookup = assignment(
+      'AsyncLookup,
+      nilocdecl,
+      (
+        (endc:	const(val(true))),
+        (inv:	const(val(true))),
+        (post:	const(val(true))),
+        (pre:	const(val(true))),
+        (repeatc:	const(val(false))),
+        (skip:	const(val(false))),
+        (startc:	((isStatus?(('Guard . 'Example1),iterationEnded))) and (lookupOnChange ('time,val(0)) > var(('guardTime . 'Example1)))),
+        (priority: 1)
+        ),
+      (('asyncLookupTime . 'Example1) := lookup ('time))
+      ) .
+
+
+op Printer : -> Plexil .
+eq Printer = command(
+      'Printer,
+      nilocdecl,
+      (
+        (endc:	const(val(true))),
+        (inv:	const(val(true))),
+        (post:	const(val(true))),
+        (pre:	const(val(true))),
+        (repeatc:	const(val(false))),
+        (skip:	const(val(false))),
+        (startc:	(isStatus?(('AsyncLookup . 'Example1),iterationEnded)))
+        ),
+          ( ('pprint) /
+            (const(val("\n"))
+              const(val("guardTime ="))
+              var('guardTime)
+              const(val("\\\n"))
+              const(val("asyncLookupTime ="))
+              var('asyncLookupTime)
+              )
+          )
+      ) .
+
+
+  op Example1Env0 : -> EnvironmentList .
+  eq Example1Env0 =
+    'time : unknown
+    #
+    'time : val(10.0)
+    #
+    'time : val(11.0)
+  .
+
+  op Example1Env1 : -> EnvironmentList .
+  eq Example1Env1 =
+    'time : val(10.0)
+    #
+    'time : val(11.0)
+    #
+    'time : val(12.0)
+    #
+    'time : val(13.0)
+    *** 'time : val(14.0) #
+    *** 'time : val(15.0) #
+    *** 'time : val(16.0) #
+    *** 'time : val(17.0) #
+    *** 'time : val(18.0) #
+    *** 'time : val(19.0) #
+    *** 'time : val(20.0) #
+    *** 'time : val(21.0) #
+    *** 'time : val(22.0) #
+    *** 'time : val(23.0)
+  .
+
+endm
+
+eof

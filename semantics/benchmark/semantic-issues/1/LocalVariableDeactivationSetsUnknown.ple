@@ -1,0 +1,26 @@
+Command pprint(...);
+
+LocalVariableDeactivationSetsUnknown : {
+  Boolean doRepeat;
+  Repeat doRepeat;
+  doRepeat = true;
+}
+/* EXECUTION NOTES
+
+Behavior:
+- Expected: Loop indefinitely
+- Actual: Deadlock on the root node ITERATION_ENDED state
+
+Explanation:
+  When the root node transitions from FINISHING -> ITERATION_ENDED its local
+  variables are deactivated with method NodeImpl::deactivateLocalVariables().
+  This implies that the values previously hold by those variables is ignored
+  and in practice its value becomes UNKNOWN. Hence, the REPEAT_CONDITION of
+  the root node is evaluated to UNKNOWN and PLEXIL does not triggers a
+  REPEAT/RESET transition to the WAITING state.
+
+Formal semantics:
+  At date 6th January 2021, the formal semantics does not mimics the PLEXIL
+  implementation because it does not feel natural but a specific
+  implementation-dependent pitfall.
+*/

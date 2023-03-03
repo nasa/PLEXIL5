@@ -1,0 +1,47 @@
+Real Command get_real ();
+Command pprint (...);
+Real Lookup r1;
+Real Lookup r2;
+
+TestUnknown:
+{
+  Real r, r1, r2;
+
+  TestVars1: Concurrence {
+    PostCondition (r1==0.0 && r2==1.0);
+    r1 = Lookup(r1);
+//    if (isKnown(r1)) pprint("r1: ", r1); endif
+    r2 = Lookup(r2);
+//    if (isKnown(r2)) pprint("r2: ", r2); endif
+  }
+
+
+  TestReal1 : {
+    StartCondition TestVars1.state == FINISHED;
+    PostCondition r==1.0;
+    r = get_real ();
+//    pprint ("r:", r);    
+  }
+
+  TestReal2 : {
+    StartCondition TestReal1.state == FINISHED;
+    PostCondition r==0.0;
+    r = get_real ();
+  }
+
+  Printer0 : {
+    StartCondition TestVars1.state == FINISHED;
+    pprint("r1:", r1, "r2:", r2);
+  }
+
+  Printer1 : {
+    StartCondition TestReal1.state == FINISHED;
+    pprint("r:", r);
+  }
+
+  Printer2 : {
+    StartCondition TestReal2.state == FINISHED;
+    pprint("r:", r);
+  }
+
+}

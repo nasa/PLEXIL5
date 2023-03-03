@@ -1,0 +1,24 @@
+// Simulation script for testing the newly added support for 'unknown' value
+
+initial-state {
+  state time           () = 0 : int;
+  state r1             () =   0.0 : real;
+  state r2             () =   1.0 : real;  
+}
+
+
+script {
+
+  state time           () = 1 : int;
+
+  command         get_real () = 1.0 : real;
+  command-success get_real ();
+
+  state time           () = 2 : int;
+  
+  command         get_real () = 0.0 : real;
+  command-success get_real ();
+
+  state time           () = 3 : int;
+  
+}

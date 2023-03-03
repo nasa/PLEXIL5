@@ -1,0 +1,81 @@
+mod TEST--COMPILER is
+
+pr COMPILER .
+pr TEST-BASE .
+
+op compiler--tests : -> TestResults .
+eq compiler--tests = compile--compiler--tests .
+
+op anEmptyNode : -> PlexilEmpty .
+eq anEmptyNode = empty('aNode, nilocdecl, none) .
+
+var PrePL : PrePlexilList .
+
+op aListNodeEmbedding : PrePlexilList -> PlexilList .
+eq aListNodeEmbedding(PrePL) = list('aListNode, nilocdecl, none, PrePL) .
+
+op compile--compiler--tests : -> TestResults .
+eq compile--compiler--tests =
+begin tests
+
+    assert "compiler__compile(PL) add by default an empty environment generator" from
+      testSystem(
+        compile(anEmptyNode)
+      )
+    reaches
+      testSystem(
+        compile(anEmptyNode,emptyEnvGen(30))
+      )
+    end
+
+    assert "compiler__compile(PL) generated nodes" from
+      testSystem(
+        compile(anEmptyNode)
+      )
+    reaches
+      testSystem(
+        compile(anEmptyNode,emptyEnvGen(30))
+      )
+    end
+
+    assert "compiler__compile(PL) sanitizes ids" from
+      testQualifiedId(
+        getOid(
+          getObject(
+            'aNode . 'aListNode,
+            getNodes(
+              getConfig(
+                compile(aListNodeEmbedding(anEmptyNode))
+              )
+            )
+          )
+        )
+      )
+    reaches
+      testQualifiedId('aNode . 'aListNode)
+    end
+
+    assert "compiler__compile(PL) generates an initial stop operation" from
+      testOperation(
+        getOperation(
+          compile(anEmptyNode)
+        )
+      )
+    reaches
+      testOperation(
+        stop
+      )
+    end
+
+    assert "compiler__compile(PL) generates a configuration similar to emptyConfig" from
+      getConfig(
+        compile(anEmptyNode)
+      ) / ([ nodes : none ] [ generator : noEnvGen ])
+    reaches
+      emptyConfig
+    end
+
+end tests
+.
+
+endm

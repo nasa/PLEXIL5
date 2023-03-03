@@ -1,0 +1,239 @@
+mod TEST--ATOMIC--FINISHING--LIST-NODE is
+
+  pr TEST-BASE .
+
+
+  op tests--atomic--finishing--list-node : -> TestResults .
+
+  eq tests--atomic--finishing--list-node = begin tests
+
+    assert "Finishing list node follows path 1 (finishing--list--01)" from
+      finishing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list | inv: const(unknown),
+                             exitc: const(val(true)) >
+            < B . A : list | status: finishing,
+                             active: true,
+                             inv: const(unknown),
+                             post: const(unknown),
+                             exitc: const(unknown) > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      finishing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list | inv: const(unknown),
+                             exitc: const(val(true)) >
+            < B . A : list | status: finishing,
+                             active: false,
+                             inv: const(unknown),
+                             post: const(unknown),
+                             exitc: const(unknown) > ]
+        [ microacts : setOutcome(B . A,interrupted(parentExited)),
+                      setStatus(B . A,failing),
+                      logTransition(B . A, finishing, failing, 1) ]
+        [ memory : none ]
+      )
+    end
+
+    assert "Finishing list node follows path 2 (finishing--list--02)" from
+      finishing(
+        [ environment : mtenvironment ]
+        [ nodes : < A     : list | inv: const(unknown),
+                           exitc: const(unknown) >
+          < B . A : list | status: finishing,
+                           active: true,
+                           inv: const(unknown),
+                           post: const(unknown),
+                           exitc: const(val(true)) > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      finishing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list | inv: const(unknown),
+                             exitc: const(unknown) >
+            < B . A : list | status: finishing,
+                             active: false,
+                             inv: const(unknown),
+                             post: const(unknown),
+                             exitc: const(val(true)) > ]
+        [ microacts : setOutcome(B . A,interrupted(exited)),
+                      setStatus(B . A,failing),
+                      logTransition(B . A, finishing, failing, 2) ]
+        [ memory : none ]
+      )
+    end
+
+    assert "Finishing list node follows path 3 (finishing--list--03)" from
+      finishing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list | inv: const(val(false)),
+                             exitc: const(unknown) >
+            < B . A : list | status: finishing,
+                             active: true,
+                             inv: const(unknown),
+                             post: const(unknown),
+                             exitc: const(unknown) > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      finishing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list | inv: const(val(false)),
+                             exitc: const(unknown) >
+            < B . A : list | status: finishing,
+                             active: false,
+                             inv: const(unknown),
+                             post: const(unknown),
+                             exitc: const(unknown) > ]
+        [ microacts : setOutcome(B . A,failure(parentFailed)),
+                      setStatus(B . A,failing),
+                      logTransition(B . A, finishing, failing, 3) ]
+        [ memory : none ]
+      )
+    end
+
+    assert "Finishing list node follows path 4 (finishing--list--04)" from
+      finishing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list | inv: const(unknown),
+                             exitc: const(unknown) >
+            < B . A : list | status: finishing,
+                             active: true,
+                             inv: const(val(false)),
+                             post: const(unknown),
+                             exitc: const(unknown) > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      finishing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list | inv: const(unknown),
+                             exitc: const(unknown) >
+            < B . A : list | status: finishing,
+                             active: false,
+                             inv: const(val(false)),
+                             post: const(unknown),
+                             exitc: const(unknown) > ]
+        [ microacts : setOutcome(B . A,failure(invariantFailed)),
+                      setStatus(B . A,failing),
+                      logTransition(B . A, finishing, failing, 4) ]
+        [ memory : none ]
+      )
+    end
+
+    assert "Finishing list node follows path 5 (finishing--list--05)" from
+      finishing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A         : list  | inv: const(unknown),
+                                  exitc: const(unknown) >
+            < B . A     : list  | status: finishing,
+                                  active: true,
+                                  inv: const(unknown),
+                                  post: const(val(false)),
+                                  exitc: const(unknown) >
+            < C . B . A : empty | status: waiting > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      finishing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A         : list  | inv: const(unknown),
+                                  exitc: const(unknown) >
+            < B . A     : list  | status: finishing,
+                                  active: false,
+                                  inv: const(unknown),
+                                  post: const(val(false)),
+                                  exitc: const(unknown) >
+            < C . B . A : empty | status: waiting > ]
+        [ microacts : setOutcome(B . A,failure(postconditionFailed)),
+                      setStatus(B . A,iterationEnded),
+                      logTransition(B . A, finishing, iterationEnded, 5) ]
+        [ memory : none ]
+      )
+    end
+
+    assert "Finishing list node follows path 6 (finishing--list--06)" from
+      finishing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A         : list  | inv: const(unknown),
+                                  exitc: const(unknown) >
+            < B . A     : list  | status: finishing,
+                                  active: true,
+                                  inv: const(unknown),
+                                  post: const(val(true)),
+                                  exitc: const(unknown) >
+            < C . B . A : empty | status: finished > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      finishing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A         : list  | inv: const(unknown),
+                                  exitc: const(unknown) >
+            < B . A     : list  | status: finishing,
+                                  active: false,
+                                  inv: const(unknown),
+                                  post: const(val(true)),
+                                  exitc: const(unknown) >
+            < C . B . A : empty | status: finished > ]
+        [ microacts : setOutcome(B . A,success),
+                      setStatus(B . A,iterationEnded),
+                      logTransition(B . A, finishing, iterationEnded, 6) ]
+        [ memory : none ]
+      )
+    end
+
+    assert "Finishing list node follows path 7 (finishing--list--07)" from
+      finishing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A         : list  | inv: const(unknown),
+                                  exitc: const(unknown) >
+            < B . A     : list  | status: finishing,
+                                  active: true,
+                                  inv: const(unknown),
+                                  post: const(unknown),
+                                  exitc: const(unknown) >
+            < C . B . A : empty | status: executing > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      finishing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A         : list  | inv: const(unknown),
+                                  exitc: const(unknown) >
+            < B . A     : list  | status: finishing,
+                                  active: false,
+                                  inv: const(unknown),
+                                  post: const(unknown),
+                                  exitc: const(unknown) >
+            < C . B . A : empty | status: executing > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+      )
+    end
+
+  end tests .
+
+endm

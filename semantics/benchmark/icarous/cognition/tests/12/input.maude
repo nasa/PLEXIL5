@@ -1,0 +1,33 @@
+mod INPUT is
+  protecting PLEXILITE .
+  op input : -> ExternalInputGenerator .
+  eq input = sequenceGenerator(
+    stateLookup('time,nilarg,val(0))
+    stateLookup('resolutionType,nilarg,val(0))
+    stateLookup('inConflict,nilarg,val(true))
+    #
+    stateLookup('time,nilarg,val(1))
+    #
+    stateLookup('time,nilarg,val(2))
+    stateLookup('resolutionType,nilarg,val(1))
+    commandAck('SetSpeed,nilarg,CommandSuccess)
+    #
+    stateLookup('time,nilarg,val(3))
+    #
+    stateLookup('time,nilarg,val(4))
+    stateLookup('resolutionType,nilarg,val(2))
+    commandAck('SetAltitude,nilarg,CommandSuccess)
+    #
+    stateLookup('time,nilarg,val(5))
+    #
+    stateLookup('time,nilarg,val(6))
+    stateLookup('resolutionType,nilarg,val(3))
+    commandAck('SetTrack,nilarg,CommandSuccess)
+    #
+    stateLookup('time,nilarg,val(7))
+    #
+    stateLookup('time,nilarg,val(8))
+    stateLookup('inConflict,nilarg,val(false))
+    commandAck('SetVerticalSpeed,nilarg,CommandSuccess)
+  ) .
+endm

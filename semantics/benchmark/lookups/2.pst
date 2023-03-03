@@ -1,0 +1,18 @@
+initial-state {
+    state tick () = 0 : int;
+}
+
+script {
+    state tick () = 1 : int;
+    state tick () = 2 : int;
+    state tick () = 3 : int;
+    state tick () = 4 : int;
+    state tick () = 5 : int;
+    state tick () = 6 : int;
+    state tick () = 7 : int;
+    state tick () = 8 : int;
+    state tick () = 9 : int;
+    state tick () = 10 : int;
+    state tick () = 11 : int;
+    state tick () = 12 : int;
+}

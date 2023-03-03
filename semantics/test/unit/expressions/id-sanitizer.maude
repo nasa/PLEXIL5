@@ -1,0 +1,863 @@
+mod TEST--ID-SANITIZER is
+
+pr TEST-BASE .
+
+
+op id-sanitizer--tests : -> TestResults .
+eq id-sanitizer--tests =
+        id-sanitizer--expressions--tests
+        + id-sanitizer--attributes--tests .
+
+
+vars Cfg      : Configuration .
+vars I I'     : Identifier .
+vars V W      : Identifier .
+vars E E'     : Expression .
+vars Q Q' Q'' : NeQualified .
+vars QV QW    : NeQualified .
+
+op id-sanitizer--attributes--tests : -> TestResults .
+ceq id-sanitizer--attributes--tests =
+begin tests
+
+    assert "repeatc: attribute is sanitized" from
+        testAttributes( sanitizeIds(
+            repeatc: E,
+            Q,
+            Cfg
+            )
+        )
+        reaches
+        testAttributes(
+            repeatc: E'
+        )
+    end
+
+    assert "startc: attribute is sanitized" from
+        testAttributes( sanitizeIds(
+            startc: E,
+            Q,
+            Cfg
+            )
+        )
+        reaches
+        testAttributes(
+            startc: E'
+        )
+    end
+
+    assert "endc: attribute is sanitized" from
+        testAttributes( sanitizeIds(
+            endc: E,
+            Q,
+            Cfg
+            )
+        )
+        reaches
+        testAttributes(
+            endc: E'
+        )
+    end
+
+    assert "exitc: attribute is sanitized" from
+        testAttributes( sanitizeIds(
+            exitc: E,
+            Q,
+            Cfg
+            )
+        )
+        reaches
+        testAttributes(
+            exitc: E'
+        )
+    end
+
+    assert "post: attribute is sanitized" from
+        testAttributes( sanitizeIds(
+            post: E,
+            Q,
+            Cfg
+            )
+        )
+        reaches
+        testAttributes(
+            post: E'
+        )
+    end
+
+    assert "skip: attribute is sanitized" from
+        testAttributes( sanitizeIds(
+            skip: E,
+            Q,
+            Cfg
+            )
+        )
+        reaches
+        testAttributes(
+            skip: E'
+        )
+    end
+
+    assert "pre: attribute is sanitized" from
+        testAttributes( sanitizeIds(
+            pre: E,
+            Q,
+            Cfg
+            )
+        )
+        reaches
+        testAttributes(
+            pre: E'
+        )
+    end
+
+    assert "inv: attribute is sanitized" from
+        testAttributes( sanitizeIds(
+            inv: E,
+            Q,
+            Cfg
+            )
+        )
+        reaches
+        testAttributes(
+            inv: E'
+        )
+    end
+
+end tests
+if
+    Cfg :=  < 'C . 'B . 'A : list | none >
+            <      'B . 'A : list | none >
+            <           'A : list | none >
+    /\ I  := 'B
+    /\ E  := isStatus?(I,waiting)
+    /\ Q  := 'C . 'A
+    /\ Q' := 'B . 'A
+    /\ E' := isStatus?(getFullyQualifiedNodeId(I,Q,Cfg),waiting)
+.
+
+
+op id-sanitizer--expressions--tests : -> TestResults .
+ceq id-sanitizer--expressions--tests =
+begin tests
+
+    assert "An `isFailure?` expression computes its fully qualified node id" from
+        testExpression(
+            sanitizeIds(
+                isFailure?(I, parentExited),
+                Q,
+                Cfg
+            )
+        )
+        reaches
+        testExpression(
+            isFailure?(Q', parentExited)
+        )
+    end
+
+    assert "An `isStatus?` expression computes its fully qualified node id" from
+        testExpression(
+            sanitizeIds(
+                isStatus?(I, waiting),
+                Q,
+                Cfg
+            )
+        )
+        reaches
+        testExpression(
+            isStatus?(Q', waiting)
+        )
+    end
+
+    assert "An `isOutcome?` expression computes its fully qualified node id" from
+        testExpression(
+            sanitizeIds(
+                isOutcome?(I,success),
+                Q,
+                Cfg
+            )
+        )
+        reaches
+        testExpression(
+            isOutcome?(Q',success)
+        )
+    end
+
+    assert "An `isOutcomeFailure?` expression computes its fully qualified node id" from
+        testExpression(
+            sanitizeIds(
+                isOutcomeFailure?(I),
+                Q,
+                Cfg
+            )
+        )
+        reaches
+        testExpression(
+            isOutcomeFailure?(Q')
+        )
+    end
+
+    assert "An `areChildren?` expression computes its fully qualified node id" from
+        testExpression(
+            sanitizeIds(
+                areChildren?(I, waiting),
+                Q,
+                Cfg
+            )
+        )
+        reaches
+        testExpression(
+            areChildren?(Q', waiting)
+        )
+    end
+
+    assert "An `_and_` expression propagates the sanitization" from
+        testExpression(
+            sanitizeIds(
+                isStatus?(I, waiting) and isStatus?(I', inactive),
+                Q,
+                Cfg
+            )
+        )
+        reaches
+        testExpression(
+            isStatus?(Q', waiting)
+            and
+            isStatus?(Q'', inactive)
+        )
+    end
+
+    assert "An `_or_` expression propagates the sanitization" from
+        testExpression(
+            sanitizeIds(
+                isStatus?(I, waiting) or isStatus?(I', inactive),
+                Q,
+                Cfg
+            )
+        )
+        reaches
+        testExpression(
+            isStatus?(Q', waiting)
+            or
+            isStatus?(Q'', inactive)
+        )
+    end
+
+    assert "An `not_` expression propagates the sanitization" from
+        testExpression(
+            sanitizeIds(
+                not isStatus?(I, waiting),
+                Q,
+                Cfg
+            )
+        )
+        reaches
+        testExpression(
+            not isStatus?(Q', waiting)
+        )
+    end
+
+    assert "A `var` expression propagates the sanitization" from
+        testExpression(
+            sanitizeIds(
+                var(I),
+                Q,
+                Cfg
+            )
+        )
+        testExpression(
+            sanitizeIds(
+                var(V),
+                Q,
+                Cfg
+            )
+        )
+        reaches
+        testExpression(
+            var(unresolvedVariable(I,Q))
+        )
+        testExpression(
+            var(QV)
+        )
+    end
+
+    assert "A comparison expression propagates the sanitization" from
+        testExpression(
+            sanitizeIds(
+                var(V) < var(W),
+                Q,
+                Cfg
+            )
+        )
+        testExpression(
+            sanitizeIds(
+                var(V) <= var(W),
+                Q,
+                Cfg
+            )
+        )
+        testExpression(
+            sanitizeIds(
+                var(V) > var(W),
+                Q,
+                Cfg
+            )
+        )
+        testExpression(
+            sanitizeIds(
+                var(V) >= var(W),
+                Q,
+                Cfg
+            )
+        )
+        testExpression(
+            sanitizeIds(
+                var(V) nequ var(W),
+                Q,
+                Cfg
+            )
+        )
+        testExpression(
+            sanitizeIds(
+                var(V) equ var(W),
+                Q,
+                Cfg
+            )
+        )
+        reaches
+        testExpression(
+            var(QV) < var(QW)
+        )
+        testExpression(
+            var(QV) <= var(QW)
+        )
+        testExpression(
+            var(QV) > var(QW)
+        )
+        testExpression(
+            var(QV) >= var(QW)
+        )
+        testExpression(
+            var(QV) equ var(QW)
+        )
+        testExpression(
+            var(QV) nequ var(QW)
+        )
+    end
+
+    assert "An `isKnown` expression propagates the sanitization" from
+        testExpression(
+            sanitizeIds(
+                isKnown(var(V)),
+                Q,
+                Cfg
+            )
+        )
+        reaches
+        testExpression(
+            isKnown(var(QV))
+        )
+    end
+
+    assert "An `arrayVar` expression propagates the sanitization" from
+        testExpression(
+            sanitizeIds(
+                arrayVar(V,var(W)),
+                Q,
+                Cfg
+            )
+        )
+        reaches
+        testExpression(
+            arrayVar(QV,var(QW))
+        )
+    end
+
+    assert "A arithmetic expression propagates the sanitization" from
+        testExpression(
+            sanitizeIds(
+                var(V) + var(W),
+                Q,
+                Cfg
+            )
+        )
+        testExpression(
+            sanitizeIds(
+                var(V) - var(W),
+                Q,
+                Cfg
+            )
+        )
+        testExpression(
+            sanitizeIds(
+                var(V) * var(W),
+                Q,
+                Cfg
+            )
+        )
+        reaches
+        testExpression(
+            var(QV) + var(QW)
+        )
+        testExpression(
+            var(QV) - var(QW)
+        )
+        testExpression(
+            var(QV) * var(QW)
+        )
+    end
+
+    assert "A `const` expression returns itself" from
+        testExpression(
+            sanitizeIds(
+                const(val(1)),
+                Q,
+                Cfg
+            )
+        )
+        reaches
+        testExpression(
+            const(val(1))
+        )
+    end
+
+    assert "A `lookup` expression returns itself" from
+        testExpression(
+            sanitizeIds(
+                lookup(I,nilarg),
+                Q,
+                Cfg
+            )
+        )
+        testExpression(
+            sanitizeIds(
+                lookup('state,nilarg),
+                Q,
+                Cfg
+            )
+        )
+        reaches
+        testExpression(
+            lookup('state,nilarg)
+        )
+        testExpression(
+            lookup(I,nilarg)
+        )
+    end
+
+end tests
+if
+    Cfg :=  < 'C . 'B . 'A : list   | none >
+            <      'B . 'A : list   | none >
+            <           'A : list   | none >
+            <      'V . 'A : memory | none >
+            < 'W . 'B . 'A : memory | none >
+    /\ I   := 'B
+    /\ I'  := 'C
+    /\ V   := 'V
+    /\ W   := 'W
+    /\ Q   := 'B . 'A
+    /\ Q'  := 'B . 'A
+    /\ Q'' := 'C . 'B . 'A
+    /\ QV  := 'V . 'A
+    /\ QW  := 'W . 'B . 'A
+.
+
+
+op getFullyQualifiedVariableId--tests : -> TestResults .
+ceq getFullyQualifiedVariableId--tests =
+begin tests
+
+    assert "A top level identifier at the top context returns itself if it exists or `unresolvedVariable` if it doesn't" from
+        testQualified(
+            getFullyQualifiedVariableId(
+                'M,
+                nilq,
+                Cfg:Configuration
+            )
+        )
+        testQualified(
+            getFullyQualifiedVariableId(
+                'X,
+                nilq,
+                Cfg:Configuration
+            )
+        )
+        reaches
+        testQualified(
+            'M
+        )
+        testQualified(
+            unresolvedVariable('X,nilq)
+        )
+    end
+
+    assert "A top level identifier in a nested context returns the identifier if it exists or `unresolved` if it doesn't" from
+        testQualified(
+            getFullyQualifiedVariableId(
+                'M,
+                'A,
+                Cfg:Configuration
+            )
+        )
+        testQualified(
+            getFullyQualifiedVariableId(
+                'M,
+                'B . 'A,
+                Cfg:Configuration
+            )
+        )
+        testQualified(
+            getFullyQualifiedVariableId(
+                'M,
+                'C . 'B . 'A,
+                Cfg:Configuration
+            )
+        )
+        testQualified(
+            getFullyQualifiedVariableId(
+                'X,
+                'A,
+                Cfg:Configuration
+            )
+        )
+        testQualified(
+            getFullyQualifiedVariableId(
+                'X,
+                'B . 'A,
+                Cfg:Configuration
+            )
+        )
+        testQualified(
+            getFullyQualifiedVariableId(
+                'X,
+                'C . 'B . 'A,
+                Cfg:Configuration
+            )
+        )
+        reaches
+        testQualified(
+            'M
+        )
+        testQualified(
+            'M
+        )
+        testQualified(
+            'M
+        )
+        testQualified(
+            unresolvedVariable('X,'A)
+        )
+        testQualified(
+            unresolvedVariable('X,'B . 'A)
+        )
+        testQualified(
+            unresolvedVariable('X,'C . 'B . 'A)
+        )
+    end
+
+    assert "A nested identifier in a top level context returns `unresolvedVariable`" from
+        testQualified(
+            getFullyQualifiedVariableId(
+                'M_A,
+                nilq,
+                Cfg:Configuration
+            )
+        )
+        testQualified(
+            getFullyQualifiedVariableId(
+                'M_B,
+                nilq,
+                Cfg:Configuration
+            )
+        )
+        testQualified(
+            getFullyQualifiedVariableId(
+                'M_C,
+                nilq,
+                Cfg:Configuration
+            )
+        )
+        reaches
+        testQualified(
+            unresolvedVariable('M_A,nilq)
+        )
+        testQualified(
+            unresolvedVariable('M_B,nilq)
+        )
+        testQualified(
+            unresolvedVariable('M_C,nilq)
+        )
+    end
+
+    assert "A nested identifier in its lexical context that exists returns the fully qualified id, otherwise `unresolved`" from
+        testQualified(
+            getFullyQualifiedVariableId(
+                'M_C,
+                'C . 'B . 'A,
+                Cfg:Configuration
+            )
+        )
+        testQualified(
+            getFullyQualifiedVariableId(
+                'M_B,
+                'C . 'B . 'A,
+                Cfg:Configuration
+            )
+        )
+        testQualified(
+            getFullyQualifiedVariableId(
+                'M_A,
+                'C . 'B . 'A,
+                Cfg:Configuration
+            )
+        )
+        testQualified(
+            getFullyQualifiedVariableId(
+                'M_C,
+                'B . 'A,
+                Cfg:Configuration
+            )
+        )
+        testQualified(
+            getFullyQualifiedVariableId(
+                'M_B,
+                'B . 'A,
+                Cfg:Configuration
+            )
+        )
+        testQualified(
+            getFullyQualifiedVariableId(
+                'M_A,
+                'B . 'A,
+                Cfg:Configuration
+            )
+        )
+        testQualified(
+            getFullyQualifiedVariableId(
+                'M_C,
+                'A,
+                Cfg:Configuration
+            )
+        )
+        testQualified(
+            getFullyQualifiedVariableId(
+                'M_B,
+                'A,
+                Cfg:Configuration
+            )
+        )
+        testQualified(
+            getFullyQualifiedVariableId(
+                'M_A,
+                'A,
+                Cfg:Configuration
+            )
+        )
+        reaches
+        testQualified(
+            'M_C . 'C . 'B . 'A
+        )
+        testQualified(
+            'M_B . 'C . 'B . 'A
+        )
+        testQualified(
+            'M_A . 'A
+        )
+        testQualified(
+            unresolvedVariable('M_C,'B . 'A)
+        )
+        testQualified(
+            'M_B . 'B . 'A
+        )
+        testQualified(
+            'M_A . 'A
+        )
+        testQualified(
+            unresolvedVariable('M_C,'A)
+        )
+        testQualified(
+            unresolvedVariable('M_B,'A)
+        )
+        testQualified(
+            'M_A . 'A
+        )
+    end
+
+end tests
+if Cfg:Configuration :=
+    < 'A           : list       | none >
+    < 'B . 'A      : command    | none >
+    < 'C . 'B . 'A : assignment | none >
+    < 'M                  : memory | none >
+    < 'M_A . 'A           : memory | none >
+    < 'M_B . 'B . 'A      : memory | none >
+    < 'M_C . 'C . 'B . 'A : memory | none >
+    < 'M_B . 'C . 'B . 'A : memory | none >
+.
+
+op getFullyQualifiedNodeId--tests : -> TestResults .
+ceq getFullyQualifiedNodeId--tests =
+begin tests
+
+    assert "A top level identifier returns the identifier if it exists, otherwise `unresolvedNode`" from
+        testQualified(
+            getFullyQualifiedNodeId(
+                'A,
+                nilq,
+                Cfg:Configuration
+            )
+        )
+        testQualified(
+            getFullyQualifiedNodeId(
+                'A,
+                'C . 'B . 'A,
+                Cfg:Configuration
+            )
+        )
+        testQualified(
+            getFullyQualifiedNodeId(
+                'X,
+                nilq,
+                Cfg:Configuration
+            )
+        )
+        testQualified(
+            getFullyQualifiedNodeId(
+                'X,
+                'B . 'A,
+                Cfg:Configuration
+            )
+        )
+    reaches
+        testQualified(
+            'A
+        )
+        testQualified(
+            'A
+        )
+        testQualified(
+            unresolvedNode('X,nilq)
+        )
+        testQualified(
+            unresolvedNode('X,'B . 'A)
+        )
+    end
+
+    assert "A nested identifier in a top level context returns `unresolvedNode`" from
+        testQualified(
+            getFullyQualifiedNodeId(
+                'B,
+                nilq,
+                Cfg:Configuration
+            )
+        )
+        testQualified(
+            getFullyQualifiedNodeId(
+                'C,
+                nilq,
+                Cfg:Configuration
+            )
+        )
+    reaches
+        testQualified(
+            unresolvedNode('B,nilq)
+        )
+        testQualified(
+            unresolvedNode('C,nilq)
+        )
+    end
+
+    assert "A nested identifier that coincides with its context returns the full qualified id" from
+        testQualified(
+            getFullyQualifiedNodeId(
+                'B,
+                'B . 'A,
+                Cfg:Configuration
+            )
+        )
+        reaches
+        testQualified(
+            'B . 'A
+        )
+    end
+
+    assert "A duplicated fully qualified identifier of a node returns an `ambiguity`" from
+        testQualified(
+            getFullyQualifiedNodeId(
+                'Child,
+                'A,
+                < 'Child . 'Child . 'A : list | none >
+                < 'Child . 'Child . 'A : list | none >
+            )
+        )
+        reaches
+        testQualified(
+            ambiguity('Child . 'Child . 'A,
+                < 'Child . 'Child . 'A : list | none >
+                < 'Child . 'Child . 'A : list | none >
+            )
+        )
+    end
+
+    assert "A nested identifier in its lexical context that exists returns the full qualified id, the priority is child, self, sibling, parent" from
+        testQualified(
+            getFullyQualifiedNodeId(
+                'Child,
+                'Child . 'Child . 'A,
+                < 'Child . 'Child . 'Child . 'A : list | none >
+                <          'Child . 'Child . 'A : list | none >
+            )
+        )
+        testQualified(
+            getFullyQualifiedNodeId(
+                'Own,
+                'Own . 'Own . 'A,
+                <          'Own . 'Own . 'A : list | none >
+                < 'Child . 'Own . 'Own . 'A : list | none >
+            )
+        )
+        testQualified(
+            getFullyQualifiedNodeId(
+                'Sibling,
+                'Own . 'Sibling . 'A,
+                <              'Own . 'Sibling . 'A : list | none >
+                <          'Sibling . 'Sibling . 'A : list | none >
+                < 'Child . 'Sibling . 'Sibling . 'A : list | none >
+            )
+        )
+        testQualified(
+            getFullyQualifiedNodeId(
+                'Parent,
+                'Own . 'Parent . 'A,
+                < 'Own . 'Parent . 'A : list | none >
+                <        'Parent . 'A : list | none >
+            )
+        )
+        reaches
+        testQualified(
+            'Child . 'Child . 'Child . 'A
+        )
+        testQualified(
+            'Own . 'Own . 'A
+        )
+        testQualified(
+            'Sibling . 'Sibling . 'A
+        )
+        testQualified(
+            'Parent . 'A
+        )
+    end
+
+end tests
+if Cfg:Configuration :=
+    < 'A                : list       | none >
+    < 'B . 'A           : command    | none >
+    < 'C . 'B . 'A      : list       | none >
+    < 'M_A . 'A           : memory | none >
+    < 'M_B . 'B . 'A      : memory | none >
+    < 'M_C . 'C . 'B . 'A : memory | none >
+.
+
+
+endm

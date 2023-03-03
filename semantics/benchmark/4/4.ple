@@ -1,0 +1,18 @@
+ArrayComplex:
+{
+  Real foo[3] = #(3.0 2.0 1.0);
+  Real bar[3] = #(0.0 7.0 13.0);
+  Integer jar[3];
+  Integer i = 0;
+  Integer j = 1;
+  Integer k = 2;
+
+  SimpleArrayAssignment1: {
+    StartCondition isKnown(foo[i]);
+    foo[i] = 1.0;
+    }
+
+  SimpleArrayAssignment2:  foo[j] = bar[j];
+
+  SimpleArrayAssignment3:  foo[k] = foo[k] + bar[j] + 2;
+}

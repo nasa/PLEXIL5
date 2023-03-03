@@ -1,0 +1,213 @@
+mod TESTUNKNOWN is
+ protecting PLEXILITE-PREDS .
+
+
+op TestUnknown : -> Plexil .
+eq TestUnknown = list(
+			'TestUnknown,
+			('r : val(0.0)) ('r1 : val(0.0)) ('r2 : val(0.0)),
+			(
+  			(endc:	areChildren?('TestUnknown, finished)),
+  			(inv:	not ((isOutcomeFailure?('TestVars1 . 'TestUnknown) and isStatus?(('TestVars1 . 'TestUnknown),finished)) or (isOutcomeFailure?('TestReal1 . 'TestUnknown) and isStatus?('TestReal1 . 'TestUnknown,finished)))),
+  			(post:	const(val(true))),
+  			(pre:	const(val(true))),
+  			(repeatc:	const(val(false))),
+  			(skip:	const(val(false))),
+  			(startc:	const(val(true)))
+  			),
+  			(TestVars1 TestReal1 TestReal2 Printer0 Printer1 Printer2)
+			) .
+
+
+op TestVars1 : -> Plexil .
+eq TestVars1 = list(
+			'TestVars1,
+			nilocdecl,
+			(
+  			(endc:	areChildren?('TestVars1 . 'TestUnknown, finished)),
+  			(inv:	const(val(true))),
+  			(post:	((var(('r1 . 'TestUnknown)) equ const(val(0.0)))) and ((var(('r2 . 'TestUnknown)) equ const(val(1.0))))),
+  			(pre:	const(val(true))),
+  			(repeatc:	const(val(false))),
+  			(skip:	const(val(false))),
+  			(startc:	const(val(true)))
+  			),
+  			(ASSIGNMENT--0 ASSIGNMENT--1)
+			) .
+
+
+op ASSIGNMENT--0 : -> Plexil .
+eq ASSIGNMENT--0 = assignment(
+			'ASSIGNMENT--0,
+			nilocdecl,
+			(
+  			(endc:	const(val(true))),
+  			(inv:	const(val(true))),
+  			(post:	const(val(true))),
+  			(pre:	const(val(true))),
+  			(repeatc:	const(val(false))),
+  			(skip:	const(val(false))),
+  			(startc:	const(val(true))),
+  			(priority: 1)
+  			),
+			(('r1 . 'TestUnknown) := lookup ('r1))
+			) .
+
+
+op ASSIGNMENT--1 : -> Plexil .
+eq ASSIGNMENT--1 = assignment(
+			'ASSIGNMENT--1,
+			nilocdecl,
+			(
+  			(endc:	const(val(true))),
+  			(inv:	const(val(true))),
+  			(post:	const(val(true))),
+  			(pre:	const(val(true))),
+  			(repeatc:	const(val(false))),
+  			(skip:	const(val(false))),
+  			(startc:	const(val(true))),
+  			(priority: 1)
+  			),
+			(('r2 . 'TestUnknown) := lookup ('r2))
+			) .
+
+
+op TestReal1 : -> Plexil .
+eq TestReal1 = command(
+			'TestReal1,
+nilocdecl,
+			(
+  			(endc:	const(val(true))),
+  			(inv:	const(val(true))),
+  			(post:	(var(('r . 'TestUnknown)) equ const(val(1.0)))),
+  			(pre:	const(val(true))),
+  			(repeatc:	const(val(false))),
+  			(skip:	const(val(false))),
+  			(startc:	(isStatus?(('TestVars1 . 'TestUnknown),finished)))
+  			),
+			( ('get_real) / ( nilpar ) / ('r . 'TestUnknown))
+			) .
+
+
+op TestReal2 : -> Plexil .
+eq TestReal2 = command(
+			'TestReal2,
+nilocdecl,
+			(
+  			(endc:	const(val(true))),
+  			(inv:	const(val(true))),
+  			(post:	(var(('r . 'TestUnknown)) equ const(val(0.0)))),
+  			(pre:	const(val(true))),
+  			(repeatc:	const(val(false))),
+  			(skip:	const(val(false))),
+  			(startc:	(isStatus?(('TestReal1 . 'TestUnknown),finished)))
+  			),
+			( ('get_real) / ( nilpar ) / ('r . 'TestUnknown))
+			) .
+
+
+op Printer0 : -> Plexil .
+eq Printer0 = command(
+			'Printer0,
+nilocdecl,
+			(
+  			(endc:	const(val(true))),
+  			(inv:	const(val(true))),
+  			(post:	const(val(true))),
+  			(pre:	const(val(true))),
+  			(repeatc:	const(val(false))),
+  			(skip:	const(val(false))),
+  			(startc:	((isStatus?(('TestReal2 . 'TestUnknown),finished))) and ((isStatus?(('TestVars1 . 'TestUnknown),finished))))
+  			),
+			( ('pprint) / ( const(val("r1:")) var('r1 . 'TestUnknown) const(val("r2:")) var('r2 . 'TestUnknown) ) )
+			) .
+
+
+op Printer1 : -> Plexil .
+eq Printer1 = command(
+			'Printer1,
+nilocdecl,
+			(
+  			(endc:	const(val(true))),
+  			(inv:	const(val(true))),
+  			(post:	const(val(true))),
+  			(pre:	const(val(true))),
+  			(repeatc:	const(val(false))),
+  			(skip:	const(val(false))),
+  			(startc:	((isStatus?(('Printer0 . 'TestUnknown),finished))) and ((isStatus?(('TestReal1 . 'TestUnknown),finished))))
+  			),
+			( ('pprint) / ( const(val("r:")) var('r . 'TestUnknown) ) )
+			) .
+
+
+op Printer2 : -> Plexil .
+eq Printer2 = command(
+			'Printer2,
+nilocdecl,
+			(
+  			(endc:	const(val(true))),
+  			(inv:	const(val(true))),
+  			(post:	const(val(true))),
+  			(pre:	const(val(true))),
+  			(repeatc:	const(val(false))),
+  			(skip:	const(val(false))),
+  			(startc:	isStatus?('Printer1 . 'TestUnknown,finished) and ((isStatus?(('TestReal2 . 'TestUnknown),finished))))
+  			),
+			( ('pprint) / ( const(val("r:")) var('r . 'TestUnknown) ) )
+			) .
+
+
+op TestUnknownEnv : -> EnvironmentList .
+eq TestUnknownEnv =
+        (
+          ('time : val(0.0)),
+          ('r1 :   val(0.0)),
+          ('r2 :   val(1.0))
+        )
+        #
+        (
+          ('time : val(1.0))
+        )
+        #
+        (
+          cmdEntry('get_real,val(1.0))
+        )
+        #
+        (
+          cmdEntry('get_real,CommandSuccess)
+        )
+        #
+        (
+          'time : val(2.0)
+        )
+        #
+        (
+          cmdEntry('get_real,val(0.0))
+        )
+        #
+        (
+          cmdEntry('get_real,CommandSuccess)
+        )
+        #
+        (
+          ('time : val(3.0))
+        )
+        #
+        (
+          ('time : val(4.0))
+        )
+        #
+        (
+          ('time : val(5.0))
+        )
+        #
+        (
+          ('time : val(6.0))
+        )
+        #
+        mtenvironment
+        .
+
+endm
+
+eof

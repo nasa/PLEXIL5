@@ -1,0 +1,36 @@
+Integer Lookup resolutionType;
+Boolean Lookup isSafeToReturn;
+
+Command SetSpeed();
+Command SetAltitude();
+Command SetTrack();
+Command SetVerticalSpeed();
+
+TrafficConflictHandler: CheckedSequence
+{
+  Integer resolutionType;
+  Boolean inConflict;
+  Repeat inConflict;
+
+  GetResolutionType: {
+    resolutionType = Lookup(resolutionType);
+  }
+  SpeedResolution: {
+    Skip resolutionType != 0;
+    SetSpeed();
+  }
+  AltitudeResolution: {
+    Skip resolutionType != 1;
+    SetAltitude();
+  }
+  TrackResolution: {
+    Skip resolutionType != 2;
+    SetTrack();
+  }
+  VerticalSpeedResolution: {
+    Skip resolutionType != 3;
+    SetVerticalSpeed();
+  }
+
+  inConflict = !Lookup(isSafeToReturn) ;
+}

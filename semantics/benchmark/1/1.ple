@@ -1,0 +1,41 @@
+/*
+ * Example 1
+ *
+ * PURPOSE: We want to capture the moment in which a LookupOnChange is updated
+ * with new information.
+ *
+ * STRATEGY:
+ *
+ * 1 - We are going to use a Lookup in a get condition, for example in the
+ * `EndCondition`, and to control the moment in which the Lookup will be made
+ * will add a `StartCondition` dependent on the state of another `Guard` node.
+ * 2 - The Lookup will be over the `time` external state.
+ * 3 - To ensure the LookupOnChange is fresh we will capture a previous Lookup
+ * on the `Guard` node.
+ * 4 - We will try to print both Lookups with other nodes
+ *
+ */
+
+Command pprint(...);
+Real Lookup time;
+
+Example1: Concurrence
+{
+  Real guardTime = 0;
+  Real asyncLookupTime = 0;
+
+  Guard: {
+    guardTime = Lookup(time);
+  }
+
+  AsyncLookup: {
+    StartCondition Guard.state == ITERATION_ENDED && Lookup(time) > guardTime;
+    asyncLookupTime = Lookup(time);
+  }
+
+  Printer:
+  {
+    StartCondition AsyncLookup.state == ITERATION_ENDED;
+    pprint("\n", "guardTime =", guardTime, "\\\n", "asyncLookupTime =", asyncLookupTime);
+  }
+}

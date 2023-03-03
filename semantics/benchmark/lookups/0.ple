@@ -1,0 +1,15 @@
+Boolean Lookup reset;
+Command pprint(...);
+
+ACTION : {
+    Start Lookup(reset);
+    Skip Lookup(reset);
+    End Lookup(reset);
+    Repeat Lookup(reset);
+    Exit Lookup(reset);
+    Pre Lookup(reset);
+    Post Lookup(reset);
+    Invariant Lookup(reset);
+
+    pprint("Print all conditions");
+}

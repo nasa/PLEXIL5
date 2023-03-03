@@ -1,0 +1,19 @@
+mod TEST--ATOMIC--EXECUTING--COMMAND-NODE is
+
+  pr TEST-BASE .
+
+
+  op tests--atomic--executing--command-node : -> TestResults .
+
+  eq tests--atomic--executing--command-node = begin tests
+
+  Pending "Executing command node follows path 1 (executing--command--01)"
+  Pending "Executing command node follows path 2 (executing--command--02)"
+  Pending "Executing command node follows path 3 (executing--command--03)"
+  Pending "Executing command node follows path 4 (executing--command--04)"
+  Pending "Executing command node follows path 5 (executing--command--05)"
+  Pending "Executing command node follows path 6 (executing--command--06)"
+
+  end tests .
+
+endm

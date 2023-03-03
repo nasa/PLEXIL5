@@ -1,0 +1,14 @@
+in list-node.maude
+
+mod TEST--ATOMIC--FINISHING is
+
+  pr TEST--ATOMIC--FINISHING--LIST-NODE .
+
+
+  op tests--atomic--finishing : -> TestResults .
+
+  eq tests--atomic--finishing =
+    tests--atomic--finishing--list-node
+    .
+
+endm

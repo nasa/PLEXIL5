@@ -1,0 +1,137 @@
+mod TEST-RUNNER is
+
+  ex TEST-SUITE
+    * ( sort Sort to WSort
+      , sort Type to WType
+      , sort Variable to WVariable
+      , sort Bound to WBound
+      , sort Trace to WTrace
+      , op unbounded to Wunbounded
+   ) .
+   ex
+     META-LEVEL
+    * (
+      sort Variable   to ____MetaVariable,
+      sort Context    to ____MetaContext,
+      sort Trace      to ____MetaTrace,
+      sort Qid        to ____Qid,
+      sort Expression to ____Expression,
+      op qid to '_'_'_'_qid,
+      op id  to '_'_'_'_id
+      )
+  .
+
+  pr NAT .
+  pr STRING .
+
+  vars S S' : SystemUnderTest .
+  vars BE : Bool .
+  vars Str  : String .
+  vars TRL TRL'  : TestResultList .
+  vars T1 T2 : Term .
+  vars WSo : WSort .
+  vars Ty : Type .
+  vars So : Sort .
+  vars ResTriple : ResultTriple .
+  vars B : WBound .
+  vars Asrt : Assertion .
+  vars Q Q' : Qid .
+
+  eq begin tests noTest end tests = AllTestsPassed .
+
+  op unWrap : WBound -> [Bound] .
+  eq unWrap(N:Nat) = N:Nat .
+  eq unWrap(Wunbounded) = unbounded .
+
+  op unWrap : WSort -> [Sort] .
+  eq unWrap(Q:Qid) =  '_'_'_'_qid(string(Q:Qid)) .
+
+  op wrap : Type -> WType .
+  eq wrap(Q:____Qid) =  qid(string(Q:____Qid)) .
+
+  eq assert S : WSo end = CheckSortLeq(S,WSo) .
+  eq assert S !: WSo end = CheckSortNotLeq(S,WSo) .
+  eq assert Str truth S end = CheckTrue(Str,S) .
+  eq assert Str from S reaches S' end = assert Str from S reaches S' in Wunbounded steps end .
+  eq assert Str from S avoids S' end  = assert Str from S avoids S' in Wunbounded steps end .
+  eq assert Str from S reaches S' in one step end = assert Str from S reaches S' in 1 steps end .
+  eq assert Str from S avoids S' in one step end  = assert Str from S avoids S' in 1 steps end .
+  eq assert Str from S reaches S' in B steps end = Check(reachesIn(B), Str, S, S') .
+  eq assert Str from S avoids S' in B steps end  = Check(avoidsIn(B), Str, S, S') .
+
+  eq begin tests TRL Success(Str) TRL' end tests = begin tests TRL TRL' end tests .
+
+  op SystemModule : -> Module .
+  eq SystemModule = upModule('TEST-SUITE, false) .
+
+  op CheckSortLeq : SystemUnderTest WSort -> TestResult .
+ ceq CheckSortLeq(S, WSo) =
+      if sortLeq(SystemModule, T:Type, unWrap(WSo))
+      then Success "The types are LEQ"
+      else Failure(msg: "The type is wrong", actual: wrap(T:Type), expected: WSo)
+      fi
+  if T:Type := getActualType'(S,WSo)
+  .
+  op CheckSortNotLeq : SystemUnderTest WSort -> TestResult .
+ ceq CheckSortNotLeq(S, WSo) =
+      if not sortLeq(SystemModule, T:Type, unWrap(WSo))
+      then Success "The types are not LEQ"
+      else Failure(msg: "The type is wrong", actual: wrap(T:Type), expected: WSo)
+      fi
+  if T:Type := getActualType'(S,WSo)
+  .
+  op getActualType' : SystemUnderTest WSort -> Type .
+ ceq getActualType'(S, WSo) = T:Type
+  if {T:Term, T:Type} := metaReduce( SystemModule, upTerm(S) )
+  .
+  eq getActualType'(S, WSo) = unWrap(WSo) [owise] .
+
+  op CheckTrue : String SystemUnderTest -> TestResult .
+ ceq CheckTrue(Str, S) = Success Str
+  if {T:Term, T:Type, none} := metaSearch(
+        upModule('TEST-SUITE, false),
+        upTerm(S),
+        upTerm(true),
+        nil,
+        '*,
+        unbounded,
+        0
+      )
+  .
+  eq CheckTrue(Str,BE) = Failure(msg: Str, actual: BE, expected: true) [owise] .
+
+  op Check    :    Assertion String SystemUnderTest SystemUnderTest -> TestResult .
+  ceq Check(reachesIn(B), Str, S, S') = Success Str
+  if  T1 := upTerm(S) /\ T2 := upTerm(S') /\
+      BUN:Bound := unWrap(B)
+      /\
+      {T:Term, T:Type, none} := metaSearch(
+        upModule('TEST-SUITE, false),
+        upTerm(S),
+        upTerm(S'),
+        nil,
+        '*,
+        BUN:Bound,
+        0
+        )
+  .
+  ceq Check(avoidsIn(B), Str, S, S') = Success Str
+  if  T1 := upTerm(S) /\ T2 := upTerm(S') /\
+      failure = metaSearch(
+        upModule('TEST-SUITE, false),
+        upTerm(S),
+        upTerm(S'),
+        nil,
+        '*,
+        unWrap(B),
+        0
+        )
+  .
+  ceq Check(reachesIn(B), Str, S, S') = Failure(msg: Str, actual: S, expected: S')
+    if true [owise print Str] .
+
+
+  op runTests : -> TestResults .
+  eq runTests = tests .
+
+endm

@@ -1,0 +1,15 @@
+Integer Lookup tick;
+Command pprint(...);
+
+ACTION : {
+    Integer count = 0;
+    Exit Lookup(tick,2) > 10;
+    {
+        Repeat true;
+        Concurrence {
+            count = count + 1;
+            pprint("Iteration", count);
+        }
+    }
+    pprint("This should never be printed");
+}

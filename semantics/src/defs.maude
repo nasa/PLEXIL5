@@ -1,0 +1,27 @@
+mod DEFS is
+  protecting IDENTIFIER .
+  protecting VALUE .
+  protecting STATUS .
+  protecting FAILURE .
+  protecting XFLAG .
+  protecting FUNCTION .
+  protecting QUALIFIED .
+  protecting EXPRESSION .
+  protecting ARGUMENTS .
+  protecting PARAMETER .
+  protecting OUTCOME .
+  protecting COMMAND .
+  protecting COMMANDINFO .
+  protecting NODE .
+  protecting GLOBAL .
+  protecting ENVIRONMENTS .
+  protecting LOCAL .
+  protecting LOCALDECLS .
+  protecting ACTION .
+  protecting TRACE .
+  protecting SYSTEM .
+
+  sort Debug .
+  subsort Debug < Expression .
+
+endm

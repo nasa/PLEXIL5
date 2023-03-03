@@ -1,0 +1,268 @@
+----                                       Predicates and auxiliary definitions
+----                                                       author: Camilo Rocha
+
+mod FUNPRED is
+  protecting EVAL .
+  protecting ACTION .
+
+  vars Ats Ats'       : AttributeSet .
+  vars AtS AtS'       : AttributeSet .
+  vars Args Args'     : Arguments .
+  vars B B'           : Bool .
+  var onChange?       : Bool .
+  var C               : Cid .
+  var CI              : CommandInfo .
+  vars Conf           : Config .
+  vars PS PS'         : Configuration .
+  vars Gamma Gamma'   : Environment .
+  var Sigma           : Environment .
+  vars E E'           : Expression .
+  vars Es Es'         : ExpressionSet .
+  vars Fl Fl' Fl''    : Float .
+  vars F F'           : Function .
+  vars I I'           : Identifier .
+  vars iNt iNt' iNt'' : Int .
+  vars Q Q'           : NeQualified .
+  var O               : Outcome .
+  var P               : Parameters .
+  vars R R'           : Rat .
+  vars S S'           : Status .
+ ---- var Tr           : Trace .
+  vars V V' V''       : Value .
+
+  op ancestorInv? : NeQualified Expression Environment Configuration -> Bool .
+  eq ancestorInv?((I . Q), E, Gamma, < Q : C | inv: E' , Ats > PS)
+   = if eval(Gamma, [< Q : C | inv: E' , Ats > PS], E) == eval(Gamma, [< Q : C | inv: E' , Ats > PS], E')
+     then true
+     else ancestorInv?(Q, E, Gamma, PS)
+     fi .
+  eq ancestorInv?(Q, E, Gamma, PS) = false [owise] .
+
+  *** Parent finished
+  op parentFinished? : Configuration NeQualified -> Bool .
+  eq parentFinished?( < Q : C | status: S, Ats > PS, (I . Q))
+   = S == finished .
+  eq parentFinished?(PS, Q)
+   = false [owise] . *** REFERENCE: Root nodes have a parent state that is always `executing`
+
+  *** Parent executing
+  op parentExecuting? : Configuration NeQualified -> Bool .
+  eq parentExecuting?( < Q : C | status: S, Ats > PS, (I . Q))
+   = S == executing .
+  eq parentExecuting?(PS, Q) = true [owise] .
+
+  *** Ancestor Invariant
+  op ancestorInvariantFalse? : Environment Configuration Qualified -> Bool .
+  eq ancestorInvariantFalse?(Gamma, < Q : C | inv: E , Ats > PS , (I . Q))
+   = if (eval(Gamma, PS, E) == const(val(false)))
+     then true
+     else ancestorInvariantFalse?(Gamma, PS, Q)
+     fi .
+  eq ancestorInvariantFalse?(Gamma, PS, Q) = false [owise] .
+
+  *** Ancestor exit
+  op ancestorExitTrue? : Environment Configuration Qualified -> Bool .
+  eq ancestorExitTrue?(Gamma, < Q : C | exitc: E , Ats > PS, (I . Q))
+   = if (eval(Gamma, < Q : C | exitc: E , Ats > PS, E) == const(val(true)))
+     then true
+     else ancestorExitTrue?(Gamma, < Q : C | exitc: E , Ats > PS, Q)
+     fi .
+  eq ancestorExitTrue?(Gamma, PS, Q)
+   = false [owise] .
+
+ *** Ancestor end
+ **** TODO: check semantics
+  op ancestorEndTrue? : Environment Configuration Qualified -> Bool .
+  eq ancestorEndTrue?(Gamma, < Q : C | endc: E , Ats > PS, (I . Q))
+   = if (eval(Gamma, < Q : C | endc: E , Ats > PS, E) == const(val(true)))
+     then true
+     else ancestorEndTrue?(Gamma, < Q : C | endc: E , Ats > PS, Q)
+     fi .
+  eq ancestorEndTrue?(Gamma, PS, Q)
+   = false [owise] .
+
+  *** Parent finished
+  op parentFinished? : Configuration NeQualified -> Bool .
+  eq parentFinished?( < Q : C | status: S, Ats > PS, (I . Q))
+   = S == finished .
+  eq parentFinished?(PS, Q)
+   = false [owise] . *** REFERENCE: Root nodes have a parent state that is always `executing`
+
+  *** Parent waiting
+   op parentWaiting? : Configuration NeQualified -> Bool .
+   eq parentWaiting?( < Q : C | status: waiting , Ats  > PS, (I . Q))
+    = true .
+   eq parentWaiting?(PS, Q)
+    = false [owise] .
+
+  *** Parent executing
+  op parentExecuting? : Configuration NeQualified -> Bool .
+  eq parentExecuting?( < Q : C | status: S, Ats > PS, (I . Q))
+   = S == executing .
+  eq parentExecuting?(PS, Q)
+   = true [owise] .
+
+  *** Children waiting or finished
+  op waitingOrFinished : Configuration -> Bool .
+  eq waitingOrFinished( < Q : C | status: S , Ats > PS) =
+     if ((S == waiting) or (S == finished))
+     then waitingOrFinished(PS)
+     else false
+     fi .
+  eq waitingOrFinished( PS )
+   = true [owise] .
+
+  op childrenWaitingFinished : Configuration Qualified -> Bool .
+  eq childrenWaitingFinished(PS, Q)
+   = waitingOrFinished(childrenProcesses(Q,PS)) .
+
+  *** is Root ?
+  op root : Qualified -> Expression .
+  eq root(Q)
+   = const(val(sizeQualified(Q) == 1)) .
+
+  *** Expression to Value
+  op expToVal : Expression ~> Value .
+  eq expToVal(const(V))
+   = V .
+
+  *** Evaluate parameters
+  op evalpar : Environment Configuration Parameters -> Arguments .
+  eq evalpar(Gamma, PS, nilpar)
+   = nilarg .
+  eq evalpar(Gamma, PS, (E P))
+   = (expToVal(eval(Gamma, PS, E)) evalpar(Gamma, PS, P)) .
+
+  *** Assignment expression of node
+  op assignmentExpression : Qualified Configuration -> Expression .
+  eq assignmentExpression(Q, < Q : assignment | (Q' := E), AtS > PS)
+   = E .
+  eq assignmentExpression(Q, < Q : assignment | (Q' [ E' ] := E), AtS > PS)
+   = E .
+
+  *** Assignment variable of node
+  op assignmentVariable : Qualified Configuration -> Qualified .
+  eq assignmentVariable(Q, < Q : assignment | (Q' := E), AtS > PS)
+   = Q' .
+  eq assignmentVariable(Q, < Q : assignment | (Q' [ E' ] := E), AtS > PS)
+   = Q' .
+
+  op assignmentIndexExpression : Qualified Configuration -> Expression .
+  eq assignmentIndexExpression(Q, < Q : assignment | (Q' [ E' ] := E), AtS > PS) = E' .
+***   eq assignmentIndexExpression(Q, PS) = nothing .
+
+  op isArrayAssignment : Qualified Configuration -> Bool .
+  eq isArrayAssignment(Q, < Q : assignment | (Q' [ E' ] := E), AtS > PS) = true .
+  eq isArrayAssignment(Q, PS) = false .
+
+
+  **************************************************
+  *** Command node functions
+
+  var Params : Parameters .
+  var Q'' : Qualified .
+
+  *** Command id of node
+  op getCommandId : Qualified Configuration -> Identifier .
+  eq getCommandId(Q, < Q : command | command: Q' / Params, AtS > PS)
+   = Q' .
+  eq getCommandId(Q, < Q : command | command: Q' / Params / Q'', AtS > PS)
+   = Q' .
+
+  *** Command arguments of node
+  op getCommandArguments : Qualified Configuration -> Expression .
+  eq getCommandArguments(Q, < Q : command | command: Q' / Params, AtS > PS)
+   = Params .
+
+  var CH : CommandHandle .
+  var Env : Environment .
+
+  var IFACE : Configuration .
+
+  op isCommandHandleKnown : Qualified Configuration -> Bool .
+  eq isCommandHandleKnown('pprint . Q, IFACE) = true .
+  eq isCommandHandleKnown(Q, < Q : command-on-execution | handle: just(CH), AtS > IFACE) = true  .
+  eq isCommandHandleKnown(Q, IFACE) = false [owise] .
+
+  *** TODO: fix the implementation once the representation for command
+  *** handles is final
+  op abortCompleted : Environment Configuration Qualified -> Bool .
+  eq abortCompleted(Gamma, PS, Q)
+   = true .
+
+*** Type of node
+ op nodeType : Object -> Cid .
+ eq nodeType( < Q : list | Ats > ) = list .
+ eq nodeType( < Q : command | Ats > ) = command .
+ eq nodeType( < Q : assignment | Ats > ) = assignment .
+ eq nodeType( < Q : retCommand | Ats > ) = retCommand .
+ eq nodeType( < Q : empty | Ats > ) = empty .
+
+*** Invoke command
+ op invokeCommand : Environment Configuration Object -> Object .
+ eq invokeCommand(Gamma,PS, < Q : command | command: (I / P),
+    status: S, commandInfo: CI, Ats >)
+  = < Q : command | command: (I / P), status: executing,
+      commandInfo: evalpar(Gamma,PS,P) / I / invoked > .
+ eq invokeCommand(Gamma,PS, < Q : retCommand | command: (I / P),
+    status: S, commandInfo: CI, Ats >)
+  = < Q : retCommand | command: (I / P), status: executing,
+      commandInfo: evalpar(Gamma,PS,P) / I / invoked, Ats > .
+
+*** Declared variables in a process
+ op declaredVars : Configuration Qualified -> Configuration .
+ eq declaredVars( PS < (I . Q) : memory | Ats >, Q )
+  = < (I . Q) : memory | Ats > declaredVars(PS,Q) .
+ eq declaredVars(PS, Q) = none [owise] .
+
+
+ --- Set of expressions
+ sort ExpressionSet .
+ subsort Expression < ExpressionSet .
+ op mtexprs : -> ExpressionSet .
+ op _;_ : ExpressionSet ExpressionSet -> ExpressionSet [assoc comm id: mtexprs] .
+ eq E ; E = E .
+
+ --- Recursively computes the lookup expressions ocurring in any expression
+ op getLookups : ExpressionSet ExpressionSet Bool -> ExpressionSet .
+ eq getLookups(mtexprs, Es', onChange?) = Es' .
+ eq getLookups(lookup(Q,Args) ; Es, Es', onChange?)
+  = getLookups(Es, (Es' ; if onChange? == false then lookup(Q,Args) else mtexprs fi), onChange?) .
+ eq getLookups(lookupOnChange(Q,Args,V) ; Es, Es', onChange?)
+  = getLookups(Es, (Es' ; if onChange? == true then lookupOnChange(Q,Args,V) else mtexprs fi), onChange?) .
+ eq getLookups(const(V) ; Es, Es', onChange?) = getLookups(Es, Es', onChange?) .
+ eq getLookups(var(Q) ; Es, Es', onChange?) = getLookups(Es, Es', onChange?) .
+ eq getLookups(func(F,E) ; Es, Es', onChange?) = getLookups(E ; Es, Es', onChange?) .
+ eq getLookups(E + E' ; Es, Es', onChange?) = getLookups(E ; E' ; Es, Es', onChange?) .
+ eq getLookups(E - E' ; Es, Es', onChange?) = getLookups(E ; E' ; Es, Es', onChange?) .
+ eq getLookups(E * E' ; Es, Es', onChange?) = getLookups(E ; E' ; Es, Es', onChange?) .
+ eq getLookups(E < E' ; Es, Es', onChange?) = getLookups(E ; E' ; Es, Es', onChange?) .
+ eq getLookups(E > E' ; Es, Es', onChange?) = getLookups(E ; E' ; Es, Es', onChange?) .
+ eq getLookups(E <= E' ; Es, Es', onChange?) = getLookups(E ; E' ; Es, Es', onChange?) .
+ eq getLookups(E >= E' ; Es, Es', onChange?) = getLookups(E ; E' ; Es, Es', onChange?) .
+ eq getLookups(E equ E' ; Es, Es', onChange?) = getLookups(E ; E' ; Es, Es', onChange?) .
+ eq getLookups(E nequ E' ; Es, Es', onChange?) = getLookups(E ; E' ; Es, Es', onChange?) .
+ eq getLookups(E and E' ; Es, Es', onChange?) = getLookups(E ; E' ; Es, Es', onChange?) .
+ eq getLookups(E or E' ; Es, Es', onChange?) = getLookups(E ; E' ; Es, Es', onChange?) .
+ eq getLookups(not E ; Es, Es', onChange?) = getLookups(E ; Es, Es', onChange?) .
+ eq getLookups(isStatus?(Q,S) ; Es, Es', onChange?) = getLookups(Es, Es', onChange?) .
+ eq getLookups(isOutcome?(Q,O) ; Es, Es', onChange?) = getLookups(Es, Es', onChange?) .
+ eq getLookups(isOutcomeFailure?(Q) ; Es, Es', onChange?) = getLookups(Es, Es', onChange?) .
+ eq getLookups(areChildren?(Q,S) ; Es, Es', onChange?) = getLookups(Es, Es', onChange?) .
+ eq getLookups(areChildren?(S) ; Es, Es', onChange?) = getLookups(Es, Es', onChange?) .
+ eq getLookups(cmdHandleRcv?(Q) ; Es, Es', onChange?) = getLookups(Es, Es', onChange?) .
+ eq getLookups(cmdHandleRcv? ; Es, Es', onChange?) = getLookups(Es, Es', onChange?) .
+
+ eq hasLookupOnChange?(E)
+  = if getLookups(E, mtexprs, true) == mtexprs
+    then false
+    else true
+    fi .
+
+
+ --- Extracts the expressions from a list of parameters
+ op parametersToExpressionSet : Parameters ExpressionSet -> ExpressionSet .
+ eq parametersToExpressionSet(nilpar, Es) = Es .
+ eq parametersToExpressionSet(E P, Es) = parametersToExpressionSet(P, Es ; E) .
+
+endm

@@ -1,0 +1,37 @@
+fmod IDENTIFIER is
+ protecting QID .
+
+ sort Identifier .
+ subsort Qid < Identifier .
+ op id : Qid -> Identifier .
+
+----------------------------------------
+--- Relative identifiers
+
+ op self    :     -> Identifier .
+ op sibling : Qid -> Identifier .
+
+endfm
+
+view Identifier from TRIV to IDENTIFIER is
+ sort Elt to Identifier .
+endv
+
+fmod QUALIFIED is
+  protecting LIST{Identifier}
+    * ( sort List{Identifier}   to Qualified,
+        sort NeList{Identifier} to NeQualified,
+        op nil      to nilq,
+        op __       to _._,
+        op append   to appendQualified,
+        op head     to headQualified,
+        op tail     to tailQualified,
+        op last     to lastQualified,
+        op front    to frontQualified,
+        op occurs   to occursQualified,
+        op reverse  to reverseQualified,
+        op $reverse to $reverseQualified,
+        op size     to sizeQualified,
+        op $size    to $sizeQualified
+      ) .
+endfm

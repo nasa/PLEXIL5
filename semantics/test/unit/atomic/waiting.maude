@@ -1,0 +1,506 @@
+mod TEST--ATOMIC--WAITING is
+
+  pr TEST-BASE .
+
+
+  op waiting--atomic--tests : -> TestResults .
+
+  eq waiting--atomic--tests = begin tests
+
+    assert "Waiting node follows path 1 (waiting-01)" from
+      waiting(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | status: executing,
+                              exitc: const(val(true)) >
+            < B . A : empty | status: waiting,
+                              active: true,
+                              suspended: false,
+                              skip: const(unknown),
+                              startc: const(unknown),
+                              pre: const(unknown),
+                              exitc: const(unknown) > ]
+        [ memory : none ]
+        [ microacts : mtactions ]
+        [ macroacts : mtactions ]
+      )
+    reaches
+      waiting(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | status: executing,
+                              exitc: const(val(true)) >
+            < B . A : empty | status: waiting,
+                              active: false,
+                              suspended: false,
+                              skip: const(unknown),
+                              startc: const(unknown),
+                              pre: const(unknown),
+                              exitc: const(unknown) > ]
+        [ memory : none ]
+        [ microacts : setStatus(B . A, finished),
+                      setOutcome(B . A,skipped),
+                      logTransition(B . A,waiting,finished,1) ]
+        [ macroacts : mtactions ]
+      )
+    end
+
+    assert "Waiting node does not follow path 1 (waiting-01) if suspended" from
+      waiting(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | status: executing,
+                              exitc: const(val(true)) >
+            < B . A : empty | status: waiting,
+                              active: true,
+                              suspended: true,
+                              skip: const(unknown),
+                              startc: const(unknown),
+                              pre: const(unknown),
+                              exitc: const(unknown) > ]
+        [ memory : none ]
+        [ microacts : mtactions ]
+        [ macroacts : mtactions ]
+      )
+    avoids
+      waiting(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | status: executing,
+                              exitc: const(val(true)) >
+            < B . A : empty | status: waiting,
+                              active: false,
+                              suspended: true,
+                              skip: const(unknown),
+                              startc: const(unknown),
+                              pre: const(unknown),
+                              exitc: const(unknown) > ]
+        [ memory : none ]
+        [ microacts : setStatus(B . A, finished),
+                      setOutcome(B . A,skipped),
+                      logTransition(B . A,waiting,finished,1) ]
+        [ macroacts : mtactions ]
+      )
+    end
+
+    assert "Waiting node follows path 2 (waiting-02)" from
+      waiting(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | status: executing,
+                              exitc: const(unknown) >
+            < B . A : empty | status: waiting,
+                              active: true,
+                              suspended: false,
+                              skip: const(unknown),
+                              startc: const(unknown),
+                              pre: const(unknown),
+                              exitc: const(val(true)) > ]
+        [ memory : none ]
+        [ microacts : mtactions ]
+        [ macroacts : mtactions ]
+      )
+    reaches
+      waiting(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | status: executing,
+                              exitc: const(unknown) >
+            < B . A : empty | status: waiting,
+                              active: false,
+                              suspended: false,
+                              skip: const(unknown),
+                              startc: const(unknown),
+                              pre: const(unknown),
+                              exitc: const(val(true)) > ]
+        [ memory : none ]
+        [ microacts : setStatus(B . A, finished),
+                      setOutcome(B . A,skipped),
+                      logTransition(B . A,waiting,finished,2) ]
+        [ macroacts : mtactions ]
+      )
+    end
+
+    assert "Waiting node follows path 3 (waiting-03)" from
+      waiting(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | status: executing,
+                              exitc: const(unknown),
+                              inv: const(val(false)) >
+            < B . A : empty | status: waiting,
+                              active: true,
+                              suspended: false,
+                              skip: const(unknown),
+                              startc: const(unknown),
+                              pre: const(unknown),
+                              exitc: const(unknown) > ]
+        [ memory : none ]
+        [ microacts : mtactions ]
+        [ macroacts : mtactions ]
+      )
+    reaches
+      waiting(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | status: executing,
+                              exitc: const(unknown),
+                              inv: const(val(false)) >
+            < B . A : empty | status: waiting,
+                              active: false,
+                              suspended: false,
+                              skip: const(unknown),
+                              startc: const(unknown),
+                              pre: const(unknown),
+                              exitc: const(unknown) > ]
+        [ memory : none ]
+        [ microacts : setStatus(B . A, finished),
+                      setOutcome(B . A,skipped),
+                      logTransition(B . A,waiting,finished,3) ]
+        [ macroacts : mtactions ]
+      )
+    end
+
+    assert "Waiting node follows path 4 (waiting-04)" from
+      waiting(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | status: executing,
+                              exitc: const(unknown),
+                              inv: const(unknown),
+                              endc: const(val(true)) >
+            < B . A : empty | status: waiting,
+                              active: true,
+                              suspended: false,
+                              skip: const(unknown),
+                              startc: const(unknown),
+                              pre: const(unknown),
+                              exitc: const(unknown) > ]
+        [ memory : none ]
+        [ microacts : mtactions ]
+        [ macroacts : mtactions ]
+      )
+    reaches
+      waiting(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | status: executing,
+                              exitc: const(unknown),
+                              inv: const(unknown),
+                              endc: const(val(true)) >
+            < B . A : empty | status: waiting,
+                              active: false,
+                              suspended: false,
+                              skip: const(unknown),
+                              startc: const(unknown),
+                              pre: const(unknown),
+                              exitc: const(unknown) > ]
+        [ memory : none ]
+        [ microacts : setStatus(B . A, finished),
+                      setOutcome(B . A,skipped),
+                      logTransition(B . A,waiting,finished,4) ]
+        [ macroacts : mtactions ]
+      )
+    end
+
+    assert "Waiting node follows path 5 (waiting-05)" from
+      waiting(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | status: executing,
+                              exitc: const(unknown),
+                              inv: const(unknown),
+                              endc: const(unknown) >
+            < B . A : empty | status: waiting,
+                              active: true,
+                              suspended: false,
+                              skip: const(val(true)),
+                              startc: const(unknown),
+                              pre: const(unknown),
+                              exitc: const(unknown) > ]
+        [ memory : none ]
+        [ microacts : mtactions ]
+        [ macroacts : mtactions ]
+      )
+    reaches
+      waiting(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | status: executing,
+                              exitc: const(unknown),
+                              inv: const(unknown),
+                              endc: const(unknown) >
+            < B . A : empty | status: waiting,
+                              active: false,
+                              suspended: false,
+                              skip: const(val(true)),
+                              startc: const(unknown),
+                              pre: const(unknown),
+                              exitc: const(unknown) > ]
+        [ memory : none ]
+        [ microacts : setStatus(B . A, finished),
+                      setOutcome(B . A,skipped),
+                      logTransition(B . A,waiting,finished,5) ]
+        [ macroacts : mtactions ]
+      )
+    end
+
+    assert "Waiting node follows path 6 (waiting-06)" from
+      waiting(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | status: executing,
+                              exitc: const(unknown),
+                              inv: const(unknown),
+                              endc: const(unknown) >
+            < B . A : empty | status: waiting,
+                              active: true,
+                              suspended: false,
+                              skip: const(unknown),
+                              startc: const(val(true)),
+                              pre: const(unknown),
+                              exitc: const(unknown) > ]
+        [ memory : none ]
+        [ microacts : mtactions ]
+        [ macroacts : mtactions ]
+      )
+    reaches
+      waiting(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | status: executing,
+                              exitc: const(unknown),
+                              inv: const(unknown),
+                              endc: const(unknown) >
+            < B . A : empty | status: waiting,
+                              active: false,
+                              suspended: false,
+                              skip: const(unknown),
+                              startc: const(val(true)),
+                              pre: const(unknown),
+                              exitc: const(unknown) > ]
+        [ memory : none ]
+        [ microacts : setStatus(B . A, iterationEnded),
+                      setOutcome(B . A,failure(preconditionFailed)),
+                      logTransition(B . A,waiting,iterationEnded,6) ]
+        [ macroacts : mtactions ]
+      )
+    end
+
+    assert "Waiting assignment node follows path 7 (waiting-07-assignment)" from
+      waiting(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A         : list       | status: executing,
+                                       exitc: const(unknown),
+                                       inv: const(unknown),
+                                       endc: const(unknown) >
+            < B . A     : assignment | status: waiting,
+                                       active: true,
+                                       suspended: false,
+                                       skip: const(unknown),
+                                       startc: const(val(true)),
+                                       pre: const(val(true)),
+                                       exitc: const(unknown),
+                                       (M . B . A := const(val(10)) + var(M . B . A)) > ]
+        [ memory :
+            < M . B . A : memory     | actVal: val(5),
+                                       prevVal: val(0) > ]
+        [ microacts : mtactions ]
+        [ macroacts : mtactions ]
+      )
+    reaches
+      waiting(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A         : list       | status: executing,
+                                       exitc: const(unknown),
+                                       inv: const(unknown),
+                                       endc: const(unknown) >
+            < B . A     : assignment | status: waiting,
+                                       active: false,
+                                       suspended: false,
+                                       skip: const(unknown),
+                                       startc: const(val(true)),
+                                       pre: const(val(true)),
+                                       exitc: const(unknown),
+                                       (M . B . A := const(val(10)) + var(M . B . A)) > ]
+        [ memory :
+            < M . B . A : memory     | actVal: val(5),
+                                       prevVal: val(0) > ]
+        [ microacts : setStatus(B . A,executing),
+                      logTransition(B . A,waiting,executing,7),
+                      suspend(B . A) ]
+        [ macroacts : setMem(M . B . A, val(15),nothing) ]
+      )
+    end
+
+    assert "Waiting command node follows path 7 (waiting-07-command)" from
+      waiting(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A         : list    | status: executing,
+                                    exitc: const(unknown),
+                                    inv: const(unknown),
+                                    endc: const(unknown) >
+            < B . A     : command | status: waiting,
+                                    active: true,
+                                    suspended: false,
+                                    skip: const(unknown),
+                                    startc: const(val(true)),
+                                    pre: const(val(true)),
+                                    exitc: const(unknown),
+                                    command: pprint / var(M . B . A) > ]
+        [ memory :
+            < M . B . A : memory  | actVal: val("Hello World!") > ]
+        [ microacts : mtactions ]
+        [ macroacts : mtactions ]
+      )
+    reaches
+      waiting(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A         : list    | status: executing,
+                                    exitc: const(unknown),
+                                    inv: const(unknown),
+                                    endc: const(unknown) >
+            < B . A     : command | status: waiting,
+                                    active: false,
+                                    suspended: false,
+                                    skip: const(unknown),
+                                    startc: const(val(true)),
+                                    pre: const(val(true)),
+                                    exitc: const(unknown),
+                                    command: pprint / var(M . B . A) > ]
+        [ memory :
+            < M . B . A : memory  | actVal: val("Hello World!") > ]
+        [ microacts : setStatus(B . A,executing),
+                      logTransition(B . A,waiting,executing,7),
+                      suspend(B . A) ]
+        [ macroacts : runCommand(B . A, val("Hello World!") / pprint / invoked) ]
+      )
+    end
+
+    assert "Waiting other node follows path 7 (waiting-07-other)" from
+      waiting(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | status: executing,
+                              exitc: const(unknown),
+                              inv: const(unknown),
+                              endc: const(unknown) >
+            < B . A : empty | status: waiting,
+                              active: true,
+                              suspended: false,
+                              skip: const(unknown),
+                              startc: const(val(true)),
+                              pre: const(val(true)),
+                              exitc: const(unknown) > ]
+        [ memory : none ]
+        [ microacts : mtactions ]
+        [ macroacts : mtactions ]
+      )
+    reaches
+      waiting(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | status: executing,
+                              exitc: const(unknown),
+                              inv: const(unknown),
+                              endc: const(unknown) >
+            < B . A : empty | status: waiting,
+                              active: false,
+                              suspended: false,
+                              skip: const(unknown),
+                              startc: const(val(true)),
+                              pre: const(val(true)),
+                              exitc: const(unknown) > ]
+        [ memory : none ]
+        [ microacts : setStatus(B . A, executing),
+                      logTransition(B . A,waiting,executing,7) ]
+        [ macroacts : mtactions ]
+      )
+    end
+
+    assert "Waiting node follows path 8 (waiting-08)" from
+      waiting(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | status: executing,
+                              exitc: const(unknown),
+                              inv: const(unknown),
+                              endc: const(unknown) >
+            < B . A : empty | status: waiting,
+                              active: true,
+                              suspended: false,
+                              skip: const(unknown),
+                              startc: const(val(false)),
+                              pre: const(unknown),
+                              exitc: const(unknown) > ]
+        [ memory : none ]
+        [ microacts : mtactions ]
+        [ macroacts : mtactions ]
+      )
+    reaches
+      waiting(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | status: executing,
+                              exitc: const(unknown),
+                              inv: const(unknown),
+                              endc: const(unknown) >
+            < B . A : empty | status: waiting,
+                              active: false,
+                              suspended: false,
+                              skip: const(unknown),
+                              startc: const(val(false)),
+                              pre: const(unknown),
+                              exitc: const(unknown) > ]
+        [ memory : none ]
+        [ microacts : logTransition(B . A, waiting, waiting, 8) ]
+        [ macroacts : mtactions ]
+      )
+    end
+
+    assert "Waiting node suspended does not evolve" from
+      waiting(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | status: executing,
+                              exitc: const(unknown),
+                              inv: const(unknown),
+                              endc: const(unknown) >
+            < B . A : empty | status: waiting,
+                              active: true,
+                              suspended: true,
+                              skip: const(unknown),
+                              startc: const(val(false)),
+                              pre: const(unknown),
+                              exitc: const(unknown) > ]
+        [ memory : none ]
+        [ microacts : mtactions ]
+        [ macroacts : mtactions ]
+      )
+    reaches
+      waiting(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | status: executing,
+                              exitc: const(unknown),
+                              inv: const(unknown),
+                              endc: const(unknown) >
+            < B . A : empty | status: waiting,
+                              active: false,
+                              suspended: true,
+                              skip: const(unknown),
+                              startc: const(val(false)),
+                              pre: const(unknown),
+                              exitc: const(unknown) > ]
+        [ memory : none ]
+        [ microacts : mtactions ]
+        [ macroacts : mtactions ]
+      )
+    end
+  end tests .
+
+endm

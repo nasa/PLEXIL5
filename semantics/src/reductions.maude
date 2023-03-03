@@ -1,0 +1,350 @@
+----                                                        Reduction relations
+----                                                       authors: Marco A. Feliu
+----                                                                Camilo Rocha
+
+mod REDUCTIONS is
+  protecting ATOMIC .
+  protecting SYNC-REDUCTION .
+  protecting RUNTIME .
+  protecting INTERFACE .
+
+  vars AS             : ActionSet .
+  vars AtS AtS'       : AttributeSet .
+  vars St St' St''    : Config .
+  vars Cfg Cfg' Cfg'' : Config .
+  vars Conf Conf'     : Config .
+  vars PS PS'         : Configuration .
+  vars Nds Nds'       : Configuration .
+  vars Sigma          : Environment .
+  vars Gamma          : Environment .
+  vars CL             : EnvironmentList .
+  vars Q              : Qualified .
+  vars TL TL'         : TraceList .
+  vars V V' V''       : Value .
+
+
+  **************************************************
+  *** Syncrhonous closure of the atomic relation ***
+  *** under the maximal redices strategy         ***
+  **************************************************
+
+  op computeTransitions : Config -> Config .
+  eq computeTransitions(St) = finished(iterended(finishing(failing(executing(waiting(inactive(activateRedexes(St)))))))) .
+
+  op executeTransitions : Config -> Config .
+  eq executeTransitions(St) = applyActions(St) .
+
+  op micro : Config -> Config .
+ ceq micro(Conf) = executeTransitions(computeTransitions(Conf))
+  if not hasMicroactions?(Conf)   *** TODO: this check shouldn't be done on production
+  /\ not hasMacroactions?(Conf) . *** IMPORTANT: this check here is MANDATORY!
+  eq micro(Conf) = Conf [owise] .
+
+  *** NOTE: This bootstraps the generator with one update
+  eq [start] : start | [ generator : EG ] Cfg = macro | [ generator : update(EG,Cfg) ] Cfg .
+
+  op run : GlobalConfig -> GlobalConfig .
+  eq [run] : run(stop | Cfg) = start | Cfg .
+
+  vars EG EG' : ExternalInputGenerator .
+  vars Act : Operation .
+  vars E : Environment .
+  vars ExtInput EIn : ExternalInputs .
+  vars Nodes Nodes' : Configuration .
+  vars EIns EIns' : EInputsList .
+
+  op cleanTrace : Config -> Config .
+  eq cleanTrace( [ trace : T:TraceList ] Cfg ) = [ trace : niltrace ] Cfg .
+
+  ceq [MACRO-relation] :
+    macro | [ generator : EG  ] Cfg
+  =
+    if EIns == nilEInputsList
+    then
+      stop  | [ generator : EG ] Cfg
+    else
+      macroND(generate(EG,Cfg)) | cleanTrace([ generator : update(EG,Cfg) ] Cfg)
+    fi
+    if EIns := generate(EG,Cfg)
+  .
+
+  op macroND : EInputsList -> Operation .
+  rl [MACRO-nd-choose-external-input] :
+    macroND(EIns # EIn # EIns') | Cfg
+    =>
+    macro-log | updateInterface(Cfg,EIn)
+  .
+
+  op macro-log : -> Operation .
+  eq [MACRO-relation-log] : macro-log = micro [print "MACRO"] .
+
+  ceq [micro-relation] :
+    micro | Cfg
+  =
+    Act | Cfg''
+  if Cfg' := micro(Cfg)
+  /\ Nodes  := getNodes(Cfg)
+  /\ Nodes' := getNodes(Cfg')
+  /\ Cfg'' := if Nodes == Nodes' then Cfg        else Cfg'      fi
+  /\ Act   := if Nodes == Nodes' then quiescence else micro-log fi
+  .
+
+  op micro-log : -> Operation .
+  eq [micro-relation-log] : micro-log = micro [print " micro"] .
+
+  ceq [quiescence] :
+    quiescence | Cfg
+  =
+    macro |
+  executeCommands(
+      unSuspendMacroNodes(
+        performAssignments(
+          Cfg
+        )
+      )
+    )
+  if Cfg' := incrementCycleCount(Cfg)
+  /\ N := getCycleCount(Cfg')
+  .
+
+  op executeCommandsDebug : Config -> Config .
+  eq executeCommandsDebug([ macroacts : AS ] Conf)
+   = executeCommands(     [ macroacts : AS ] Conf)
+  [print "MACTIONS: " AS]
+  .
+
+  **************************************************
+  *** Utility functions                          ***
+  **************************************************
+
+  op hasMicroactions?          : Config -> Bool .
+  op hasMacroactions?          : Config -> Bool .
+  op hasAssignmentToExecuteOrRetract? : Config -> Bool .
+  op hasCommandToExecute?             : Config -> Bool .
+
+  eq hasMicroactions?(St) = getMicroacts(St) =/= mtactions .
+  eq hasMacroactions?(St) = getMacroacts(St) =/= mtactions .
+
+  eq hasAssignmentToExecuteOrRetract?(St) = hasAssignmentAction?(getMacroacts(St)) .
+
+  var MV : Maybe{Value} .
+
+  op hasAssignmentAction? : ActionSet -> Bool .
+  eq hasAssignmentAction?( (undoMem(Q)    ,AS) ) = true .
+  eq hasAssignmentAction?( (setMem(Q,V,MV),AS) ) = true .
+  eq hasAssignmentAction?( (resetMem(Q)   ,AS) ) = true .
+  eq hasAssignmentAction?( (               AS) ) = false [owise] .
+
+  eq hasCommandToExecute?(St) = false .
+
+  vars NId : Identifier .
+  vars Value Value' : Value .
+  vars Args : Arguments .
+  vars CmdInfo : CommandInfo .
+  vars Pretty? : Bool .
+
+  op base10 : -> NzNat .
+  eq base10 = 10 .
+
+  op value-formatter : Value -> String .
+  eq value-formatter(val(I:Int)) = string(I:Int,base10) .
+  eq value-formatter(val(S:String)) = S:String .
+  eq value-formatter(val(F:Float)) = string(F:Float) .
+  eq value-formatter(val(B:Bool)) = if B:Bool then "true" else "false" fi .
+  eq value-formatter(unknown) = "<unknown>" .
+
+  op string-formatter : Arguments Bool -> String .
+  eq string-formatter(Value Args, Pretty?) = value-formatter(Value)
+                                           + if Pretty? then " " else "" fi
+                                           + string-formatter(Args,Pretty?) .
+  eq string-formatter(nilarg, Pretty?) = if Pretty? then "\n" else "" fi .
+
+  vars CmdId CmdId' : Qualified .
+  vars MEM : Configuration .
+  var Cmds : Configuration .
+  vars Q' Q'' : Qualified .
+  vars Params : Parameters .
+  vars AtS'' : AttributeSet .
+  var Intf : Config .
+
+  op executeCommands : Config -> Config .
+ ceq executeCommands(
+       [ nodes : < Q : command | commandInfo: CmdInfo, AtS > Nds ]
+       [ macroacts : runCommand(Q, Args / 'pprint / invoked), AS ]
+       [ interface : Cmds ]
+       Conf )
+     = [ nodes : < Q : command | commandInfo: Args / 'pprint / CommandSuccess, AtS > Nds ]
+       [ macroacts : AS ]
+       [ interface : < 'pprint . Q : command-on-execution | arguments: Args, handle: just(CommandSuccess) > Cmds ]
+       Conf
+  if Str:String := string-formatter(Args,true)
+  .
+  eq executeCommands(
+       [ nodes : < Q : command | command: CmdId / Params, AtS > Nds ]
+       [ macroacts : runCommand(Q, Args / CmdId / invoked), AS ]
+       [ interface : < CmdId . Q : command-on-execution | AtS'' > Cmds ]
+       Conf )
+   =
+    executeCommands(
+      [ nodes : < Q : command | command: CmdId / Params, AtS > Nds ]
+      [ macroacts : AS ]
+      [ interface : < CmdId . Q : command-on-execution | arguments: Args, handle: nothing > Cmds ]
+      Conf
+    )
+  .
+  eq executeCommands(
+       [ nodes : < Q : command | command: CmdId / Params, AtS > Nds ]
+       [ macroacts : runCommand(Q, Args / CmdId / invoked), AS ]
+       [ interface : Cmds ]
+       Conf )
+   =
+    executeCommands(
+      [ nodes : < Q : command | command: CmdId / Params, AtS > Nds ]
+      [ macroacts : AS ]
+      [ interface : < CmdId . Q : command-on-execution | arguments: Args, handle: nothing > Cmds ]
+      Conf
+    )
+    [owise]
+  .
+  eq executeCommands(
+       [ nodes : < Q : command | command: CmdId / Params / Q', AtS > Nds ]
+       [ macroacts : runCommand(Q, Args / CmdId / invoked), AS ]
+       [ interface : < CmdId . Q : command-on-execution | AtS' > Cmds ]
+       Conf )
+   =
+    executeCommands(
+      [ nodes : < Q : command | command: CmdId / Params / Q', AtS > Nds ]
+      [ macroacts : AS ]
+      [ interface : < CmdId . Q : command-on-execution | arguments: Args, returnVariable: Q', handle: nothing > Cmds ]
+      Conf
+    )
+  .
+  eq executeCommands(
+       [ nodes : < Q : command | command: CmdId / Params / Q', AtS > Nds ]
+       [ macroacts : runCommand(Q, Args / CmdId / invoked), AS ]
+       [ interface : Cmds ]
+       Conf )
+   =
+    executeCommands(
+      [ nodes : < Q : command | command: CmdId / Params / Q', AtS > Nds ]
+      [ macroacts : AS ]
+      [ interface : < CmdId . Q : command-on-execution | arguments: Args, returnVariable: Q', handle: nothing > Cmds ]
+      Conf
+    )
+     [owise]
+     .
+  eq executeCommands([ macroacts : mtactions ] Conf) = [ macroacts : mtactions ] Conf .
+
+  op unSuspendMacroNodes : Config -> Config .
+  eq unSuspendMacroNodes(
+      Conf
+      [ nodes : < Q : assignment | suspended: true, AtS > PS ]
+      )
+  =
+    unSuspendMacroNodes(
+      Conf
+      [ nodes : < Q : assignment | suspended: false, AtS > PS ]
+      )
+    .
+  eq unSuspendMacroNodes(
+      Conf
+      [ nodes : < Q : command | suspended: true, AtS > PS ]
+      )
+  =
+    unSuspendMacroNodes(
+      Conf
+      [ nodes : < Q : command | suspended: false, AtS > PS ]
+      )
+    .
+  eq unSuspendMacroNodes(Conf) = Conf [owise] .
+
+  op performAssignments : Config -> Config .
+  eq performAssignments(
+      Conf
+      [ memory : < Q : memory | actVal: V,  prevVal: V', AtS > PS ]
+      [ macroacts : undoMem(Q), AS ]
+      )
+  =
+    performAssignments(
+      Conf
+      [ memory : < Q : memory | actVal: V', prevVal: V, AtS > PS ]
+      [ macroacts : AS ]
+      )
+    .
+  eq performAssignments(
+      Conf
+      [ memory : < Q : memory | actVal: V', prevVal: V'', AtS > PS ]
+      [ macroacts : setMem(Q,V,nothing), AS ]
+      )
+  =
+    performAssignments(
+      Conf
+      [ memory : < Q : memory | actVal: V, prevVal: V', AtS > PS ]
+      [ macroacts : AS ]
+      )
+    .
+  eq performAssignments(
+      Conf
+      [ memory : < Q : memory | actVal: V', prevVal: V'', AtS > PS ]
+      [ macroacts : setMem(Q,V,just(val(N))), AS ]
+      )
+  =
+    performAssignments(
+      Conf
+      [ memory : < Q : memory | actVal: updateArray(V',N,V), prevVal: V', AtS > PS ]
+      [ macroacts : AS ]
+      )
+    .
+  eq performAssignments(
+      Conf
+      [ memory : < Q : memory | actVal: V', prevVal: V'', AtS > PS ]
+      [ macroacts : setMem(Q,V,just(unknown)), AS ]
+      )
+  =
+    performAssignments(
+      Conf
+      [ memory : < Q : memory | actVal: unknown, prevVal: V', AtS > PS ]
+      [ macroacts : AS ]
+      )
+    .
+  eq performAssignments(
+      Conf
+      [ memory : < Q : memory | actVal: V', prevVal: V'', initVal: V, AtS > PS ]
+      [ macroacts : resetMem(Q), AS ]
+      )
+  =
+    performAssignments(
+      Conf
+      [ memory : < Q : memory | actVal: V,  prevVal: V,   initVal: V, AtS > PS ]
+      [ macroacts : AS ]
+      )
+    .
+  eq performAssignments(
+      Conf
+      [ memory : < Q : memory | actVal: V, prevVal: V', AtS > PS ]
+      [ macroacts : undoMem(Q), AS ]
+      )
+  =
+    performAssignments(
+      Conf
+      [ memory : < Q : memory | actVal: V',  prevVal: V',  AtS > PS ]
+      [ macroacts : AS ]
+      )
+    .
+  eq performAssignments(Conf) = Conf [owise] .
+
+ op counter : -> Cid .
+ var N : Nat .
+ var IFACE : Configuration .
+
+  op incrementCycleCount : Config -> Config .
+  eq incrementCycleCount([ interface : < 'cycle : counter | value: N, AtS > IFACE ] Conf)
+  = [ interface : < 'cycle : counter | value: s N, AtS > IFACE ] Conf .
+  eq incrementCycleCount([ interface : IFACE ] Conf)
+  = [interface : < 'cycle : counter | value: 1 > IFACE ] Conf [owise] .
+
+  op getCycleCount : Config -> Nat .
+  eq getCycleCount([ interface : < 'cycle : counter | value: N, AtS > IFACE ] Conf) = N .
+  eq getCycleCount([ interface : IFACE ] Conf) = 0 [owise] .
+
+endm

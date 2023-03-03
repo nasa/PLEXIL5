@@ -1,0 +1,14 @@
+in micro.maude
+
+mod TEST--REDUCTIONS is
+
+  pr TEST--REDUCTIONS--MICRO .
+
+  op reductions--tests : -> TestResults .
+
+  eq reductions--tests =
+    micro--reductions--tests
+    *** + macro--reductions--tests
+    .
+
+endm

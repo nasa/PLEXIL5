@@ -1,0 +1,70 @@
+mod GENERIC-GENERATOR is
+  pr PLEXILITE .
+
+  sort Behavior .
+  sort CommandBehavior .
+  sort LookupBehavior .
+  sort MetaBehavior .
+  subsort CommandBehavior LookupBehavior MetaBehavior < Behavior .
+  sort Behaviors .
+  subsort Behavior < Behaviors .
+  op noBehavior : -> Behaviors .
+  op __ : Behaviors Behaviors -> Behaviors [assoc ctor id: noBehavior] .
+
+  op ackCommand : Identifier Arguments CommandHandle Maybe{Value} -> CommandBehavior [ctor] .
+  --- op updateLookup : Identifier Arguments -> LookupBehavior [ctor] .
+  --- op disabled : Behavior -> Behavior [frozen ctor] .
+  --- op disableAtStep : Behavior Nat -> MetaBehavior [ctor] .
+  --- op enableAtStep : Behavior Nat -> MetaBehavior [ctor] .
+
+  sort Time .
+  subsort Nat < Time .
+
+  op genericGenerator : Time Behaviors -> ExternalInputGenerator .
+
+  vars Id : Identifier .
+  vars Args : Arguments .
+  vars Q : Qualified .
+  vars AtS : AttributeSet .
+  vars ExCmds : Configuration .
+  vars Cfg : Config .
+  vars Bhv : Behavior .
+  vars Bhvs : Behaviors .
+  vars Hndl : CommandHandle .
+  vars V? : Maybe{Value} .
+  --- vars C
+
+  --- rl update(
+  ---     genericGenerator(
+  ---       T,
+  ---       ackCommand(Id,Args)
+  ---     ),
+  ---     [ interface : < Id . Q : command-on-execution | arguments: Args, AtS > ExCmds ] Cfg
+  ---    )
+  ---    =>
+
+  op synchronizeBehaviors : Behaviors Config -> ExternalInputs .
+  eq synchronizeBehaviors(
+      ackCommand(Id,Args,Hndl,V?) Bhvs,
+      [ interface : < Id . Q : command-on-execution | handle: nothing, arguments: Args, AtS > ExCmds ] Cfg
+      ) =
+      commandAck(Id,Args,CommandSentToSystem)
+      if V? =/= nothing
+        then commandResult(Id,Args,fromMaybe(V?))
+        else noExternalInputs
+      fi
+      synchronizeBehaviors(
+        Bhvs,
+        [ interface : < Id . Q : command-on-execution | handle: nothing, arguments: Args, AtS > ExCmds ] Cfg
+      ) .
+  eq synchronizeBehaviors(noBehavior,Cfg) = noExternalInputs .
+  eq synchronizeBehaviors(Bhv Bhvs,Cfg) = synchronizeBehaviors(Bhvs,Cfg) [owise] .
+
+  op test0 : -> ExternalInputs .
+  eq test0 =
+    synchronizeBehaviors(
+      ackCommand('A,nilarg,CommandSentToSystem,nothing) ackCommand('B,val(0),CommandSentToSystem,nothing),
+      [ interface : < 'B . 'ROOT : command-on-execution | handle: nothing, arguments: val(0) > ]
+    ) .
+
+endm

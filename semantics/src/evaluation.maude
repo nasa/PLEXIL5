@@ -1,0 +1,348 @@
+----                                Extra/temporary definitions for expressions
+----                                                       author: Camilo Rocha
+
+fmod EXTENDED-EXPRESSION is
+ extending VALUE .
+ protecting INT .
+ protecting STATUS .
+ protecting OUTCOME .
+ protecting QUALIFIED .
+ protecting EXPRESSION .
+ protecting COMMAND-HANDLE .
+ extending FUNCTION .
+
+ op _+_           : Expression Expression -> Expression [prec 13 format (o sc o o)] .
+ op _-_           : Expression Expression -> Expression [prec 13 format (o sc o o)] .
+ op _*_           : Expression Expression -> Expression [prec 12 format (o sc o o)] .
+ op _rem_         : Expression Expression -> Expression [prec 12 format (o sc o o)] .
+ op _<_           : Expression Expression -> Expression [prec 15 format (o sc o o)] .
+ op _<=_          : Expression Expression -> Expression [prec 15 format (o sc o o)] .
+ op _>_           : Expression Expression -> Expression [prec 15 format (o sc o o)] .
+ op _>=_          : Expression Expression -> Expression [prec 15 format (o sc o o)] .
+ op _and_         : Expression Expression -> Expression [prec 18 format (o sc o o)] .
+ op _or_          : Expression Expression -> Expression [prec 18 format (o sc o o)] .
+ op _equ_         : Expression Expression -> Expression [prec 20 format (o sc o o)] .
+ op _nequ_        : Expression Expression -> Expression [prec 20 format (o sc o o)] .
+ op not_          : Expression            -> Expression [prec 17 format (c o o)] .
+ op isKnown       : Expression            -> Expression .
+ op noChildFailed           :             -> Expression .
+ op noChildFailed           : NeQualified -> Expression .
+ op isFinished?             : NeQualified -> Expression .
+ op hasSucceeded?           : NeQualified -> Expression .
+ op hasPostconditionFailed? : NeQualified -> Expression .
+ op hasSkipped?             : NeQualified -> Expression .
+
+
+*** Function Ids
+**** Absolute value (of integers and reals)
+ op absp  : -> Function .
+**** Square root (of reals)
+ op sqrt  : -> Function .
+**** Boolean negation
+ op notp  : -> Function .
+
+*** Predicates on processes
+ op isStatus?         : NeQualified Status      -> Expression .
+ op isOutcome?        : NeQualified Outcome     -> Expression .
+ op isOutcomeFailure? : NeQualified             -> Expression .
+ op isOutcomeSuccess? : NeQualified             -> Expression .
+ op isFailure?        : NeQualified FailureType -> Expression .
+ op areChildren?      : NeQualified Status      -> Expression .
+ op areChildren?      : Status                  -> Expression .
+ op cmdHandleRcv?     : NeQualified             -> Expression .
+ op cmdHandleRcv?     :                         -> Expression .
+ op cmdHandleIs?      : NeQualified CommandHandle -> Expression .
+endfm
+
+----                                                   Evaluation specification
+----                                                       author: Camilo Rocha
+mod EVAL is
+ protecting EXTENDED-EXPRESSION .
+ protecting DEFS .
+
+ op eval : Environment Nodes         Expression ~> Expression . *** TODO: refactor to be ... -> Value
+ op eval : Environment Configuration Expression ~> Expression . *** TODO: remove dependency from Nodes above
+
+ vars NA  Ats  : AttributeSet .
+ vars B B'     : Bool .
+ var Cd        : Cid .
+ vars PS PS'   : Configuration .
+ var C         : Environment .
+ var Sigma     : Environment .
+ vars E E' E'' : Expression .
+ var Fa        : FailureType .
+ vars F F'     : Float .
+ var iD        : Identifier .
+ vars I I'     : Int .
+ vars Q Q'     : NeQualified .
+ var P         : Object .
+ vars O O'     : Outcome .
+ var PL        : Nodes .
+ vars S S'     : Status .
+ var R R'      : String .
+ vars V V'     : Value .
+ vars Args Args' : Arguments .
+
+ eq eval(C, PS, E)
+  = eval(C, [ PS ], E) .
+
+*** Operations on constants
+ eq const(val(false)) and const(V)          = const(val(false)) .
+ eq const(V)          and const(val(false)) = const(val(false)) .
+ eq const(val(true))  and const(val(true))  = const(val(true)) .
+ eq const(unknown)    and const(val(true))  = const(unknown) .
+ eq const(val(true))  and const(unknown)    = const(unknown) .
+ eq const(unknown)    and const(unknown)    = const(unknown) .
+
+ eq const(val(true))  or const(V)          = const(val(true)) .
+ eq const(V)          or const(val(true))  = const(val(true)) .
+ eq const(val(false)) or const(val(false)) = const(val(false)) .
+ eq const(unknown)    or const(val(false)) = const(unknown) .
+ eq const(val(false)) or const(unknown)    = const(unknown) .
+ eq const(unknown)    or const(unknown)    = const(unknown) .
+
+ eq not const(val(true))  = const(val(false)) .
+ eq not const(val(false)) = const(val(true)) .
+ eq not const(unknown)    = const(unknown) .
+
+ eq const(val(I)) + const(val(I')) = const(val(I + I')) .
+ eq const(val(I)) - const(val(I')) = const(val(I - I')) .
+ eq const(val(I)) * const(val(I')) = const(val(I * I')) .
+ eq const(val(I)) rem const(val(I')) = const(val(I rem I')) .
+ eq const(val(I)) < const(val(I')) = const(val(I < I')) .
+ eq const(val(I)) > const(val(I')) = const(val(I > I')) .
+ eq const(val(I)) <= const(val(I')) = const(val(I <= I')) .
+ eq const(val(I)) >= const(val(I')) = const(val(I >= I')) .
+ eq const(val(F)) + const(val(F')) = const(val(F + F')) .
+ eq const(val(F)) - const(val(F')) = const(val(F - F')) .
+ eq const(val(F)) * const(val(F')) = const(val(F * F')) .
+ eq const(val(F)) rem const(val(F')) = const(val(F rem F')) .
+ eq const(val(F)) < const(val(F')) = const(val(F < F')) .
+ eq const(val(F)) > const(val(F')) = const(val(F > F')) .
+ eq const(val(F)) <= const(val(F')) = const(val(F <= F')) .
+ eq const(val(F)) >= const(val(F')) = const(val(F >= F')) .
+ eq const(val(R)) + const(val(R')) = const(val(R + R')) .
+
+ eq const(val(I))  + const(val(F)) = const(val(float(I)))  + const(val(F))        .
+ eq const(val(F))  + const(val(I)) = const(val(F))         + const(val(float(I))) .
+ eq const(val(I))  - const(val(F)) = const(val(float(I)))  - const(val(F))        .
+ eq const(val(F))  - const(val(I)) = const(val(F))         - const(val(float(I))) .
+ eq const(val(I))  * const(val(F)) = const(val(float(I)))  * const(val(F))        .
+ eq const(val(F))  * const(val(I)) = const(val(F))         * const(val(float(I))) .
+ eq const(val(I))  rem const(val(F)) = const(val(float(I))) rem const(val(F))        .
+ eq const(val(F))  rem const(val(I)) = const(val(F))        rem const(val(float(I))) .
+ eq const(val(I))  < const(val(F)) = const(val(float(I)))  < const(val(F))        .
+ eq const(val(F))  < const(val(I)) = const(val(F))         < const(val(float(I))) .
+ eq const(val(I))  > const(val(F)) = const(val(float(I)))  > const(val(F))        .
+ eq const(val(F))  > const(val(I)) = const(val(F))         > const(val(float(I))) .
+ eq const(val(I)) <= const(val(F)) = const(val(float(I))) <= const(val(F))        .
+ eq const(val(F)) <= const(val(I)) = const(val(F))        <= const(val(float(I))) .
+ eq const(val(I)) >= const(val(F)) = const(val(float(I))) >= const(val(F))        .
+ eq const(val(F)) >= const(val(I)) = const(val(F))        >= const(val(float(I))) .
+
+*** Constant expressions
+ eq eval(C,PL,const(V)) = const(V) .
+
+*** Expressions involving 'unknown'
+ eq eval(C,PL,const(unknown) nequ E) = const(unknown) .
+ eq eval(C,PL,E nequ const(unknown)) = const(unknown) .
+ eq const(unknown) + E = const(unknown) .
+ eq const(unknown) - E = const(unknown) .
+ eq const(unknown) * E = const(unknown) .
+ eq const(unknown) < E = const(unknown) .
+ eq const(unknown) > E = const(unknown) .
+ eq const(unknown) <= E = const(unknown) .
+ eq const(unknown) >= E = const(unknown) .
+ eq E + const(unknown) = const(unknown) .
+ eq E - const(unknown) = const(unknown) .
+ eq E * const(unknown) = const(unknown) .
+ eq E < const(unknown) = const(unknown) .
+ eq E > const(unknown) = const(unknown) .
+ eq E <= const(unknown) = const(unknown) .
+ eq E >= const(unknown) = const(unknown) .
+
+ eq const(val(I)) equ const(val(I)) = const(val(true)) .
+ eq const(val(I)) equ const(val(I')) = const(val(false)) [owise] .
+ eq const(val(I)) equ const(val(F)) = const(val(false)) .
+ eq const(val(F)) equ const(val(I)) = const(val(false)) .
+ eq const(val(F)) equ const(val(F)) = const(val(true)) .
+ eq const(val(F)) equ const(val(F')) = const(val(false)) [owise] .
+ eq const(val(R)) equ const(val(R)) = const(val(true)) .
+ eq const(val(R)) equ const(val(R')) = const(val(false)) [owise] .
+ eq const(unknown) equ E = const(unknown) .
+ eq E equ const(unknown) = const(unknown) .
+
+ eq eval(C,PL,E and E') = eval(C,PL,E) and eval(C,PL,E') .
+
+ eq eval(C,PL,E or E') = eval(C,PL,E) or eval(C,PL,E') .
+
+ eq eval(C,PL,not E) = not eval(C,PL,E) .
+
+*** Recursive cases
+ eq eval(C,PL,E + E') = eval(C,PL,E) + eval(C,PL,E') .
+ eq eval(C,PL,E - E') = eval(C,PL,E) - eval(C,PL,E') .
+ eq eval(C,PL,E * E') = eval(C,PL,E) * eval(C,PL,E') .
+ eq eval(C,PL,E rem E') = eval(C,PL,E) rem eval(C,PL,E') .
+ eq eval(C,PL,E < E') = eval(C,PL,E) < eval(C,PL,E') .
+ eq eval(C,PL,E > E') = eval(C,PL,E) > eval(C,PL,E') .
+ eq eval(C,PL,E <= E') = eval(C,PL,E) <= eval(C,PL,E') .
+ eq eval(C,PL,E >= E') = eval(C,PL,E) >= eval(C,PL,E') .
+
+ eq eval(C,PL,E equ E') = eval(C,PL,E) equ eval(C,PL,E') .
+ eq eval(C,PL,E nequ E') = not eval(C,PL,E equ E') .
+
+ ceq eval(C,PL,isKnown(E)) = const(val(V =/= unknown)) if const(V) := eval(C,PL,E) .
+
+ var ArrV : ArrayValue .
+
+*** Expression to Value
+  op expToVal : Expression ~> Value .
+  eq expToVal(const(V))
+   = V .
+
+*** On local variables
+ eq eval(C,[ < Q : memory | NA , actVal: V > PS ],var(Q)) = const(V) .
+ eq eval(C,[ < Q : memory | NA , actVal: ArrV > PS ],arrayVar(Q)) = const(ArrV) .
+ ceq eval(C,[ < Q : memory | NA , actVal: ArrV > PS ],arrayVar(Q,E)) = const(nth(ArrV,I))
+    if val(I) := expToVal(eval(C,[ < Q : memory | NA , actVal: ArrV > PS ],E)) .
+
+*** On context variables
+ eq eval(((Q(Args) : V),C), PL, lookup(Q,Args)) = const(V) . --- [print "lookup(" Q "," Args ") = const(" V ")"] .
+ eq eval(C, PL, lookup(Q,Args)) = const(unknown) [owise] . --- print "lookup(" Q "," Args ") = const(unknown)"] .
+ eq eval(((Q(Args) : V),C), PL, lookupOnChange(Q,Args,V')) = const(V) . --- [print "lookupOnChange(" Q "," Args ") = const(" V ")"] .
+ eq eval(C, PL, lookupOnChange(Q,Args,V')) = const(unknown) [owise] . --- print "lookupOnChange(" Q "," Args ") = const(unknown)"] .
+
+*** On functions
+**** Case by case
+ ceq eval(C,PL,func(absp,E)) = const(val(abs(I)))
+  if const(val(I)) := eval(C,PL,E) .
+
+ ceq eval(C,PL,func(absp,E)) = const(val(abs(F)))
+  if const(val(F)) := eval(C,PL,E) .
+
+ ceq eval(C,PL,func(sqrt,E)) = const(val(sqrt(F)))
+  if const(val(F)) := eval(C,PL,E) .
+
+ ceq eval(C,PL,func(notp,E)) = const(val(not(B)))
+  if const(val(B)) := eval(C,PL,E) .
+
+*** Predicates on Processes
+
+var FT FT' : FailureType .
+
+ eq eval(C, [ < Q : (X:Cid) | NA, status: S' > PS ], isStatus?(Q,S)) = const(val(S == S')) .
+ *** TODO: Refactor this logic into the normal Value expressions logic for unknown (in this case `none`)
+ eq eval(C, [ < Q : (X:Cid) | NA, outcome: none > PS ], isOutcome?(Q,none)) = const(val(true)) .
+ eq eval(C, [ < Q : (X:Cid) | NA, outcome: none > PS ], isOutcome?(Q,O)) = const(unknown) [owise] .
+ eq eval(C, [ < Q : (X:Cid) | NA, outcome: O' > PS ], isOutcome?(Q,O)) = const(val(O == O')) [owise] .
+ eq eval(C, [ < Q : (X:Cid) | NA, outcome: failure(FT') > PS ], isFailure?(Q,FT)) = const(val(FT == FT')) .
+ eq eval(C, [ < Q : (X:Cid) | NA, outcome: O' > PS ], isFailure?(Q,FT)) = const(val(false)) [owise] .
+ eq eval(C, [ < Q : (X:Cid) | NA, outcome: O' > PS ], isOutcomeFailure?(Q)) = const(val(isFailure?(O'))) .
+ eq eval(C, [ < Q : (X:Cid) | NA, outcome: O' > PS ], isOutcomeSuccess?(Q)) = const(val(isSuccess?(O'))) .
+ eq eval(C, [ < Q : (X:Cid) | NA, status: S > PS ], isFinished?(Q)) = const(val(S == finished)) .
+ eq eval(C, [ PS ], hasPostconditionFailed?(Q))
+  = eval(C, [ PS ], isOutcome?(Q,failure(postconditionFailed)) or isOutcome?(Q,interrupted(postconditionFailed))) .
+ eq eval(C, [ PS ], hasSucceeded?(Q))
+  = eval(C, [ PS ], isOutcome?(Q,success) and isStatus?(Q,finished)) .
+ eq eval(C, [ PS ], hasSkipped?(Q))
+  = eval(C, [ PS ], isOutcome?(Q,skipped)) .
+
+ eq eval(C, [ PS ], areChildren?(Q,S)) = const(val(processesWithStatus?(childrenProcesses(Q,PS),S))) .
+ eq eval(C, [ PS ], noChildFailed(Q)) = const(val(getFailedProcesses(getProcessesWithStatus(childrenProcesses(Q,PS),finished)) == none)) .
+
+var CH : CommandHandle .
+vars AtS AtS' : AttributeSet .
+
+ eq eval(C, [ < Q : command | AtS > < I:Identifier . Q : command-on-execution | handle: just(CH), AtS' > PS ], cmdHandleIs?(Q,CH)) = const(val(true)) .
+ eq eval(C, [ PS ], cmdHandleIs?(Q,CH)) = const(val(false)) [owise] .
+
+ op isFailure? : Outcome -> Bool .
+ eq isFailure?(failure(Fa)) = true .
+ eq isFailure?(O) = false [owise] .
+
+ op isSuccess? : Outcome -> Bool .
+ eq isSuccess?(success) = true .
+ eq isSuccess?(O) = false [owise] .
+
+******** Auxiliary functions
+
+*** Reset memory
+ op resetMemory : Configuration -> Configuration .
+ eq resetMemory( < Q : memory | initVal: V', actVal: V, Ats > PS )
+  = < Q : memory | initVal: V', actVal: V', Ats > resetMemory(PS) .
+ eq resetMemory(PS) = PS [owise] .
+
+*** Do the given set of processes satisfy certain status?
+*** Precondition: Conf does not contain memory nodes
+ op processesWithStatus? : Configuration Status -> Bool .
+ eq processesWithStatus?(none,S) = true .
+ eq processesWithStatus?(< Q : Cd | Ats, status: S > PS, S)
+  = processesWithStatus?(PS, S) .
+ eq processesWithStatus?(PS, S) = false [owise] .
+
+  op getProcessesWithStatus : Configuration Status -> Configuration .
+  eq getProcessesWithStatus(PS,S) = getProcessesWithStatus'(PS,S,none) .
+    op getProcessesWithStatus' : Configuration Status Configuration -> Configuration .
+    eq getProcessesWithStatus'(< Q : Cd | Ats, status: S > PS, S, PS')
+    = getProcessesWithStatus'(PS, S, < Q : Cd | Ats, status: S > PS') .
+    eq getProcessesWithStatus'(< Q : Cd | Ats, status: S' > PS, S, PS')
+    = getProcessesWithStatus'(PS, S, PS') [owise] .
+    eq getProcessesWithStatus'(none, S, PS') = PS' .
+
+  op getProcessesWithOutcome : Configuration Outcome -> Configuration .
+  eq getProcessesWithOutcome(PS,O) = getProcessesWithOutcome'(PS,O,none) .
+    op getProcessesWithOutcome' : Configuration Outcome Configuration -> Configuration .
+    eq getProcessesWithOutcome'(< Q : Cd | Ats, outcome: O > PS, O, PS')
+    = getProcessesWithOutcome'(PS, O, < Q : Cd | Ats, outcome: O > PS') .
+    eq getProcessesWithOutcome'(< Q : Cd | Ats, outcome: O' > PS, O, PS')
+    = getProcessesWithOutcome'(PS, O, PS') [owise] .
+    eq getProcessesWithOutcome'(none, O, PS') = PS' .
+
+  op getFailedProcesses : Configuration -> Configuration .
+  eq getFailedProcesses(PS) = getFailedProcesses'(PS,none) .
+    op getFailedProcesses' : Configuration Configuration -> Configuration .
+    eq getFailedProcesses'(< Q : Cd | Ats, outcome: failure(FT) > PS, PS')
+    = getFailedProcesses'(PS, < Q : Cd | Ats, outcome: failure(FT) > PS') .
+    eq getFailedProcesses'(< Q : Cd | Ats, outcome: O' > PS, PS')
+    = getFailedProcesses'(PS, PS') [owise] .
+    eq getFailedProcesses'(none, PS') = PS' .
+
+
+ *** Immediate children of a given node
+ op children : NeQualified Configuration -> Configuration .
+ op $children : NeQualified Configuration Configuration -> Configuration .
+ eq children(Q, PS) = $children(Q, PS, none) .
+ eq $children(Q, < iD . Q : Cd | Ats > PS, PS')
+  = $children(Q, PS, < iD . Q : Cd | Ats > PS') .
+ eq $children(Q, PS, PS') = PS' [owise] .
+
+ *** Immediate children processes of a given node
+ op childrenProcesses : NeQualified Configuration -> Configuration .
+ op $childrenProcesses : NeQualified Configuration Configuration -> Configuration .
+ eq childrenProcesses(Q, PS) = $childrenProcesses(Q, PS, none) .
+ eq $childrenProcesses(Q, < iD . Q : Cd | Ats > PS, PS')
+  = if Cd == memory then $childrenProcesses(Q, PS, PS')
+    else $childrenProcesses(Q, PS, < iD . Q : Cd | Ats > PS') fi .
+ eq $childrenProcesses(Q, PS, PS') = PS' [owise] .
+
+ *** Memory nodes declared by a given node
+ op childrenMemories : NeQualified Configuration -> Configuration .
+ op $childrenMemories : NeQualified Configuration Configuration -> Configuration .
+ eq childrenMemories(Q, PS) = $childrenMemories(Q, PS, none) .
+ eq $childrenMemories(Q, < iD . Q : memory | Ats > PS, PS')
+  = $childrenMemories(Q, PS, < iD . Q : memory | Ats > PS') .
+ eq $childrenMemories(Q, PS, PS') = PS' [owise] .
+
+ *** Auxiliary boolean expression predicates
+ ops isTrue isFalse isUnknown : Expression -> Bool .
+ eq isTrue(const(val(true))) = true .
+ eq isTrue(const(val(false))) = false .
+ eq isTrue(const(unknown)) = false .
+ eq isFalse(const(val(true))) = false .
+ eq isFalse(const(val(false))) = true .
+ eq isFalse(const(unknown)) = false .
+ eq isUnknown(const(val(true))) = false .
+ eq isUnknown(const(val(false))) = false .
+ eq isUnknown(const(unknown)) = true .
+
+endm

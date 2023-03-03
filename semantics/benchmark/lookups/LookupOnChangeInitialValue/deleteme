@@ -1,0 +1,365 @@
+
+Running executive from /Users/mfeliu/Desktop/plexil/plexil4-executive
+  Plan:           plan.plx
+
+[ResourceArbiterInterface:readResourceHierarchyFile] Unable to open file resource.data. No resources read.
+[loadXmlFile] plan.plx
+[parsePlan]entered
+[checkPlan] entered
+[pushSymbolTable] 0x7f9ac5403090
+[checkNode] parsing element NodeId
+[checkNode] parsing element ExitCondition
+[checkExpression] name = GT
+[checkExpression] name = LookupOnChange
+[checkExpression] name = StringValue
+[checkExpression] name = IntegerValue
+[checkNode] parsing element InvariantCondition
+[checkExpression] name = NoChildFailed
+[checkNode] parsing element NodeBody
+[checkNode] parsing element NodeId
+[checkNode] parsing element NodeBody
+[checkExpression] name = StringValue
+[checkExpression] name = StringValue
+[checkNode] parsing element NodeId
+[checkNode] parsing element StartCondition
+[checkExpression] name = Finished
+[checkNode] parsing element NodeBody
+[checkExpression] name = StringValue
+[checkExpression] name = StringValue
+[popSymbolTable] 0x7f9ac5403090
+[constructPlan] ACTION
+[pushSymbolTable] 0x7f9ac5403090
+[parseNode] constructing node
+[NodeFactory] initialized
+[NodeImpl:NodeImpl] Constructor for "ACTION"
+[NodeImpl:NodeImpl] common initialization
+[NodeFactory] created node ACTION
+[parseNode] Node ACTION created
+[parseNode] constructing body
+[parseNode] constructing node
+[NodeImpl:NodeImpl] Constructor for "COMMAND__0"
+[NodeImpl:NodeImpl] common initialization
+[NodeFactory] created node COMMAND__0
+[parseNode] Node COMMAND__0 created
+[parseNode] constructing body
+[parseNode] first pass done.
+[parseNode] constructing node
+[NodeImpl:NodeImpl] Constructor for "COMMAND__1"
+[NodeImpl:NodeImpl] common initialization
+[NodeFactory] created node COMMAND__1
+[parseNode] Node COMMAND__1 created
+[parseNode] constructing body
+[parseNode] first pass done.
+[parseNode] first pass done.
+[popSymbolTable] 0x7f9ac5403090
+[pushSymbolTable] 0x7f9ac5403090
+[finalizeNode] node ACTION
+[finalizeNode] processing condition ExitCondition
+[createExpression] name = GT
+[createExpression] name = LookupOnChange
+[createExpression] name = StringValue
+[createExpression] Created (Constant String 0x7f9ac5404740 [a](tick))
+[createExpression] Created (LookupNow Integer 0x7f9ac54047d0 [i](UNKNOWN) name (Constant String 0x7f9ac5404740 [a](tick)) )
+[createExpression] name = IntegerValue
+[createExpression] Created reference to (Constant Integer 0x10dc870f0 [a](0))
+[createExpression] Created (GT Boolean 0x7f9ac5404860 [i](UNKNOWN) (LookupNow Integer 0x7f9ac54047d0 [i](UNKNOWN) name (Constant String 0x7f9ac5404740 [a](tick)) ) (Constant Integer 0x10dc870f0 [a](0)))
+[finalizeNode] processing condition InvariantCondition
+[createExpression] name = NoChildFailed
+[createExpression] Created (NoChildFailed Boolean ACTION0x7f9ac5404770 [i](1))
+[finalizeNode] node COMMAND__0
+[createExpression] name = StringValue
+[createExpression] Created (Constant String 0x7f9ac5404960 [a](pprint))
+[createExpression] name = StringValue
+[createExpression] Created (Constant String 0x7f9ac54049c0 [a](This should be printed))
+[finalizeNode] node COMMAND__1
+[finalizeNode] processing condition StartCondition
+[createExpression] name = Finished
+[createExpression] Created (Finished Boolean COMMAND__00x7f9ac54049f0 [i](0))
+[createExpression] name = StringValue
+[createExpression] Created (Constant String 0x7f9ac5404a80 [a](pprint))
+[createExpression] name = StringValue
+[createExpression] Created (Constant String 0x7f9ac5404b00 [a](This should not be printed because of the Exit))
+[popSymbolTable] 0x7f9ac5403090
+[ExecListener:implementNotifyAddPlan] default method called
+[PlexilExec:addPlan]Added plan: 
+ACTION{
+ State: INACTIVE (0)
+  COMMAND__0{
+   State: INACTIVE (0)
+  }
+  COMMAND__1{
+   State: INACTIVE (0)
+  }
+}
+
+[PlexilExec:notifyNodeConditionChanged] for node ACTION 0x7f9ac5403ff0
+[loadXmlFile] input.psx
+[Test:testOutput]Creating initial state tick() = 0
+[ExternalInterface:lookupReturn](tick(), 0)
+[CachedValue:update] updated to 0
+[CachedValue:update] updated to 0
+[PlexilExec:cycle] ==>Start cycle 1
+[PlexilExec:step][1:0] Check queue: ACTION 0x7f9ac5403ff0 
+[Node:checkConditions]Checking condition change for node ACTION 0x7f9ac5403ff0
+[Node:getDestState]Getting destination state for ACTION 0x7f9ac5403ff0 from state INACTIVE
+[Node:getDestState] ACTION 0x7f9ac5403ff0 INACTIVE -> WAITING. Root node.
+[Node:checkConditions]Can (possibly) transition to WAITING
+[PlexilExec:handleConditionsChanged] Considering node ACTION 0x7f9ac5403ff0 for state transition.
+[PlexilExec:addStateChangeNode] Placing node ACTION 0x7f9ac5403ff0 on the state change queue in position 1
+[PlexilExec:step][1:0] State change queue: ACTION 0x7f9ac5403ff0 
+[PlexilExec:step][1:0:0] Transitioning node ACTION 0x7f9ac5403ff0 from INACTIVE to WAITING
+[Node:transition]Transitioning ACTION 0x7f9ac5403ff0 from INACTIVE to WAITING at 0
+[Lookup:handleActivate] called
+[Lookup:register] tick()
+[StateCacheEntry:registerLookup] tick() subscribing to interface
+[Test:testOutput]Registering change lookup for tick()
+[StateCacheEntry:registerLookup] tick() now has 1 lookups
+[PlexilExec:notifyNodeConditionChanged] for node ACTION 0x7f9ac5403ff0
+[PlexilExec:step][1:1] Check queue: ACTION 0x7f9ac5403ff0 
+[Node:checkConditions]Checking condition change for node ACTION 0x7f9ac5403ff0
+[Node:getDestState]Getting destination state for ACTION 0x7f9ac5403ff0 from state WAITING
+[Node:getDestState] ACTION 0x7f9ac5403ff0 WAITING -> EXECUTING. START_CONDITION and PRE_CONDITION are both true.
+[Node:checkConditions]Can (possibly) transition to EXECUTING
+[PlexilExec:handleConditionsChanged] Considering node ACTION 0x7f9ac5403ff0 for state transition.
+[PlexilExec:addStateChangeNode] Placing node ACTION 0x7f9ac5403ff0 on the state change queue in position 2
+[PlexilExec:step][1:1] State change queue: ACTION 0x7f9ac5403ff0 
+[PlexilExec:step][1:1:0] Transitioning node ACTION 0x7f9ac5403ff0 from WAITING to EXECUTING
+[Node:transition]Transitioning ACTION 0x7f9ac5403ff0 from WAITING to EXECUTING at 0
+[PlexilExec:notifyNodeConditionChanged] for node ACTION 0x7f9ac5403ff0
+[PlexilExec:notifyNodeConditionChanged] for node COMMAND__0 0x7f9ac5404220
+[PlexilExec:notifyNodeConditionChanged] for node COMMAND__1 0x7f9ac54044b0
+[Node:execute] Executing node ACTION
+[PlexilExec:handleNeedsExecution] Storing action for node ACTION 0x7f9ac5403ff0 of type NodeList to be executed.
+[PlexilExec:step][1:2] Check queue: ACTION 0x7f9ac5403ff0 COMMAND__0 0x7f9ac5404220 COMMAND__1 0x7f9ac54044b0 
+[Node:checkConditions]Checking condition change for node ACTION 0x7f9ac5403ff0
+[Node:getDestState]Getting destination state for ACTION 0x7f9ac5403ff0 from state EXECUTING
+[AllFinished]result = false
+[Node:getDestState] ACTION 0x7f9ac5403ff0 EXECUTING -> no change.
+[Node:checkConditions]Checking condition change for node COMMAND__0 0x7f9ac5404220
+[Node:getDestState]Getting destination state for COMMAND__0 0x7f9ac5404220 from state INACTIVE
+[Node:getDestState] COMMAND__0 0x7f9ac5404220 INACTIVE -> WAITING. Parent state == EXECUTING.
+[Node:checkConditions]Can (possibly) transition to WAITING
+[PlexilExec:handleConditionsChanged] Considering node COMMAND__0 0x7f9ac5404220 for state transition.
+[PlexilExec:addStateChangeNode] Placing node COMMAND__0 0x7f9ac5404220 on the state change queue in position 3
+[Node:checkConditions]Checking condition change for node COMMAND__1 0x7f9ac54044b0
+[Node:getDestState]Getting destination state for COMMAND__1 0x7f9ac54044b0 from state INACTIVE
+[Node:getDestState] COMMAND__1 0x7f9ac54044b0 INACTIVE -> WAITING. Parent state == EXECUTING.
+[Node:checkConditions]Can (possibly) transition to WAITING
+[PlexilExec:handleConditionsChanged] Considering node COMMAND__1 0x7f9ac54044b0 for state transition.
+[PlexilExec:addStateChangeNode] Placing node COMMAND__1 0x7f9ac54044b0 on the state change queue in position 4
+[PlexilExec:step][1:2] State change queue: COMMAND__0 0x7f9ac5404220 COMMAND__1 0x7f9ac54044b0 
+[PlexilExec:step][1:2:0] Transitioning node COMMAND__0 0x7f9ac5404220 from INACTIVE to WAITING
+[Node:transition]Transitioning COMMAND__0 0x7f9ac5404220 from INACTIVE to WAITING at 0
+[PlexilExec:notifyNodeConditionChanged] for node COMMAND__0 0x7f9ac5404220
+[PlexilExec:notifyNodeConditionChanged] for node ACTION 0x7f9ac5403ff0
+[PlexilExec:notifyNodeConditionChanged] for node COMMAND__1 0x7f9ac54044b0
+[PlexilExec:step][1:2:1] Transitioning node COMMAND__1 0x7f9ac54044b0 from INACTIVE to WAITING
+[Node:transition]Transitioning COMMAND__1 0x7f9ac54044b0 from INACTIVE to WAITING at 0
+[PlexilExec:step][1:3] Check queue: COMMAND__0 0x7f9ac5404220 ACTION 0x7f9ac5403ff0 COMMAND__1 0x7f9ac54044b0 
+[Node:checkConditions]Checking condition change for node COMMAND__0 0x7f9ac5404220
+[Node:getDestState]Getting destination state for COMMAND__0 0x7f9ac5404220 from state WAITING
+[Node:getDestState] COMMAND__0 0x7f9ac5404220 WAITING -> EXECUTING. START_CONDITION and PRE_CONDITION are both true.
+[Node:checkConditions]Can (possibly) transition to EXECUTING
+[PlexilExec:handleConditionsChanged] Considering node COMMAND__0 0x7f9ac5404220 for state transition.
+[PlexilExec:addStateChangeNode] Placing node COMMAND__0 0x7f9ac5404220 on the state change queue in position 5
+[Node:checkConditions]Checking condition change for node ACTION 0x7f9ac5403ff0
+[Node:getDestState]Getting destination state for ACTION 0x7f9ac5403ff0 from state EXECUTING
+[AllFinished]result = false
+[Node:getDestState] ACTION 0x7f9ac5403ff0 EXECUTING -> no change.
+[Node:checkConditions]Checking condition change for node COMMAND__1 0x7f9ac54044b0
+[Node:getDestState]Getting destination state for COMMAND__1 0x7f9ac54044b0 from state WAITING
+[Node:getDestState] COMMAND__1 0x7f9ac54044b0 WAITING -> no change. START_CONDITION false or unknown
+[PlexilExec:step][1:3] State change queue: COMMAND__0 0x7f9ac5404220 
+[PlexilExec:step][1:3:0] Transitioning node COMMAND__0 0x7f9ac5404220 from WAITING to EXECUTING
+[Node:transition]Transitioning COMMAND__0 0x7f9ac5404220 from WAITING to EXECUTING at 0
+[PlexilExec:notifyNodeConditionChanged] for node COMMAND__0 0x7f9ac5404220
+[Node:execute] Executing node COMMAND__0
+[PlexilExec:handleNeedsExecution] Storing action for node COMMAND__0 0x7f9ac5404220 of type Command to be executed.
+[PlexilExec:notifyNodeConditionChanged] for node ACTION 0x7f9ac5403ff0
+[PlexilExec:notifyNodeConditionChanged] for node COMMAND__1 0x7f9ac54044b0
+[PlexilExec:performAssignments] performing 0 assignments and 0 retractions
+[ResourceArbiterInterface:partitionCommands] accepting pprint with no resource requests
+[Test:testOutput]Executing pprint(This should be printed) into noId with ack (CommandHandleVariable NodeCommandHandle 0x7f9ac54043b0 [a](UNKNOWN))
+This should be printed 
+[ExecListener:notifyOfTransitions] reporting 5 transitions
+[ExecListener:implementNotifyNodeTransitions] default method called
+[Node:clock]Node 'ACTION' started at 0
+[Node:clock]Node 'ACTION' started at 0
+[Node:clock]Node 'COMMAND__0' started at 0
+[Node:clock]Node 'COMMAND__0' started at 0
+[PlexilExec:cycle] ==>End cycle 1
+[PlexilExec:printPlan]
+ACTION{
+ State: EXECUTING (0)
+ ExitCondition: (GT Boolean 0x7f9ac5404860 [a](0) (LookupNow Integer 0x7f9ac54047d0 [a](0) name (Constant String 0x7f9ac5404740 [a](tick)) ) (Constant Integer 0x10dc870f0 [a](0)))
+ InvariantCondition: (NoChildFailed Boolean ACTION0x7f9ac5404770 [a](1))
+ EndCondition: [AllFinished]result = false
+(AllChildrenFinished Boolean ACTION0x7f9ac5404168 [a](0))
+ ActionCompleteCondition: [AllWaitingOrFinished] result = false
+(AllChildrenWaitingOrFinished Boolean ACTION0x7f9ac5404120 [i](0))
+  COMMAND__0{
+   State: EXECUTING (0)
+   AncestorExitCondition: (GT Boolean 0x7f9ac5404860 [a](0) (LookupNow Integer 0x7f9ac54047d0 [a](0) name (Constant String 0x7f9ac5404740 [a](tick)) ) (Constant Integer 0x10dc870f0 [a](0)))
+   AncestorInvariantCondition: (NoChildFailed Boolean ACTION0x7f9ac5404770 [a](1))
+   ActionCompleteCondition: (CommandHandleKnown Boolean 0x7f9ac5404368 [i](1))
+   AbortCompleteCondition: (InternalVariable Boolean abortComplete 0x7f9ac54043f0 [a](0))
+   Command handle: (CommandHandleVariable NodeCommandHandle 0x7f9ac54043b0 [a](COMMAND_SUCCESS))
+  }
+  COMMAND__1{
+   State: WAITING (0)
+   AncestorExitCondition: (GT Boolean 0x7f9ac5404860 [a](0) (LookupNow Integer 0x7f9ac54047d0 [a](0) name (Constant String 0x7f9ac5404740 [a](tick)) ) (Constant Integer 0x10dc870f0 [a](0)))
+   AncestorInvariantCondition: (NoChildFailed Boolean ACTION0x7f9ac5404770 [a](1))
+   StartCondition: (Finished Boolean COMMAND__00x7f9ac54049f0 [a](0))
+   ActionCompleteCondition: (CommandHandleKnown Boolean 0x7f9ac54045f8 [i](0))
+   AbortCompleteCondition: (InternalVariable Boolean abortComplete 0x7f9ac5404680 [i](0))
+   Command handle: (CommandHandleVariable NodeCommandHandle 0x7f9ac5404640 [i](UNKNOWN))
+  }
+}
+
+[Test:testOutput]Processing event: tick() = 1
+[ExternalInterface:lookupReturn](tick(), 1)
+[CachedValue:update] updated to 1
+[PlexilExec:cycle] ==>Start cycle 2
+[PlexilExec:step][2:0] Check queue: COMMAND__0 0x7f9ac5404220 ACTION 0x7f9ac5403ff0 COMMAND__1 0x7f9ac54044b0 
+[Node:checkConditions]Checking condition change for node COMMAND__0 0x7f9ac5404220
+[Node:getDestState]Getting destination state for COMMAND__0 0x7f9ac5404220 from state EXECUTING
+[Node:getDestState] COMMAND__0 0x7f9ac5404220 EXECUTING -> FAILING. Command node and ancestor exit true.
+[Node:checkConditions]Can (possibly) transition to FAILING
+[PlexilExec:handleConditionsChanged] Considering node COMMAND__0 0x7f9ac5404220 for state transition.
+[PlexilExec:addStateChangeNode] Placing node COMMAND__0 0x7f9ac5404220 on the state change queue in position 6
+[Node:checkConditions]Checking condition change for node ACTION 0x7f9ac5403ff0
+[Node:getDestState]Getting destination state for ACTION 0x7f9ac5403ff0 from state EXECUTING
+[Node:getDestState] ACTION 0x7f9ac5403ff0 EXECUTING -> FAILING. List node and EXIT_CONDITION true.
+[Node:checkConditions]Can (possibly) transition to FAILING
+[PlexilExec:handleConditionsChanged] Considering node ACTION 0x7f9ac5403ff0 for state transition.
+[PlexilExec:addStateChangeNode] Placing node ACTION 0x7f9ac5403ff0 on the state change queue in position 7
+[Node:checkConditions]Checking condition change for node COMMAND__1 0x7f9ac54044b0
+[Node:getDestState]Getting destination state for COMMAND__1 0x7f9ac54044b0 from state WAITING
+[Node:getDestState] COMMAND__1 0x7f9ac54044b0 WAITING -> FINISHED. ANCESTOR_EXIT_CONDITION true.
+[Node:checkConditions]Can (possibly) transition to FINISHED
+[PlexilExec:handleConditionsChanged] Considering node COMMAND__1 0x7f9ac54044b0 for state transition.
+[PlexilExec:addStateChangeNode] Placing node COMMAND__1 0x7f9ac54044b0 on the state change queue in position 8
+[PlexilExec:step][2:0] State change queue: COMMAND__0 0x7f9ac5404220 ACTION 0x7f9ac5403ff0 COMMAND__1 0x7f9ac54044b0 
+[PlexilExec:step][2:0:0] Transitioning node COMMAND__0 0x7f9ac5404220 from EXECUTING to FAILING
+[Node:transition]Transitioning COMMAND__0 0x7f9ac5404220 from EXECUTING to FAILING at 0
+[Test:testOutput]Aborting pprint(This should be printed)
+[PlexilExec:notifyNodeConditionChanged] for node COMMAND__0 0x7f9ac5404220
+[PlexilExec:notifyNodeConditionChanged] for node ACTION 0x7f9ac5403ff0
+[PlexilExec:step][2:0:1] Transitioning node ACTION 0x7f9ac5403ff0 from EXECUTING to FAILING
+[Node:transition]Transitioning ACTION 0x7f9ac5403ff0 from EXECUTING to FAILING at 0
+[PlexilExec:notifyNodeConditionChanged] for node COMMAND__1 0x7f9ac54044b0
+[PlexilExec:step][2:0:2] Transitioning node COMMAND__1 0x7f9ac54044b0 from WAITING to FINISHED
+[Node:transition]Transitioning COMMAND__1 0x7f9ac54044b0 from WAITING to FINISHED at 0
+[Node:outcome]Outcome of COMMAND__1 0x7f9ac54044b0 is SKIPPED
+[PlexilExec:step][2:1] Check queue: COMMAND__0 0x7f9ac5404220 ACTION 0x7f9ac5403ff0 COMMAND__1 0x7f9ac54044b0 
+[Node:checkConditions]Checking condition change for node COMMAND__0 0x7f9ac5404220
+[Node:getDestState]Getting destination state for COMMAND__0 0x7f9ac5404220 from state FAILING
+[Node:getDestState] COMMAND__0 0x7f9ac5404220 FAILING -> no change.
+[Node:checkConditions]Checking condition change for node ACTION 0x7f9ac5403ff0
+[Node:getDestState]Getting destination state for ACTION 0x7f9ac5403ff0 from state FAILING
+[AllWaitingOrFinished] result = false
+[Node:getDestState] ACTION 0x7f9ac5403ff0 FAILING -> no change.
+[Node:checkConditions]Checking condition change for node COMMAND__1 0x7f9ac54044b0
+[Node:getDestState]Getting destination state for COMMAND__1 0x7f9ac54044b0 from state FINISHED
+[Node:getDestState] COMMAND__1 0x7f9ac54044b0 FINISHED -> no change.
+[PlexilExec:performAssignments] performing 0 assignments and 0 retractions
+[ExecListener:notifyOfTransitions] reporting 3 transitions
+[ExecListener:implementNotifyNodeTransitions] default method called
+[Node:clock]Node 'COMMAND__1' finished at 0 (19)
+[PlexilExec:cycle] ==>End cycle 2
+[PlexilExec:printPlan]
+ACTION{
+ State: FAILING (0)
+ ExitCondition: (GT Boolean 0x7f9ac5404860 [a](1) (LookupNow Integer 0x7f9ac54047d0 [a](1) name (Constant String 0x7f9ac5404740 [a](tick)) ) (Constant Integer 0x10dc870f0 [a](0)))
+ InvariantCondition: (NoChildFailed Boolean ACTION0x7f9ac5404770 [a](1))
+ EndCondition: [AllFinished]result = false
+(AllChildrenFinished Boolean ACTION0x7f9ac5404168 [i](0))
+ ActionCompleteCondition: [AllWaitingOrFinished] result = false
+(AllChildrenWaitingOrFinished Boolean ACTION0x7f9ac5404120 [a](0))
+  COMMAND__0{
+   State: FAILING (0)
+   AncestorExitCondition: (GT Boolean 0x7f9ac5404860 [a](1) (LookupNow Integer 0x7f9ac54047d0 [a](1) name (Constant String 0x7f9ac5404740 [a](tick)) ) (Constant Integer 0x10dc870f0 [a](0)))
+   AncestorInvariantCondition: (NoChildFailed Boolean ACTION0x7f9ac5404770 [a](1))
+   ActionCompleteCondition: (CommandHandleKnown Boolean 0x7f9ac5404368 [i](1))
+   AbortCompleteCondition: (InternalVariable Boolean abortComplete 0x7f9ac54043f0 [a](0))
+   Command handle: (CommandHandleVariable NodeCommandHandle 0x7f9ac54043b0 [a](COMMAND_SUCCESS))
+  }
+  COMMAND__1{
+   State: FINISHED (0)
+   Outcome: SKIPPED
+   Command handle: (CommandHandleVariable NodeCommandHandle 0x7f9ac5404640 [i](UNKNOWN))
+  }
+}
+
+[Test:testOutput]Processing event: tick() = 2
+[ExternalInterface:lookupReturn](tick(), 2)
+[CachedValue:update] updated to 2
+[PlexilExec:notifyNodeConditionChanged] for node ACTION 0x7f9ac5403ff0
+[PlexilExec:notifyNodeConditionChanged] for node COMMAND__0 0x7f9ac5404220
+[PlexilExec:notifyNodeConditionChanged] for node COMMAND__1 0x7f9ac54044b0
+[PlexilExec:cycle] ==>Start cycle 3
+[PlexilExec:step][3:0] Check queue: ACTION 0x7f9ac5403ff0 COMMAND__0 0x7f9ac5404220 COMMAND__1 0x7f9ac54044b0 
+[Node:checkConditions]Checking condition change for node ACTION 0x7f9ac5403ff0
+[Node:getDestState]Getting destination state for ACTION 0x7f9ac5403ff0 from state FAILING
+[AllWaitingOrFinished] result = false
+[Node:getDestState] ACTION 0x7f9ac5403ff0 FAILING -> no change.
+[Node:checkConditions]Checking condition change for node COMMAND__0 0x7f9ac5404220
+[Node:getDestState]Getting destination state for COMMAND__0 0x7f9ac5404220 from state FAILING
+[Node:getDestState] COMMAND__0 0x7f9ac5404220 FAILING -> no change.
+[Node:checkConditions]Checking condition change for node COMMAND__1 0x7f9ac54044b0
+[Node:getDestState]Getting destination state for COMMAND__1 0x7f9ac54044b0 from state FINISHED
+[Node:getDestState] COMMAND__1 0x7f9ac54044b0 FINISHED -> no change.
+[PlexilExec:performAssignments] performing 0 assignments and 0 retractions
+[ExecListener:notifyOfTransitions] reporting 0 transitions
+[ExecListener:implementNotifyNodeTransitions] default method called
+[PlexilExec:cycle] ==>End cycle 3
+[PlexilExec:printPlan]
+ACTION{
+ State: FAILING (0)
+ ExitCondition: (GT Boolean 0x7f9ac5404860 [a](1) (LookupNow Integer 0x7f9ac54047d0 [a](2) name (Constant String 0x7f9ac5404740 [a](tick)) ) (Constant Integer 0x10dc870f0 [a](0)))
+ InvariantCondition: (NoChildFailed Boolean ACTION0x7f9ac5404770 [a](1))
+ EndCondition: [AllFinished]result = false
+(AllChildrenFinished Boolean ACTION0x7f9ac5404168 [i](0))
+ ActionCompleteCondition: [AllWaitingOrFinished] result = false
+(AllChildrenWaitingOrFinished Boolean ACTION0x7f9ac5404120 [a](0))
+  COMMAND__0{
+   State: FAILING (0)
+   AncestorExitCondition: (GT Boolean 0x7f9ac5404860 [a](1) (LookupNow Integer 0x7f9ac54047d0 [a](2) name (Constant String 0x7f9ac5404740 [a](tick)) ) (Constant Integer 0x10dc870f0 [a](0)))
+   AncestorInvariantCondition: (NoChildFailed Boolean ACTION0x7f9ac5404770 [a](1))
+   ActionCompleteCondition: (CommandHandleKnown Boolean 0x7f9ac5404368 [i](1))
+   AbortCompleteCondition: (InternalVariable Boolean abortComplete 0x7f9ac54043f0 [a](0))
+   Command handle: (CommandHandleVariable NodeCommandHandle 0x7f9ac54043b0 [a](COMMAND_SUCCESS))
+  }
+  COMMAND__1{
+   State: FINISHED (0)
+   Outcome: SKIPPED
+   Command handle: (CommandHandleVariable NodeCommandHandle 0x7f9ac5404640 [i](UNKNOWN))
+  }
+}
+
+[Time]Time spent in execution: 1718
+[ListNode:~ListNode] destructor for ACTION
+[ListNode:cleanUpConditions] for ACTION
+[ListNode:cleanUpChildConditions] for ACTION
+[Node:cleanUpConditions] for COMMAND__0
+[Node:cleanUpConditions] for COMMAND__1
+[Node:cleanUpConds]<COMMAND__1> Removing condition StartCondition
+[CommandNode:cleanUpNodeBody]<COMMAND__0> entered
+[CommandNode:cleanUpNodeBody]<COMMAND__1> entered
+[Node:cleanUpConditions] for ACTION
+[Node:cleanUpConds]<ACTION> Removing condition ExitCondition
+[Lookup:unregister] tick()
+[StateCacheEntry:unregisterLookup] tick()
+[StateCacheEntry:unregisterLookup] tick() no lookups remaining, unsubscribing
+[Node:cleanUpConds]<ACTION> Removing condition InvariantCondition
+[ListNode:cleanUpNodeBody] for ACTION
+[CommandNode:~CommandNode] destructor for COMMAND__0
+[CommandNode:~CommandNode]<COMMAND__0> Removing command.
+[NodeImpl:~NodeImpl] base class destructor for COMMAND__0
+[Node:cleanUpVars] for COMMAND__0
+[CommandNode:~CommandNode] destructor for COMMAND__1
+[CommandNode:~CommandNode]<COMMAND__1> Removing command.
+[NodeImpl:~NodeImpl] base class destructor for COMMAND__1
+[Node:cleanUpVars] for COMMAND__1
+[NodeImpl:~NodeImpl] base class destructor for ACTION
+[Node:cleanUpVars] for ACTION

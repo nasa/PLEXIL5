@@ -1,0 +1,35 @@
+in ../../lib/test/test.maude
+in ../../src/plexilite.maude
+in ./base.maude
+in ./atomic/test.maude
+in ./reductions/test.maude
+in ./expressions/test.maude
+in ./model-checking.maude
+in ./compiler/test.maude
+
+mod TEST-SUITE is
+
+  pr TEST--ATOMIC .
+  pr TEST--REDUCTIONS .
+  pr TEST--EXPRESSIONS .
+  pr TEST--MODEL-CHECKING .
+  pr TEST--COMPILER .
+
+  eq tests =
+    AllTestsPassed
+    + atomic--tests
+    + reductions--tests
+    + expressions--tests
+    + model-checking--tests
+    + compiler--tests
+    .
+
+endm
+
+set show stats   off .
+set show command off .
+set show timing  off .
+
+load ../../lib/test/test-runner.maude
+
+reduce in TEST-RUNNER : runTests .

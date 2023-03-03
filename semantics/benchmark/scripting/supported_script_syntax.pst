@@ -1,0 +1,14 @@
+initial-state {
+}
+
+script {
+  command                get-string (1 : int) = "fred" : string;
+  command-abort          get-string (1 : int) = 1 : string;
+  command-ack            get-string (1 : int) = "COMMAND_SUCCESS" : string;
+  command-accepted       get-string (1 : int);
+  command-denied         get-string (1 : int);
+  command-sent-to-system get-string (1 : int);
+  command-rcvd-by-system get-string (1 : int);
+  command-success        get-string (1 : int);
+  command-failed         get-string (1 : int);
+}

@@ -1,0 +1,17 @@
+in assignment-node.maude
+in list-node.maude
+
+mod TEST--ATOMIC--FAILING is
+
+  pr TEST--ATOMIC--FAILING--ASSIGNMENT-NODE .
+  pr TEST--ATOMIC--FAILING--LIST-NODE .
+
+
+  op tests--atomic--failing : -> TestResults .
+
+  eq tests--atomic--failing =
+    tests--atomic--failing--assignment-node
+    + tests--atomic--failing--list-node
+    .
+
+endm

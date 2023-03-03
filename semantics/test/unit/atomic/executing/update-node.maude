@@ -1,0 +1,20 @@
+mod TEST--ATOMIC--EXECUTING--UPDATE-NODE is
+
+  pr TEST-BASE .
+
+
+  op tests--atomic--executing--update-node : -> TestResults .
+
+  eq tests--atomic--executing--update-node = begin tests
+
+  Pending "Executing update node follows path 1 (executing--update--01)"
+  Pending "Executing update node follows path 2 (executing--update--02)"
+  Pending "Executing update node follows path 3 (executing--update--03)"
+  Pending "Executing update node follows path 4 (executing--update--04)"
+  Pending "Executing update node follows path 5 (executing--update--05)"
+  Pending "Executing update node follows path 6 (executing--update--06)"
+  Pending "Executing update node follows path 7 (executing--update--07)"
+
+  end tests .
+
+endm

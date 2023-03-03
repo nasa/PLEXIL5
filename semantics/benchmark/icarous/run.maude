@@ -1,0 +1,5 @@
+set print attribute on .
+set print color on .
+
+rew run(compile(rootNode,input)) .
+q

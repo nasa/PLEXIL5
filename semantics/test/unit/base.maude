@@ -1,0 +1,28 @@
+mod TEST-BASE is
+  pr TEST .
+  pr PLEXILITE .
+  pr PLEXILITE-PREDS .
+
+  subsort Config Bool < SystemUnderTest .
+
+  --- Test stubs/adapters
+
+  op testConfiguration    : Configuration    -> Cell .
+  op testExpression       : Expression       -> Cell .
+  op testAttributes       : AttributeSet     -> Cell .
+  op testQualified        : Qualified        -> Cell .
+  op testBool             : Bool             -> Cell .
+  op testModelCheckResult : ModelCheckResult -> Cell .
+  op testSystem           : GlobalConfig     -> Cell .
+  op testOperation        : Operation        -> Cell .
+  op testQualifiedId      : Qualified        -> Cell .
+
+
+  --- Identifiers for test cases
+
+  op A : -> Identifier .
+  op B : -> Identifier .
+  op C : -> Identifier .
+  op M : -> Identifier .
+
+endm

@@ -1,0 +1,86 @@
+mod ARRAYCOMPLEX is
+ protecting PLEXILITE .
+
+ op ArrayComplex : -> Plexil .
+ eq ArrayComplex = list(
+    'ArrayComplex,
+    (
+      ('foo : array(val(3.0) # val(2.0) # val(1.0)))
+      ('bar : array(val(0.0) # val(7.0) # val(13.0)))
+      ('jar : array(unknownIntArray(3)))
+      ('i : val(0))
+      ('j : val(1))
+      ('k : val(2))
+      ),
+    (
+  		(endc:	areChildren?('ArrayComplex, finished)),
+  		(inv:	not (
+          (isOutcomeFailure?('SimpleArrayAssignment1 . 'ArrayComplex) and isStatus?('SimpleArrayAssignment1 . 'ArrayComplex,finished))
+          or
+          const(val(false))
+          )
+        )
+      ),
+    (
+      SimpleArrayAssignment1
+      SimpleArrayAssignment2
+      SimpleArrayAssignment3
+      )
+ ) .
+
+op SimpleArrayAssignment1 : -> Plexil .
+eq SimpleArrayAssignment1 = assignment(
+			'SimpleArrayAssignment1,
+			nilocdecl,
+			(
+  			(endc:	const(val(true))),
+  			(inv:	const(val(true))),
+  			(post:	const(val(true))),
+  			(pre:	const(val(true))),
+  			(repeatc:	const(val(false))),
+  			(skip:	const(val(false))),
+  			(startc:	const(val(true))),
+  			(priority: 1)
+  			),
+			(('foo . 'ArrayComplex) [ var('i . 'ArrayComplex) ]:= const(val(1.0)))
+			) .
+
+op SimpleArrayAssignment2 : -> Plexil .
+eq SimpleArrayAssignment2 = assignment(
+			'SimpleArrayAssignment2,
+			nilocdecl,
+			(
+  			(endc:	const(val(true))),
+  			(inv:	const(val(true))),
+  			(post:	const(val(true))),
+  			(pre:	const(val(true))),
+  			(repeatc:	const(val(false))),
+  			(skip:	const(val(false))),
+  			(startc:	const(val(true))),
+  			(priority: 1)
+  			),
+			(('foo . 'ArrayComplex) [ var('j . 'ArrayComplex) ]:= arrayVar('bar . 'ArrayComplex,var('j . 'ArrayComplex)))
+			) .
+
+op SimpleArrayAssignment3 : -> Plexil .
+eq SimpleArrayAssignment3 = assignment(
+			'SimpleArrayAssignment3,
+			nilocdecl,
+			(
+  			(endc:	const(val(true))),
+  			(inv:	const(val(true))),
+  			(post:	const(val(true))),
+  			(pre:	const(val(true))),
+  			(repeatc:	const(val(false))),
+  			(skip:	const(val(false))),
+  			(startc:	const(val(true))),
+  			(priority: 1)
+  			),
+			(('foo . 'ArrayComplex) [ var('j . 'ArrayComplex) ]:= (arrayVar('foo . 'ArrayComplex,var('k . 'ArrayComplex)) + arrayVar('bar . 'ArrayComplex,var('j . 'ArrayComplex))) + const(val(2.0)))
+			) .
+
+
+ op run : -> GlobalConfig .
+ eq run = compile(ArrayComplex,(mtenvironment # mtenvironment # mtenvironment # mtenvironment)) .
+
+endm

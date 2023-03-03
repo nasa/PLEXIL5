@@ -1,0 +1,8 @@
+Integer Lookup tick;
+Command pprint(...);
+
+ACTION : {
+    Exit Lookup(tick) > 0;
+    pprint("This should be printed");
+    pprint("This should not be printed because of the Exit");
+}

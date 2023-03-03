@@ -1,0 +1,170 @@
+mod INPUT is
+  protecting TRAFFIC-RESOLUTION-PLAN .
+
+  sort TimedFeedbackGenerator .
+
+  op timedFeedbackGenerator : Nat Int Identifier -> ExternalInputGenerator .
+
+  vars Time Timeout : Nat .
+  vars ExtIns : ExternalInputs .
+  vars Op : Operation .
+  vars Cfg : Config .
+  vars ExCmds : Configuration .
+  vars Cmd : Identifier .
+  vars Id : Qualified .
+  vars AtS : AttributeSet .
+  vars Args : Arguments .
+  vars HL : CommandHandle .
+
+  crl generate(
+        timedFeedbackGenerator(Time,Timeout,Cmd),
+        [ interface : < Cmd . Id : command-on-execution | arguments: Args, handle: nothing, AtS > ExCmds ] Cfg
+     )
+     =>
+     (
+      commandAck(Cmd,Args,CommandSentToSystem)
+      stateLookup('time,nilarg,val(Time))
+     )
+    if Timeout >= 0 .
+  rl generate(
+        timedFeedbackGenerator(Time,Timeout,Cmd),
+        [ interface : < Cmd . Id : command-on-execution | arguments: Args, handle: just(HL), AtS > ExCmds ] Cfg
+     )
+     =>
+      stateLookup('time,nilarg,val(Time))
+      .
+  crl generate(
+        timedFeedbackGenerator(Time,Timeout,Cmd),
+        [ interface : ExCmds ] Cfg
+     )
+     =>
+      stateLookup('time,nilarg,val(Time))
+      if not hasRunningCommands(Cmd,ExCmds)
+      .
+
+    op hasRunningCommands : Identifier Configuration -> Bool .
+    eq hasRunningCommands(Cmd, < Cmd . Id : command-on-execution | AtS > ExCmds) = true .
+    eq hasRunningCommands(Cmd, ExCmds) = false [owise] .
+
+    op maxTime : -> Nat .
+    eq maxTime = 30 .
+
+  ceq update(
+        timedFeedbackGenerator(Time,Timeout,Cmd),
+        [ interface : < Cmd . Id : command-on-execution | arguments: Args, handle: nothing, AtS > ExCmds ] Cfg
+     )
+     = timedFeedbackGenerator(s Time,Timeout - 1,Cmd) if Time <= maxTime .
+  ceq update(
+        timedFeedbackGenerator(Time,Timeout,Cmd),
+        Cfg
+      )
+     = timedFeedbackGenerator(s Time,Timeout,Cmd) if Time <= maxTime .
+  eq update(
+        timedFeedbackGenerator(Time,Timeout,Cmd),
+        Cfg
+      )
+     = timedFeedbackGenerator(Time,Timeout,Cmd) [owise].
+
+  --- eq isConsumed?(
+  ---       timedFeedbackGenerator(Time,Timeout,Cmd),
+  ---       Cfg
+  --- d   )
+  ---    = false .
+
+  eq isConsumed?(
+        timedFeedbackGenerator(Time,Timeout,Cmd),
+        Cfg
+     )
+    ---  = false .
+    ---  = Time > 30 .
+     = Time > maxTime .
+
+     ------ (stop | Cfg) |= hasStatus('TRAFFIC-RESOLUTION, finished) .
+---  eq isConsumed?(
+---        timedFeedbackGenerator(Time,Timeout,Cmd),
+---        Op | Cfg
+---     )
+---     = false [owise] .
+
+  op input2 : -> ExternalInputGenerator .
+  eq input2 = timedFeedbackGenerator(0,0,'SetVel) .
+
+  op input : -> ExternalInputGenerator .
+  eq input = sequenceGenerator(
+    (
+    stateLookup('time,nilarg,val(0))
+    stateLookup('nextWP,nilarg,val(0))
+    stateLookup('trafficConflict,nilarg,val(true))
+    stateLookup('trafficSpeedConflict,nilarg,val(false))
+    stateLookup('trafficAltConflict,nilarg,val(true))
+    stateLookup('trafficTrackConflict,nilarg,val(false))
+    stateLookup('preferredAltitude,nilarg,val(10.0))
+    stateLookup('velocity,nilarg,array(val(0.0) # val(0.0) # val(0.0)))
+    stateLookup('position,nilarg,array(val(0.0) # val(0.0) # val(0.0)))
+    )
+    #
+    stateLookup('time,nilarg,val(1))
+    #
+    stateLookup('time,nilarg,val(2))
+    #
+    stateLookup('time,nilarg,val(3))
+    #
+    stateLookup('time,nilarg,val(4))
+    #
+    stateLookup('time,nilarg,val(5))
+    #
+    stateLookup('time,nilarg,val(6))
+    #
+    stateLookup('time,nilarg,val(7))
+    #
+    stateLookup('time,nilarg,val(8))
+    #
+    stateLookup('time,nilarg,val(9))
+    #
+    stateLookup('time,nilarg,val(10))
+    #
+    stateLookup('time,nilarg,val(11))
+    #
+---    (
+---    stateLookup('trafficConflict,nilarg,val(false))
+---    stateLookup('trafficAltConflict,nilarg,val(false))
+---    stateLookup('time,nilarg,val(12))
+---    )
+    stateLookup('time,nilarg,val(12))
+    #
+    stateLookup('time,nilarg,val(13))
+    #
+    stateLookup('time,nilarg,val(14))
+    #
+    stateLookup('time,nilarg,val(15))
+    #
+    stateLookup('time,nilarg,val(16))
+    #
+    stateLookup('time,nilarg,val(17))
+    #
+    stateLookup('time,nilarg,val(18))
+    #
+    stateLookup('time,nilarg,val(19))
+    #
+    stateLookup('time,nilarg,val(20))
+    #
+    stateLookup('time,nilarg,val(21))
+    #
+    stateLookup('time,nilarg,val(22))
+    #
+    stateLookup('time,nilarg,val(23))
+    #
+    stateLookup('time,nilarg,val(24))
+    #
+    stateLookup('time,nilarg,val(25))
+    #
+    stateLookup('time,nilarg,val(26))
+    #
+    stateLookup('time,nilarg,val(27))
+    #
+    stateLookup('time,nilarg,val(28))
+    #
+    stateLookup('time,nilarg,val(29))
+  ) .
+
+endm

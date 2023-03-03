@@ -1,0 +1,6 @@
+set print attribute on .
+set print color on .
+
+set break on .
+break select MACRO-relation .
+rew run(compile(rootNode,input)) .

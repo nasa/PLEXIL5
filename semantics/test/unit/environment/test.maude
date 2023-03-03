@@ -1,0 +1,18 @@
+mod TEST--ENVIRONMENT is
+
+  pr TEST-BASE .
+
+  op environment--tests : -> TestResults .
+  eq environment--tests =
+    begin tests
+
+    assert
+      testEnvironment(emptyEnvironment)
+    reaches
+      testEnvironment(emptyEnvironment)
+    end
+
+    end tests
+    .
+
+endm

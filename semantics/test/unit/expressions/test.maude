@@ -1,0 +1,15 @@
+in id-sanitizer.maude
+
+mod TEST--EXPRESSIONS is
+
+  pr TEST--ID-SANITIZER .
+
+  op expressions--tests : -> TestResults .
+
+  eq expressions--tests =
+    id-sanitizer--tests
+    + getFullyQualifiedVariableId--tests
+    + getFullyQualifiedNodeId--tests
+    .
+
+endm

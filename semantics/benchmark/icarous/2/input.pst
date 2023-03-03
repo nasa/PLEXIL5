@@ -1,0 +1,59 @@
+// Simulating SPEED resolution
+// - 2nd condition
+
+initial-state {
+  state time                 () = 0 : int;
+  state nextWP               () = 0 : int;
+  state trafficConflict      () = true : bool;
+  state trafficSpeedConflict () = true : bool;
+  state preferredSpeed       () = 100.0 : real;
+  state velocity             () = (0.0,0.0,0.0) : real-array;
+}
+
+
+script {
+  state time           () = 1 : int;
+  state time           () = 2 : int;
+  state time           () = 3 : int;
+  state time           () = 4 : int;
+  state time           () = 5 : int;
+  state time           () = 6 : int;
+  state time           () = 7 : int;
+  state time           () = 8 : int;
+  state time           () = 9 : int;
+  state time           () = 10 : int;
+  state time           () = 11 : int;
+  state time           () = 12 : int;
+  state time           () = 13 : int;
+  state time           () = 14 : int;
+  state time           () = 15 : int;
+  state time           () = 16 : int;
+  state time           () = 17 : int;
+  state time           () = 18 : int;
+  state time           () = 19 : int;
+  state time           () = 20 : int;
+  state time           () = 21 : int;
+  state time           () = 22 : int;
+  state time           () = 23 : int;
+  simultaneous {
+    command-sent-to-system SetVel (0.0:real,100.0:real,0.0:real);
+    state time           () = 24 : int;
+  }
+  simultaneous {
+    state trafficConflict      () = false : bool;
+    state trafficSpeedConflict () = false : bool;
+    state time                 () = 25 : int;
+  }
+  state time           () = 26 : int;
+  state time           () = 27 : int;
+  state time           () = 28 : int;
+  state time           () = 29 : int;
+  state time           () = 30 : int;
+  state time           () = 31 : int;
+  state time           () = 32 : int;
+  state time           () = 33 : int;
+  state time           () = 34 : int;
+  state time           () = 35 : int;
+  state time           () = 36 : int;
+  state time           () = 37 : int;
+}

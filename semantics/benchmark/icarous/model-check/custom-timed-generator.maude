@@ -1,0 +1,185 @@
+mod CUSTOM-TIMED-GENERATOR is
+  protecting TRAFFIC-RESOLUTION-PLAN .
+
+  sort CustomTimedGenerator .
+  sort Time .
+  subsort Nat < Time .
+
+  op ctGen : Configuration -> ExternalInputGenerator .
+  op time : Time Time -> Object .
+  op onCompletedNext : Object Configuration -> Object .
+  op completed : Object -> Object .
+  op ackCommand : NeQualified Arguments CommandHandle -> Object .
+  op updateLookup : Identifier Arguments Value -> Object .
+  op inputs : ExternalInputs -> Object .
+
+  op input : -> ExternalInputGenerator .
+  ceq input =
+    ctGen(
+      time(0,50)
+      updateLookup('time,nilarg,val(0))
+      updateLookup('nextWP,nilarg,val(0))
+      updateLookup('trafficConflict,nilarg,val(true))
+      updateLookup('trafficSpeedConflict,nilarg,val(false))
+      updateLookup('trafficAltConflict,nilarg,val(true))
+      updateLookup('trafficTrackConflict,nilarg,val(false))
+      updateLookup('preferredAltitude,nilarg,val(10.0))
+      updateLookup('velocity,nilarg,array(val(0.0) # val(0.0) # val(0.0)))
+      updateLookup('position,nilarg,array(val(0.0) # val(0.0) # val(0.0)))
+      inputs(noExternalInputs)
+      CmdAck:Object
+      onCompletedNext(
+        CmdAck:Object,
+        updateLookup('trafficConflict,nilarg,val(false))
+        updateLookup('trafficAltConflict,nilarg,val(false))
+      )
+    )
+    if
+      CmdAck:Object :=
+        ackCommand(
+         'SetVel . 'COMMAND--52 . 'BLOCK--41 . 'if--40 . 'ALT . 'BLOCK--10 . 'TRAFFIC-RESOLUTION,
+         nilarg,
+         CommandSentToSystem
+        )
+  .
+
+  vars Cfg : Config .
+  vars GenCfg GenCfg' : Configuration .
+  vars ExCmds : Configuration .
+  vars ExtIns : ExternalInputs .
+  vars T T' MaxT : Nat .
+  vars Q : Qualified .
+  vars Hndl : CommandHandle .
+  vars Args : Arguments .
+  vars AtS : AttributeSet .
+  vars Obj : Object .
+  vars Id : Identifier .
+  vars V : Value .
+
+  --- ceq update(
+  ---       ctGen(GenCfg),
+  ---       Cfg
+  ---     )
+  ---     =
+  ---     update(
+  ---       ctGen(GenCfg inputs(noExternalInputs)),
+  ---       Cfg
+  ---     )
+  ---   if noInputsObject(GenCfg) .
+
+  ---   op noInputsObject : Configuration -> Bool .
+  ---   eq noInputsObject(inputs(ExtIns) GenCfg) = true .
+  ---   eq noInputsObject(GenCfg) = false [owise] .
+
+  --- ceq update(
+  ---       ctGen(GenCfg),
+  ---       Cfg
+  ---     )
+  ---     =
+  ---     update(
+  ---       ctGen(GenCfg time(0)),
+  ---       Cfg
+  ---     )
+  ---   if noTimeObject(GenCfg) .
+
+  ---   op noTimeObject : Configuration -> Bool .
+  ---   eq noTimeObject(time(T) GenCfg) = true .
+  ---   eq noTimeObject(GenCfg) = false [owise] .
+
+  eq update(ctGen(GenCfg),Cfg) = ctGen(updateTime(update'(updateInputs(GenCfg),Cfg))) .
+
+  op updateInputs : Configuration -> [Configuration] .
+  eq updateInputs(inputs(ExtIns) GenCfg) = inputs(noExternalInputs) GenCfg .
+
+  op getInputs : ExternalInputGenerator -> [Object] .
+  eq getInputs(ctGen(inputs(ExtIns) GenCfg)) = inputs(ExtIns) .
+
+  op updateTime : Configuration -> [Configuration] .
+ ceq updateTime(time(T,MaxT) inputs(ExtIns) GenCfg)
+   = time(s T,MaxT) inputs(ExtIns stateLookup('time,nilarg,val(T))) GenCfg if T < MaxT .
+  eq updateTime(GenCfg) = GenCfg [owise] .
+
+  op update' : Configuration Config -> [Configuration] .
+
+  eq
+    update'(
+      time(T,MaxT)
+      ackCommand(Q,Args,Hndl)
+      inputs(ExtIns)
+      GenCfg
+      ,
+      [ interface :
+          < Q : command-on-execution |
+              arguments: Args,
+              handle: nothing,
+              AtS >
+          ExCmds ]
+      Cfg
+    )
+    =
+    completed(ackCommand(Q,Args,Hndl))
+    update'(
+      time(T,MaxT)
+      inputs(ExtIns commandAck(headQualified(Q),Args,CommandSentToSystem))
+      GenCfg
+      ,
+      [ interface :
+          < Q : command-on-execution |
+              arguments: Args,
+              handle: nothing,
+              AtS >
+          ExCmds ]
+      Cfg
+    )
+    .
+  eq
+    update'(
+      completed(Obj)
+      onCompletedNext(Obj,GenCfg')
+      GenCfg
+      ,
+      Cfg
+    )
+    =
+    completed(onCompletedNext(Obj,GenCfg'))
+    update'(
+      completed(Obj)
+      GenCfg'
+      GenCfg
+      ,
+      Cfg
+    )
+    .
+  eq
+    update'(
+      updateLookup(Id,Args,V)
+      inputs(ExtIns)
+      GenCfg
+      ,
+      Cfg
+    )
+    =
+    completed(updateLookup(Id,Args,V))
+    update'(
+      inputs(ExtIns stateLookup(Id,Args,V))
+      GenCfg
+      ,
+      Cfg
+    )
+    .
+  eq
+    update'(
+      GenCfg
+      ,
+      Cfg
+    )
+    =
+    GenCfg
+    [owise] .
+
+
+  --- eq isConsumed?(ctGen(time(T,T') GenCfg),Cfg) = T >= T' .
+  eq isConsumed?(ctGen(time(T,T') GenCfg),Cfg) = false .
+  eq generate(ctGen(inputs(ExtIns) GenCfg),Cfg) = ExtIns .
+
+endm

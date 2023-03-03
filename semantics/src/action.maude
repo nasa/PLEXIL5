@@ -1,0 +1,38 @@
+fmod ACTION-BASE is
+  sort Action .
+  protecting QUALIFIED .
+  protecting STATUS .
+  protecting OUTCOME .
+  protecting COMMANDINFO .
+  protecting MAYBE{Value} .
+
+  *** Command actions
+  op runCommand     : Qualified CommandInfo -> Action .
+  op setCommandInfo : Qualified CommandInfo -> Action .
+
+  *** Status/Outcome actions
+  op resetNode  : Qualified         -> Action .
+  op setOutcome : Qualified Outcome -> Action .
+  op setStatus  : Qualified Status  -> Action .
+
+  *** Memory actions
+  op setMem   : Qualified Value Maybe{Value} -> Action .
+  op resetMem : Qualified                    -> Action .
+  op undoMem  : Qualified                    -> Action .
+
+  *** Synchronous reduction house-keeping
+  op suspend : Qualified -> Action .
+
+  *** Logging actions
+  op logTransition : Qualified Status Status Nat -> Action .
+endfm
+
+view Action from TRIV to ACTION-BASE is
+ sort Elt to Action .
+endv
+
+fmod ACTION is
+ protecting SET{Action} * ( sort NeSet{Action} to NeActionSet,
+                            sort Set{Action} to ActionSet,
+                            op empty to mtactions ) .
+endfm

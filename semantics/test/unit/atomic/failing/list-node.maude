@@ -1,0 +1,101 @@
+mod TEST--ATOMIC--FAILING--LIST-NODE is
+
+  pr TEST-BASE .
+
+
+  op tests--atomic--failing--list-node : -> TestResults .
+
+  eq tests--atomic--failing--list-node = begin tests
+
+    assert "Failing list node follows path 1 (failing--list--01)" from
+      failing(
+        [ nodes :
+            < A     : list | status: failing,
+                             active: true,
+                             outcome: failure(parentExited) >
+            < B . A : list | status: waiting  >
+            < C . A : list | status: finished > ]
+        [ microacts : mtactions ]
+      )
+    reaches
+      failing(
+        [ nodes :
+            < A     : list | status: failing,
+                             active: false,
+                             outcome: failure(parentExited) >
+            < B . A : list | status: waiting  >
+            < C . A : list | status: finished > ]
+        [ microacts : setStatus(A,finished),
+                      logTransition(A, failing, finished, 1) ]
+      )
+    end
+
+    assert "Failing list node follows path 2 (failing--list--02)" from
+      failing(
+        [ nodes :
+            < A     : list | status: failing,
+                             active: true,
+                             outcome: failure(parentFailed) >
+            < B . A : list | status: waiting  >
+            < C . A : list | status: finished > ]
+        [ microacts : mtactions ]
+      )
+    reaches
+      failing(
+        [ nodes :
+            < A     : list | status: failing,
+                             active: false,
+                             outcome: failure(parentFailed) >
+            < B . A : list | status: waiting  >
+            < C . A : list | status: finished > ]
+        [ microacts : setStatus(A,finished),
+                      logTransition(A, failing, finished, 2) ]
+      )
+    end
+
+    assert "Failing list node follows path 3 (failing--list--03)" from
+      failing(
+        [ nodes :
+            < A     : list | status: failing,
+                             active: true,
+                             outcome: failure(exited) >
+            < B . A : list | status: waiting  >
+            < C . A : list | status: finished > ]
+        [ microacts : mtactions ]
+      )
+    reaches
+      failing(
+        [ nodes :
+            < A     : list | status: failing,
+                             active: false,
+                             outcome: failure(exited) >
+            < B . A : list | status: waiting  >
+            < C . A : list | status: finished > ]
+        [ microacts : setStatus(A,iterationEnded),
+                      logTransition(A, failing, iterationEnded, 3) ]
+      )
+    end
+
+    assert "Failing list node can wait for its children to finish" from
+      failing(
+        [ nodes :
+            < A     : list | status: failing,
+                             active: true,
+                             outcome: failure(exited) >
+            < B . A : list | status: executing  >
+            < C . A : list | status: finished   > ]
+      )
+    avoids
+      failing(
+        [ nodes :
+            < A     : list | status: failing,
+                             active: false,
+                             outcome: failure(exited) >
+            < B . A : list | status: executing  >
+            < C . A : list | status: finished   > ]
+      )
+    end
+
+  end tests .
+
+endm

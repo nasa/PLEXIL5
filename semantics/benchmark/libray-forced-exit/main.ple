@@ -1,0 +1,10 @@
+Boolean Lookup EXIT;
+LibraryAction AUXILIAR();
+Command pprint(...);
+
+MAIN: {
+  EndCondition Lookup(EXIT);
+  pprint("Calling library");
+  LibraryCall AUXILIAR();
+  pprint("Library exited");
+}

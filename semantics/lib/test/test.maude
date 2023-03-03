@@ -1,0 +1,65 @@
+mod TEST is
+  pr QID .
+  pr NAT .
+  pr STRING .
+
+  sort SystemUnderTest .
+  sort SystemUnderTestAncestor .
+
+  sort Bound .
+  subsort Nat < Bound .
+  op unbounded : -> Bound .
+
+  sort Type .
+  sort Sort .
+  subsort Qid < Sort Type .
+  subsort Sort < Type .
+
+  sort Assertion .
+
+  op reachesIn : Bound -> Assertion .
+  op avoidsIn : Bound -> Assertion .
+  op reducesToTrue : -> Assertion .
+
+
+  sorts TestResult TestResultList TestResults .
+  subsort TestResult < TestResultList .
+  subsort Type < SystemUnderTest .
+  subsort Sort < SystemUnderTest .
+
+  sorts Message ActualResult ExpectedResult .
+  op msg:_      : String          -> Message        [format (b! o o) ctor] .
+  op actual:_   : SystemUnderTest -> ActualResult   [format (m! y o) ctor] .
+  op expected:_ : SystemUnderTest -> ExpectedResult [format (g! o d) ctor] .
+  op actual:_   : Type            -> ActualResult   [format (m! y o) ctor] .
+  op expected:_ : Sort            -> ExpectedResult [format (g! o d) ctor] .
+
+  op Success_       :                              String -> TestResult [format (g! o o)] .
+  op Pending_       :                              String -> TestResult [format (c! o o)] .
+  op Failure(_,_,_) : Message ActualResult ExpectedResult -> TestResult [format (r! o o o ++ni o ni --n o)] .
+
+  op assert_:_end : SystemUnderTest Sort -> TestResult [frozen format (r! d d d d o)] .
+  op assert_!:_end : SystemUnderTest Sort -> TestResult [frozen format (r! d d d d o)] .
+  op assert_truth_end : String SystemUnderTest -> TestResult [frozen format (r! d d d d o)] .
+  op assert_from_reaches_end : String SystemUnderTest SystemUnderTest -> TestResult [frozen format (r! d d d d d d o)] .
+  op assert_from_avoids_end  : String SystemUnderTest SystemUnderTest -> TestResult [frozen format (r! d d d d d d o)] .
+  op assert_from_reaches_in`one`step`end : String SystemUnderTest SystemUnderTest -> TestResult [frozen format (r! d d d d d d d d d o)] .
+  op assert_from_avoids_in`one`step`end  : String SystemUnderTest SystemUnderTest -> TestResult [frozen format (r! d d d d d d d d d o)] .
+  op assert_from_reaches_in_steps`end : String SystemUnderTest SystemUnderTest Bound -> TestResult [frozen format (r! d d d d d d d d d o)] .
+  op assert_from_avoids_in_steps`end  : String SystemUnderTest SystemUnderTest Bound -> TestResult [frozen format (r! d d d d d d d d d o)] .
+
+  op noTest : -> TestResult .
+  op __ : TestResultList TestResultList -> TestResultList [assoc id: noTest format (d ni d)] .
+  op begin`tests_end`tests : TestResultList -> TestResults [format (b!n d n b!n d d)] .
+  op tests : -> TestResults .
+
+  op NoTests : -> TestResults [format (g!n o)] .
+  op AllTestsPassed : -> TestResults [format (g!n o)] .
+  op _+_ : TestResults TestResults -> TestResults [assoc id: AllTestsPassed] .
+
+  vars TRL TRL' : TestResultList .
+  vars TR : TestResults .
+
+  eq (begin tests TRL end tests) + (begin tests TRL' end tests) + TR = (begin tests (TRL TRL') end tests) + TR .
+
+endm

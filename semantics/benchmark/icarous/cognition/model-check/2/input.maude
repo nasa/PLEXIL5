@@ -1,0 +1,108 @@
+mod M-CHECK is
+  protecting TrafficConflictHandler-PLAN .
+  protecting PLEXILITE-PREDS .
+  including MODEL-CHECKER .
+
+  op cognitionGen : EInputsList -> ExternalInputGenerator .
+  op cognitionGen : EInputsList GeneratorStatus -> ExternalInputGenerator [ctor] .
+  eq cognitionGen(EInsList) = cognitionGen(EInsList,uninitialized) .
+
+  eq generate(cognitionGen(EInsList,firstIteration),Conf) = EInsList .
+  eq generate(cognitionGen(EInsList,started),Conf) = extraLookups(computeCommandAcks(Conf)) .
+
+    op extraLookups : EInputsList -> EInputsList .
+    eq extraLookups(EInsList) = extraLookups(EInsList,nilEInputsList) .
+
+      op extraLookups : EInputsList EInputsList -> EInputsList .
+      eq extraLookups(EIns # EInsList,EInsListAcc) = extraLookups(EInsList,extraLookups'(EIns) # EInsListAcc) .
+      eq extraLookups(nilEInputsList,EInsListAcc) = EInsListAcc [owise] .
+
+        op extraLookups' : ExternalInputs -> ExternalInputs .
+        eq extraLookups'(EIns) = extraLookups'(EIns,noExternalInputs) .
+
+          op extraLookups' : ExternalInputs ExternalInputs -> ExternalInputs .
+          eq extraLookups'(commandAck(CmdId, Args, Hndl) EIns,EIns')
+           = extraLookups'(EIns,commandAck(CmdId, Args, Hndl) stateLookup('inConflict,nilarg,val(false)) EIns') [print "GENERATED\n\n"] .
+          eq extraLookups'(EIns,EIns') = EIns' [owise] .
+
+  eq update(cognitionGen(EInsList,uninitialized),Conf) = cognitionGen(EInsList,firstIteration) .
+  eq update(cognitionGen(EInsList,firstIteration),Conf) = cognitionGen(EInsList,started) .
+  eq update(cognitionGen(EInsList,started),Conf) = cognitionGen(EInsList,started) .
+
+  eq isConsumed?(cognitionGen(EInsList,GenStatus),Conf) = false .
+
+  vars EIns EIns' : ExternalInputs .
+  vars EInsList EInsListAcc : EInputsList .
+  vars Conf : Config .
+  vars Args : Arguments .
+  vars CmdId : Identifier .
+  vars Hndl : CommandHandle .
+  vars GenStatus : GeneratorStatus .
+
+  op input : -> ExternalInputGenerator .
+  eq [input] :
+    input
+  = cognitionGen(
+      stateLookup('inConflict,nilarg,val(true))
+      stateLookup('resolutionType,nilarg,val(-1))
+      #
+      stateLookup('inConflict,nilarg,val(true))
+      stateLookup('resolutionType,nilarg,val(0))
+      #
+      stateLookup('inConflict,nilarg,val(true))
+      stateLookup('resolutionType,nilarg,val(1))
+      #
+      stateLookup('inConflict,nilarg,val(true))
+      stateLookup('resolutionType,nilarg,val(2))
+      #
+      stateLookup('inConflict,nilarg,val(true))
+      stateLookup('resolutionType,nilarg,val(3))
+      #
+      stateLookup('inConflict,nilarg,val(true))
+      stateLookup('resolutionType,nilarg,val(4))
+    )
+  .
+
+  op property : -> Prop .
+  eq [property] : property = validResolutionConflictsAreAlwaysSolvedProperty .
+  --- eq [property] : property = anyConflictIsAlwaysSolvedProperty .
+
+  op validResolutionConflictsAreAlwaysSolvedProperty : -> Prop .
+  eq [validResolutionConflictsAreAlwaysSolvedProperty] :
+    validResolutionConflictsAreAlwaysSolvedProperty
+  =
+    *** INFO: Valid resolutions solves conflicts
+    ***   - Approx. formula [] ((resolutionType in [0,1,2,3] /\ inConflict) => <> not inConflict)
+    ***   - Generator must turn SetSpeed, SetTrack,... command invocations into `not inConflict` states
+    ***
+    O []
+      (
+        (inConflict /\
+          ( varIs('resolutionType,val(0))
+          \/ varIs('resolutionType,val(1))
+          \/ varIs('resolutionType,val(2))
+          \/ varIs('resolutionType,val(3)) )
+        )
+        =>
+        (<> ~ inConflict)
+      )
+  .
+
+  op anyConflictIsAlwaysSolvedProperty : -> Prop .
+  eq [anyConflictIsAlwaysSolvedProperty] :
+    anyConflictIsAlwaysSolvedProperty
+  =
+    *** INFO: Why the negation of this formula is still non-satisfiable?
+    ***   Because it's in LTL and its implicitly quantified over all possible traces.
+    ***   Hence if you negate the LTL formula you are not negating the formula in your
+    ***   mind that says "it's not true that all the traces satisfy the formula", but
+    ***   you are expressing "all the traces satisfy the negation of the formula", which
+    ***   is false, since there are traces that satisfy it and traces that doesn't.
+    ***
+    O [] (inConflict => (<> ~ inConflict))
+  .
+
+  op init : -> GlobalConfig .
+  eq [init] : init = run(compile(rootNode,input)) .
+
+endm

@@ -1,0 +1,36 @@
+mod M-CHECK is
+  protecting TrafficConflictHandler-PLAN .
+  protecting PLEXILITE-PREDS .
+  including MODEL-CHECKER .
+
+  op input : -> ExternalInputGenerator .
+  eq [input] :
+    input
+  = infiniteCommandAckGeneratorEx(
+      stateLookup('inConflict,nilarg,val(true))
+      stateLookup('resolutionType,nilarg,val(0))
+      ,
+      stateLookup('inConflict,nilarg,val(true))
+      stateLookup('inConflict,nilarg,val(false))
+      #
+      stateLookup('resolutionType,nilarg,val(-1))
+      stateLookup('resolutionType,nilarg,val(1))
+    )
+  .
+
+  op property : -> Prop .
+  eq [property] :
+    property
+  =
+    *** INFO: the `O` (next) operator is used to skip the formula from applying
+    ***       to the initial state because the initial state of the environment
+    ***       is always empty and as a consequence the `inConflict` property is
+    ***       false. Since we cannot control the initial state by modeling the
+    ***       ExternalInputGenerator differently with the current semantics.
+    O [] ((~ inConflict)  => (<> hasStatus('TrafficConflictHandler,finished)))
+  .
+
+  op init : -> GlobalConfig .
+  eq [init] : init = run(compile(rootNode,input)) .
+
+endm
