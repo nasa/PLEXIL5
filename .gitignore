@@ -1,3 +1,3 @@
 .DS_Store
-plexil5/bin
-/src
+dist-*
+
