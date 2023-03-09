@@ -155,6 +155,10 @@ parseBooleanExpression cursor =
             recNestChildrenNumericL "_equ_" cursor
         "NENumeric" ->
             recNestChildrenNumericL "_nequ_" cursor
+        -- "EQString" ->
+        --     recNestChildrenStringL "_equ_" cursor
+        -- "NEString" ->
+        --     recNestChildrenStringL "_nequ_" cursor
 
         _ -> fail "non-exhaustive pattern"
     other -> trace ("Hi there!" ++ show other) undefined
@@ -169,6 +173,10 @@ recNestChildrenL funName cursor' = (fmap $ foldl1 (\acc x -> T.concat [funName, 
 recNestChildrenNumericL :: Text -> Cursor -> Maybe Text
 recNestChildrenNumericL funName cursor' = (fmap $ foldl1 (\acc x -> T.concat [funName, "(", acc, ",", x, ")"]))
   (mapM parseNumericExpression $ child cursor')
+-- recNestChildrenStringL :: Text -> Cursor -> Maybe Text
+-- recNestChildrenStringL funName cursor' = (fmap $ foldl1 (\acc x -> T.concat [funName, "(", acc, ",", x, ")"]))
+--   (mapM parseStringExpression $ child cursor')
+
 
 concatContent :: (Monad m, Foldable t) => t Cursor -> m Text
 concatContent cursors = return $ T.concat $ concatMap content cursors
@@ -188,6 +196,11 @@ parseNumericExpression cursor =
 parseGeneralizedNumericExpression :: Cursor -> Maybe Text
 parseGeneralizedNumericExpression = parseNumericExpression
 
+-- parseStringExpression :: Cursor -> Maybe Text
+-- parseStringExpression cursor =
+--     case node cursor of
+--       NodeContent t -> Just t
+--       _ -> Nothing
 
 ------------------------------------------------------------
 ---------- Equality
@@ -583,6 +596,8 @@ helper el children =
             "EQBoolean"  -> text "_equ_" <> parens (hcat $ punctuate comma children)
             "EQNumeric"  -> text "_equ_" <> parens (hcat $ punctuate comma children)
             "NENumeric"  -> text "_nequ_" <> parens (hcat $ punctuate comma children)
+            "EQString"   -> text "_equ_" <> parens (hcat $ punctuate comma children)
+            "NEString"   -> text "_nequ_" <> parens (hcat $ punctuate comma children)
             "EQInternal" -> case prettyEQInternal cursor children of
                 Left msg -> text $ "ERROR: " ++ msg
                 Right s -> s

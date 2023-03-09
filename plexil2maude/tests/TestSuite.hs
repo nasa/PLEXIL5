@@ -512,6 +512,12 @@ testsParseBooleanExpression =
             ,("Non-Equality NENumeric",
               "<NENumeric><IntegerValue>3</IntegerValue><IntegerValue>4</IntegerValue></NENumeric>",
               "_nequ_(const(val(3)),const(val(4)))")
+            ,("Equality EQString",
+              "<EQString><StringValue>a</StringValue><StringValue>b</StringValue></EQString>",
+              "_equ_(const(val(\"a\")),const(val(\"b\")))")
+            ,("Non-Equality NEString",
+              "<NEString><StringValue>a</StringValue><StringValue>b</StringValue></NEString>",
+              "_nequ_(const(val(\"a\")),const(val(\"b\")))")
             ,("NoChildFailed",
               [r|
                 <NoChildFailed>
