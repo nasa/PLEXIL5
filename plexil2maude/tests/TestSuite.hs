@@ -55,7 +55,8 @@ main = defaultMain $
 testsLegacy :: TestTree
 testsLegacy =
     testGroup "Legacy Tests"
-        [testParseArray
+        [testParseArrayValue
+        ,testParseArray
         ,testsParseBooleanExpression
         ,testsParseNodeStateValue
         ,testsParseNodeStateVariable
@@ -787,6 +788,20 @@ testLookups =
         |],
         "lookupOnChange('inConflict, nilarg, val(0.0))")
       ]
+
+testParseArrayValue :: TestTree
+testParseArrayValue =
+  testGroup "Parse an array value" $
+    map (testify'' elementVisitor)
+    [("ArrayValueString",
+        [r|
+          <ArrayValue Type="String">
+            <StringValue>zero</StringValue>
+            <StringValue>one</StringValue>
+            <StringValue>two</StringValue>
+          </ArrayValue>
+        |],
+        "const(array(\"zero\" # \"one\" # \"two\"))")]
 
 testParseArray :: TestTree
 testParseArray =
