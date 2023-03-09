@@ -801,7 +801,48 @@ testParseArrayValue =
             <StringValue>two</StringValue>
           </ArrayValue>
         |],
-        "const(array(\"zero\" # \"one\" # \"two\"))")]
+        "const(array(\"zero\" # \"one\" # \"two\"))"),
+      ("ArrayValueInteger",
+        [r|
+          <ArrayValue Type="Integer">
+            <IntegerValue>0</IntegerValue>
+            <IntegerValue>1</IntegerValue>
+            <IntegerValue>2</IntegerValue>
+            <IntegerValue>3</IntegerValue>
+            <IntegerValue>4</IntegerValue>
+            <IntegerValue>5</IntegerValue>
+            <IntegerValue>6</IntegerValue>
+            <IntegerValue>7</IntegerValue>
+            <IntegerValue>8</IntegerValue>
+            <IntegerValue>9</IntegerValue>
+          </ArrayValue>
+        |],
+        "const(array(0 # 1 # 2 # 3 # 4 # 5 # 6 # 7 # 8 # 9))"),
+        ("ArrayValueReal",
+        [r|
+          <ArrayValue Type="Real">
+            <RealValue>0.0</RealValue>
+            <RealValue>1.0</RealValue>
+            <RealValue>2.0</RealValue>
+            <RealValue>3.0</RealValue>
+            <RealValue>4.0</RealValue>
+            <RealValue>5.0</RealValue>
+            <RealValue>6.0</RealValue>
+            <RealValue>7.0</RealValue>
+            <RealValue>8.0</RealValue>
+            <RealValue>9.0</RealValue>
+          </ArrayValue>
+        |],
+        "const(array(0.0 # 1.0 # 2.0 # 3.0 # 4.0 # 5.0 # 6.0 # 7.0 # 8.0 # 9.0))"),
+        ("ArrayValueBoolean",
+        [r|
+          <ArrayValue Type="Boolean">
+            <BooleanValue>TRUE</BooleanValue>
+            <BooleanValue>FALSE</BooleanValue>
+          </ArrayValue>
+        |],
+        "const(array(true # false))")
+        ]
 
 testParseArray :: TestTree
 testParseArray =

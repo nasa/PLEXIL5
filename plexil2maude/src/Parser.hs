@@ -565,7 +565,12 @@ helper el children =
             "ArrayValue" ->
                 text "const" <> parens (
                     text "array" <> parens (
-                         hcat $ punctuate (text " # ") $ map (doubleQuotes . text . T.unpack) $ (child >=> child >=> content) cursor
+                        if (concatMap T.unpack $ attribute "Type" cursor) == "String"
+                            then hcat $ punctuate (text " # ") $ map (doubleQuotes . text . T.unpack) $ (child >=> child >=> content) cursor
+                            else if (concatMap T.unpack $ attribute "Type" cursor) == "Boolean"
+                                then hcat $ punctuate (text " # ") $ map (text . T.unpack . T.toLower) $ (child >=> child >=> content) cursor
+                                else
+                                    hcat $ punctuate (text " # ") $ map (text . T.unpack) $ (child >=> child >=> content) cursor
                     )
                 )
             "IntegerValue" ->
