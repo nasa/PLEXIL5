@@ -467,7 +467,8 @@ testsParseNodeOutcomeVariable :: TestTree
 testsParseNodeOutcomeVariable =
     testGroup "parseNodeOutcomeVariable" $
         map (testify'' elementVisitor)
-            [("Simple child identifier", "<NodeOutcomeVariable><NodeRef dir=\"child\">Printer0</NodeRef></NodeOutcomeVariable>", "Printer0")
+            [("Simple child identifier with NodeRef", "<NodeOutcomeVariable><NodeRef dir=\"child\">Printer0</NodeRef></NodeOutcomeVariable>", "Printer0"),
+             ("Simple child identifier with NodeId", "<NodeOutcomeVariable><NodeId>callBoolArrayCommand</NodeId></NodeOutcomeVariable>", "callBoolArrayCommand")
             ]
 
 testsParseBooleanExpression :: TestTree

@@ -95,13 +95,13 @@ parseFinishedPredicate cursor = return $ "(isFinished?(" ++ dirAttrText ++ "(" +
 ------------------------------------------------------------
 ---------- NodeOutcome
 
-thisAxis :: Cursor -> [Text]
-thisAxis =
-    checkName (=="NodeOutcomeVariable")
-                    >=> child
-                    >=> checkName (=="NodeRef")
-                    >=> child
-                    >=> content
+-- thisAxis :: Cursor -> [Text]
+-- thisAxis =
+--     checkName (=="NodeOutcomeVariable")
+--                     >=> child
+--                     >=> checkName (=="NodeRef")
+--                     >=> child
+--                     >=> content
 parseNodeOutcomeVariable :: Cursor -> ParseError String
 parseNodeOutcomeVariable cursor =
     let
@@ -110,6 +110,13 @@ parseNodeOutcomeVariable cursor =
     in if null nodes
          then Left "No NodeOutcomeVariable found"
          else return $ maudifyLabel $ T.unpack identifier
+    where
+        thisAxis =
+            checkName (=="NodeOutcomeVariable")
+                            >=> child
+                            >=> checkName (\n -> n =="NodeRef" || n =="NodeId")
+                            >=> child
+                            >=> content
 
 prettyNodeOutcomeValue :: Cursor -> Doc
 prettyNodeOutcomeValue cursor =
@@ -394,10 +401,17 @@ data ArrayElement = ArrayElement Doc Doc
 
 parseArrayElement :: Cursor -> ParseError Doc
 parseArrayElement cursor =
-    do (var,expr) <- twoChildElements cursor
-       varId <- parseVariableId var
-       let expr' = elementVisitor expr
-       return $ parens (text varId) <+> text "[" <+> expr' <+> "]"
+  if length ((child >=> isArrayVariable) cursor) == 1
+    then
+      do (var,expr) <- twoChildElements cursor
+         varId <- parseVariableId var
+         let expr' = elementVisitor expr
+         return $ parens (text varId) <+> text "[" <+> expr' <+> "]"
+    else
+      do (var,expr) <- twoChildElements cursor
+         varId <- toQID <$> parseName var
+         let expr' = elementVisitor expr
+         return $ parens (text varId) <+> text "[" <+> expr' <+> "]"
 
 parseArrayElement' :: Cursor -> ParseError Doc
 parseArrayElement' cursor =
@@ -693,8 +707,15 @@ helper el children =
 
 getNodeOutcomeVariable :: Cursor -> Doc
 getNodeOutcomeVariable cursor =
-    let nodeReference:_ = (child >=> element "NodeOutcomeVariable" >=> child >=> element "NodeRef") cursor
-     in text $ '\'':(maudifyLabel $ T.unpack $ head $ (child >=> content) nodeReference)
+    -- let nodeReference:_ = (child >=> element "NodeOutcomeVariable" >=> child >=> element "NodeRef") cursor
+    -- in text $ '\'':(maudifyLabel $ T.unpack $ head $ (child >=> content) nodeReference)
+    if length ((child >=> element "NodeOutcomeVariable" >=> child >=> element "NodeRef") cursor) == 1
+    then
+      let nodeReference:_ = (child >=> element "NodeOutcomeVariable" >=> child >=> element "NodeRef") cursor
+      in text $ '\'':(maudifyLabel $ T.unpack $ head $ (child >=> content) nodeReference)
+    else
+      let nodeReference:_ = (child >=> element "NodeOutcomeVariable" >=> child >=> element "NodeId") cursor
+      in text $ '\'':(maudifyLabel $ T.unpack $ head $ (child >=> content) nodeReference)
 
 getNodeOutcomeValue :: Cursor -> String
 getNodeOutcomeValue cursor =
@@ -854,6 +875,11 @@ isValue :: Axis
 isValue = checkName isValueElement
   where isValueElement :: XML.Name -> Bool
         isValueElement name = "Value" `T.isSuffixOf` (nameLocalName name)
+
+isArrayVariable :: Axis
+isArrayVariable = checkName isArrayValueElement
+  where isArrayValueElement :: XML.Name -> Bool
+        isArrayValueElement name = "ArrayVariable" `T.isSuffixOf` (nameLocalName name)
 
 hasArrayValueAxis1Level :: Axis
 hasArrayValueAxis1Level = checkName isArrayValueElement
