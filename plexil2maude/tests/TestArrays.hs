@@ -23,9 +23,9 @@ testArrays :: TestTree
 testArrays =
     testGroup "Arrays" $ [
       testParseArrayValue
-      ,testParseArray,
-      
-       testCase "Trivial" $ assertBool "Trivial" False
+      ,testParseArray
+      -- ,testIsArrayValue
+      ,testHasArrayValue1Level
     ]
 
 testParseArrayValue :: TestTree
@@ -101,7 +101,7 @@ testParseArray =
             </InitialValue>
           </DeclareArray>
         |],
-        "('a2:array(\"zero\" # \"one\" # \"two\")"),
+        "('a2:array(\"zero\" # \"one\" # \"two\"))"),
         ("ArrayInteger",
         [r|
           <DeclareArray ColNo="2" LineNo="3">
@@ -139,7 +139,7 @@ testParseArray =
             </InitialValue>
           </DeclareArray>
         |],
-        "('a4:array(12.3 # 3456.67856)))"),
+        "('a4:array(12.3 # 3456.67856))"),
         ("ArrayBoolean",
         [r|
           <DeclareArray ColNo="2" LineNo="5">
@@ -154,8 +154,38 @@ testParseArray =
             </InitialValue>
           </DeclareArray>
         |],
-        "('a3:array(true # false)")
+        "('a3:array(true # false))")
       ]
+
+testHasArrayValue1Level :: TestTree
+testHasArrayValue1Level =
+  testGroup "Has an array value at level 2 deep" $
+    testParserGeneric hasArrayValue1Level [("ArrayValueString",
+        [r|
+          <InitialValue>
+              <ArrayValue Type="Boolean">
+                <BooleanValue>true</BooleanValue>
+                <BooleanValue>false</BooleanValue>
+              </ArrayValue>
+          </InitialValue>
+        |],
+        True)
+        ]
+
+-- testIsArrayValue :: TestTree
+-- testIsArrayValue =
+--   testGroup "Is an array value" $
+--     testParserGeneric isArrayValue [("ArrayValueString",
+--         [r|
+--           <ArrayValue Type="String">
+--             <StringValue>zero</StringValue>
+--             <StringValue>one</StringValue>
+--             <StringValue>two</StringValue>
+--           </ArrayValue>
+--         |],
+--         True)
+--         ]
+
 
 newtype TestInput  = In String 
 newtype TestOutput = Out String
@@ -174,6 +204,20 @@ testCaseParser f (msg,In i,Out o) =
         where
           render = renderStyle (style {mode = OneLineMode})
           clean = filter (not . isSpace)
+      cursor = fromDocument doc
+        where
+          doc = parseText_ def $ fromString i
+
+testParserGeneric :: (Eq t, Show t) => (Cursor -> t) -> [(String,String,t)] -> [TestTree]
+testParserGeneric f = map testCaseParserGeneric' 
+  where
+    testCaseParserGeneric' (msg,i,o) = testCaseParserGeneric f (msg,In i,o)
+
+testCaseParserGeneric :: (Eq t, Show t) => (Cursor -> t) -> (String, TestInput, t) -> TestTree
+testCaseParserGeneric f (msg,In i,o) = 
+  testCase msg $
+    f cursor @?= o
+    where 
       cursor = fromDocument doc
         where
           doc = parseText_ def $ fromString i

@@ -447,13 +447,14 @@ parseDeclareVariable cursor =
 fstMatch :: (Cursor -> ParseError a) -> [Cursor] -> ParseError a
 fstMatch f = msum . map f
 
-isArrayValue :: Cursor -> Bool
-isArrayValue cursor =
-    case node cursor of
-        NodeElement el ->
-            let label = nameLocalName $ elementName el
-            in label == "ArrayValue"
-        _ -> False
+hasArrayValue1Level :: Cursor -> Bool
+hasArrayValue1Level cursor = res
+    where 
+        res = length ((child >=> hasArrayValueAxis1Level) cursor) == 1
+        -- NodeElement el ->
+        --     let label = nameLocalName $ elementName el
+        --     in label == "ArrayValue"
+        -- _ -> False
 
 parseDeclareArray :: Cursor -> ParseError Doc
 parseDeclareArray cursor =
@@ -478,9 +479,9 @@ parseDeclareArray cursor =
 
         parseArrayInit :: Cursor -> ParseError Doc
         parseArrayInit cursor =
-          if isArrayValue cursor
+          if hasArrayValue1Level cursor
             then 
-                return $ elementVisitor cursor
+                return (createArrayWithValues $ head $ (child >=> hasArrayValueAxis1Level) cursor)
             else
                 do checkThisElement "InitialValue" cursor
                    doc <- mapM parseSimpleValue children
@@ -532,6 +533,17 @@ prettyElement rec cursor
         childElements = concatMap anyElement $ child cursor
         -- cursor = fromNode $ NodeElement el
 
+createArrayWithValues :: Cursor -> Doc
+createArrayWithValues cursor =
+                    text "array" <> parens (
+                        if (concatMap T.unpack $ attribute "Type" cursor) == "String"
+                            then hcat $ punctuate (text " # ") $ map (doubleQuotes . text . T.unpack) $ (child >=> child >=> content) cursor
+                            else if (concatMap T.unpack $ attribute "Type" cursor) == "Boolean"
+                                then hcat $ punctuate (text " # ") $ map (text . T.unpack . T.toLower) $ (child >=> child >=> content) cursor
+                                else
+                                    hcat $ punctuate (text " # ") $ map (text . T.unpack) $ (child >=> child >=> content) cursor
+                    )
+
 helper el children =
         case name of
             "ArrayElement" -> errorize $ parseArrayElement cursor
@@ -576,14 +588,7 @@ helper el children =
                 )
             "ArrayValue" ->
                 text "const" <> parens (
-                    text "array" <> parens (
-                        if (concatMap T.unpack $ attribute "Type" cursor) == "String"
-                            then hcat $ punctuate (text " # ") $ map (doubleQuotes . text . T.unpack) $ (child >=> child >=> content) cursor
-                            else if (concatMap T.unpack $ attribute "Type" cursor) == "Boolean"
-                                then hcat $ punctuate (text " # ") $ map (text . T.unpack . T.toLower) $ (child >=> child >=> content) cursor
-                                else
-                                    hcat $ punctuate (text " # ") $ map (text . T.unpack) $ (child >=> child >=> content) cursor
-                    )
+                    createArrayWithValues cursor
                 )
             "IntegerValue" ->
                 text "const" <> parens (
@@ -849,6 +854,11 @@ isValue :: Axis
 isValue = checkName isValueElement
   where isValueElement :: XML.Name -> Bool
         isValueElement name = "Value" `T.isSuffixOf` (nameLocalName name)
+
+hasArrayValueAxis1Level :: Axis
+hasArrayValueAxis1Level = checkName isArrayValueElement
+  where isArrayValueElement :: XML.Name -> Bool
+        isArrayValueElement name = "ArrayValue" `T.isSuffixOf` (nameLocalName name)
 
 isDeclaredVariable :: Axis
 isDeclaredVariable = checkName isVariableElement
