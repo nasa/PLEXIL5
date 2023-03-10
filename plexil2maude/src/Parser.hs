@@ -447,6 +447,14 @@ parseDeclareVariable cursor =
 fstMatch :: (Cursor -> ParseError a) -> [Cursor] -> ParseError a
 fstMatch f = msum . map f
 
+isArrayValue :: Cursor -> Bool
+isArrayValue cursor =
+    case node cursor of
+        NodeElement el ->
+            let label = nameLocalName $ elementName el
+            in label == "ArrayValue"
+        _ -> False
+
 parseDeclareArray :: Cursor -> ParseError Doc
 parseDeclareArray cursor =
     do arrName <- toQID <$> fstMatch parseName children
@@ -470,11 +478,15 @@ parseDeclareArray cursor =
 
         parseArrayInit :: Cursor -> ParseError Doc
         parseArrayInit cursor =
-            do checkThisElement "InitialValue" cursor
-               doc <- mapM parseSimpleValue children
-               return $ "array" <> parens (hsep $ intersperse (text "#") doc)
-            where
-                children = (child >=> isValue) cursor
+          if isArrayValue cursor
+            then 
+                return $ elementVisitor cursor
+            else
+                do checkThisElement "InitialValue" cursor
+                   doc <- mapM parseSimpleValue children
+                   return $ "array" <> parens (hsep $ intersperse (text "#") doc)
+                where
+                    children = (child >=> isValue) cursor
 
         getDefaultArrayInit :: String -> Int -> ParseError Doc
         getDefaultArrayInit arrType len =
