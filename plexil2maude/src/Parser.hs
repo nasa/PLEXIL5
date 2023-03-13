@@ -463,7 +463,7 @@ fstMatch f = msum . map f
 
 hasArrayValue1Level :: Cursor -> Bool
 hasArrayValue1Level cursor = res
-    where 
+    where
         res = length ((child >=> hasArrayValueAxis1Level) cursor) == 1
         -- NodeElement el ->
         --     let label = nameLocalName $ elementName el
@@ -494,7 +494,7 @@ parseDeclareArray cursor =
         parseArrayInit :: Cursor -> ParseError Doc
         parseArrayInit cursor =
           if hasArrayValue1Level cursor
-            then 
+            then
                 return (createArrayWithValues $ head $ (child >=> hasArrayValueAxis1Level) cursor)
             else
                 do checkThisElement "InitialValue" cursor
@@ -557,6 +557,10 @@ createArrayWithValues cursor =
                                 else
                                     hcat $ punctuate (text " # ") $ map (text . T.unpack) $ (child >=> child >=> content) cursor
                     )
+
+-- wrapVal :: Doc -> Doc -- wraps document in "val(...)"
+-- wrapVal doc = text "val" <> parens doc
+
 
 helper el children =
         case name of
@@ -852,12 +856,15 @@ parseSimpleValue cursor = parseIntegerValue
         parseIntegerValue = buildValue <$> parseTag "IntegerValue" cursor
         parseBooleanValue = buildValue <$> parseTag "BooleanValue" cursor
         parseRealValue = buildValue <$> parseTag "RealValue" cursor
-        parseStringValue = buildValue <$> parseTag "StringValue" cursor
+        parseStringValue = buildValue' <$> parseTag "StringValue" cursor
 
         parseTag tag cursor = getUniqueTextContent (element tag) cursor
 
         buildValue value = text "val" <> parens (
                              text $ T.unpack value
+                           )
+        buildValue' value = text "val" <> parens (
+                             doubleQuotes $ text $ T.unpack value
                            )
 
 
