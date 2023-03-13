@@ -47,8 +47,7 @@ mod NODE is
  op qid:_          : Qualified -> Attribute [ctor gather (&)] .
  op extVar:_       : Qualified -> Attribute [ctor gather (&)] .
  op locVar:_       : Qualified -> Attribute [ctor gather (&)] .
- op _:=_           : Qualified Expression -> Attribute [ctor] .
- op _[_]:=_        : Qualified Expression Expression -> Attribute [ctor] .
+ op _:=_           : AssignmentTarget Expression -> Attribute [ctor] .
  op active:_       : Bool -> Attribute [ctor gather (&)] .
  op initVal:_      : Value -> Attribute [ctor gather (&)] .
  op actVal:_       : Value -> Attribute [ctor gather (&)] .

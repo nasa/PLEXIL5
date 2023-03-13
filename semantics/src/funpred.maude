@@ -133,26 +133,28 @@ mod FUNPRED is
   eq evalpar(Gamma, PS, (E P))
    = (expToVal(eval(Gamma, PS, E)) evalpar(Gamma, PS, P)) .
 
+  vars AT AT' : AssignmentTarget .
+
   *** Assignment expression of node
   op assignmentExpression : Qualified Configuration -> Expression .
-  eq assignmentExpression(Q, < Q : assignment | (Q' := E), AtS > PS)
-   = E .
-  eq assignmentExpression(Q, < Q : assignment | (Q' [ E' ] := E), AtS > PS)
+  eq assignmentExpression(Q, < Q : assignment | (AT := E), AtS > PS)
    = E .
 
   *** Assignment variable of node
   op assignmentVariable : Qualified Configuration -> Qualified .
-  eq assignmentVariable(Q, < Q : assignment | (Q' := E), AtS > PS)
+  eq assignmentVariable(Q, < Q : assignment | (var(Q') := E), AtS > PS)
    = Q' .
-  eq assignmentVariable(Q, < Q : assignment | (Q' [ E' ] := E), AtS > PS)
+  eq assignmentVariable(Q, < Q : assignment | (arrayVar(Q') := E), AtS > PS)
+   = Q' .
+  eq assignmentVariable(Q, < Q : assignment | (arrayVar(Q',E') := E), AtS > PS)
    = Q' .
 
-  op assignmentIndexExpression : Qualified Configuration -> Expression .
-  eq assignmentIndexExpression(Q, < Q : assignment | (Q' [ E' ] := E), AtS > PS) = E' .
-***   eq assignmentIndexExpression(Q, PS) = nothing .
+  op assignmentIndexExpression : Qualified Configuration ~> Expression .
+  eq assignmentIndexExpression(Q, < Q : assignment | (arrayVar(Q', E') := E), AtS > PS) = E' .
 
   op isArrayAssignment : Qualified Configuration -> Bool .
-  eq isArrayAssignment(Q, < Q : assignment | (Q' [ E' ] := E), AtS > PS) = true .
+  eq isArrayAssignment(Q, < Q : assignment | (arrayVar(Q')    := E), AtS > PS) = true .
+  eq isArrayAssignment(Q, < Q : assignment | (arrayVar(Q',E') := E), AtS > PS) = true .
   eq isArrayAssignment(Q, PS) = false .
 
 

@@ -37,10 +37,8 @@ mod COMPILER is
     = (compileNodes(PL, (I . Q)) compileNodes(list(I, LD, (AtS), PLL), Q)) .
   eq compileNodes(command(I, LD, (AtS), C), Q)
   = < (I . Q) : command | command: C, commandInfo: commDefault(I), defaultAttributes(command,getRepeatCondition(AtS)) / (AtS) > .
-  eq compileNodes(assignment(I, LD, (AtS), (Q' := E)), Q)
-  = < (I . Q) : assignment | (Q' := E), defaultAttributes(assignment, getRepeatCondition(AtS)) / (AtS) > .
-  eq compileNodes(assignment(I, LD, (AtS), (Q' [ E' ] := E)), Q)
-  = < (I . Q) : assignment | (Q' [ E' ] := E), defaultAttributes(assignment, getRepeatCondition(AtS)) / (AtS) > .
+  eq compileNodes(assignment(I, LD, (AtS), (AT := E)), Q)
+  = < (I . Q) : assignment | (AT := E), defaultAttributes(assignment, getRepeatCondition(AtS)) / (AtS) > .
   eq compileNodes(empty(I, LD, AtS), Q)
   = < (I . Q) : empty | defaultAttributes(empty,getRepeatCondition(AtS)) / (AtS) > .
 
@@ -77,8 +75,7 @@ mod COMPILER is
   eq sanitizeIdsOnParams(nilpar, NQ, Cfg) = nilpar .
 
   op  sanitizeIdsOnAttr : Attribute NeQualified Configuration -> Attribute .
-  eq  sanitizeIdsOnAttr((Q      := E),  NQ, Cfg) = getFullyQualifiedVariableId(Q, NQ, Cfg) := sanitizeIds(E, NQ, Cfg) .
-  eq  sanitizeIdsOnAttr((Q [E'] := E),  NQ, Cfg) = getFullyQualifiedVariableId(Q, NQ, Cfg) [sanitizeIds(E', NQ, Cfg)] := sanitizeIds(E, NQ, Cfg) .
+  eq  sanitizeIdsOnAttr((AT := E),  NQ, Cfg) = sanitizeIds(AT, NQ, Cfg) := sanitizeIds(E, NQ, Cfg) .
   eq  sanitizeIdsOnAttr((command: NQ' / Ps / Q), NQ, Cfg) = command: NQ' / sanitizeIdsOnParams(Ps,NQ,Cfg) / getFullyQualifiedVariableId(Q, NQ, Cfg) .
   eq  sanitizeIdsOnAttr((command: NQ' / Ps),     NQ, Cfg) = command: NQ' / sanitizeIdsOnParams(Ps,NQ,Cfg) .
   ceq sanitizeIdsOnAttr(At,             NQ, Cfg) = At'
@@ -233,6 +230,7 @@ mod COMPILER is
   --- are given the value Unknown
 
   vars Args Args'     : Arguments .
+  vars AT AT'         : AssignmentTarget .
   vars At At'         : Attribute .
   vars AtS AtS'       : AttributeSet .
   vars B B'           : Bool .

@@ -302,7 +302,7 @@ mod TEST--ATOMIC--WAITING is
                                        startc: const(val(true)),
                                        pre: const(val(true)),
                                        exitc: const(unknown),
-                                       (M . B . A := const(val(10)) + var(M . B . A)) > ]
+                                       (var(M . B . A) := const(val(10)) + var(M . B . A)) > ]
         [ memory :
             < M . B . A : memory     | actVal: val(5),
                                        prevVal: val(0) > ]
@@ -324,7 +324,7 @@ mod TEST--ATOMIC--WAITING is
                                        startc: const(val(true)),
                                        pre: const(val(true)),
                                        exitc: const(unknown),
-                                       (M . B . A := const(val(10)) + var(M . B . A)) > ]
+                                       (var(M . B . A) := const(val(10)) + var(M . B . A)) > ]
         [ memory :
             < M . B . A : memory     | actVal: val(5),
                                        prevVal: val(0) > ]
