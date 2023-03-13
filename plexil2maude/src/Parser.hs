@@ -406,12 +406,12 @@ parseArrayElement cursor =
       do (var,expr) <- twoChildElements cursor
          varId <- parseVariableId var
          let expr' = elementVisitor expr
-         return $ parens (text varId) <+> text "[" <+> expr' <+> "]"
+         return $ "arrayVar" <> parens (text varId <+> "," <+> expr')
     else
       do (var,expr) <- twoChildElements cursor
          varId <- toQID <$> parseName var
          let expr' = elementVisitor expr
-         return $ parens (text varId) <+> text "[" <+> expr' <+> "]"
+         return $ "arrayVar" <> parens (text varId <+> "," <+> expr')
 
 parseArrayElement' :: Cursor -> ParseError Doc
 parseArrayElement' cursor =
@@ -551,15 +551,15 @@ createArrayWithValues :: Cursor -> Doc
 createArrayWithValues cursor =
                     text "array" <> parens (
                         if (concatMap T.unpack $ attribute "Type" cursor) == "String"
-                            then hcat $ punctuate (text " # ") $ map (doubleQuotes . text . T.unpack) $ (child >=> child >=> content) cursor
+                            then hcat $ punctuate (text " # ") $ map (wrapVal . doubleQuotes . text . T.unpack) $ (child >=> child >=> content) cursor
                             else if (concatMap T.unpack $ attribute "Type" cursor) == "Boolean"
-                                then hcat $ punctuate (text " # ") $ map (text . T.unpack . T.toLower) $ (child >=> child >=> content) cursor
+                                then hcat $ punctuate (text " # ") $ map (wrapVal . text . T.unpack . T.toLower) $ (child >=> child >=> content) cursor
                                 else
-                                    hcat $ punctuate (text " # ") $ map (text . T.unpack) $ (child >=> child >=> content) cursor
+                                    hcat $ punctuate (text " # ") $ map (wrapVal . text . T.unpack) $ (child >=> child >=> content) cursor
                     )
 
--- wrapVal :: Doc -> Doc -- wraps document in "val(...)"
--- wrapVal doc = text "val" <> parens doc
+wrapVal :: Doc -> Doc -- wraps document in "val(...)"
+wrapVal doc = text "val" <> parens doc
 
 
 helper el children =

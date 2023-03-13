@@ -139,7 +139,6 @@ testsLegacy =
                     </DeclareVariable>
                     |],
                     [r| ('foo : val("")) |])
-
                 ]
         ,testGroup "Parse initial value" $
             testErrorParser parseInitialSimpleValue
@@ -162,7 +161,7 @@ testsLegacy =
                        </Index>
                      </ArrayElement>
                     |],
-                  [r| ( 'foo ) [ var( 'i ) ] |])
+                  [r| arrayVar('foo,var('i)) |])
                 ]
         ,testGroup "Parse an empty node" $
             map (testify'' elementVisitor)
@@ -231,10 +230,7 @@ testsLegacy =
                     |],
                   [r|
                     assignment(
-                      'SimpleArrayAssignment1,
-                       nilocdecl,
-                       ( none ),
-                       ( ('foo ) [ var('i) ] := const(val(1.0)))
+                      'SimpleArrayAssignment1,nilocdecl,(none),(arrayVar('foo,var('i)):=const(val(1.0)))
                     )
                     |])
                 ,("An icarous complex array assignment node",
@@ -257,7 +253,7 @@ testsLegacy =
                      </Assignment>
                     |],
                   [r|
-                       ( ('velCmd ) [ const(val(0)) ] := ( arrayVar('acVelocity,const(val(0))) ) )
+                       ( arrayVar('velCmd,const(val(0))):=(arrayVar('acVelocity,const(val(0)))) )
                     |])
 
                 ]

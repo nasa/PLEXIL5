@@ -26,6 +26,7 @@ testArrays =
       ,testParseArray
       -- ,testIsArrayValue
       ,testHasArrayValue1Level
+      ,testArrayAccess
     ]
 
 testParseArrayValue :: TestTree
@@ -40,7 +41,7 @@ testParseArrayValue =
             <StringValue>two</StringValue>
           </ArrayValue>
         |],
-        "const(array(\"zero\" # \"one\" # \"two\"))"),
+        "const(array(val(\"zero\") # val(\"one\") # val(\"two\")))"),
       ("ArrayValueInteger",
         [r|
           <ArrayValue Type="Integer">
@@ -56,7 +57,7 @@ testParseArrayValue =
             <IntegerValue>9</IntegerValue>
           </ArrayValue>
         |],
-        "const(array(0 # 1 # 2 # 3 # 4 # 5 # 6 # 7 # 8 # 9))"),
+        "const(array(val(0) # val(1) # val(2) # val(3) # val(4) # val(5) # val(6) # val(7) # val(8) # val(9)))"),
         ("ArrayValueReal",
         [r|
           <ArrayValue Type="Real">
@@ -72,7 +73,7 @@ testParseArrayValue =
             <RealValue>9.0</RealValue>
           </ArrayValue>
         |],
-        "const(array(0.0 # 1.0 # 2.0 # 3.0 # 4.0 # 5.0 # 6.0 # 7.0 # 8.0 # 9.0))"),
+        "const(array(val(0.0) # val(1.0) # val(2.0) # val(3.0) # val(4.0) # val(5.0) # val(6.0) # val(7.0) # val(8.0) # val(9.0)))"),
         ("ArrayValueBoolean",
         [r|
           <ArrayValue Type="Boolean">
@@ -80,7 +81,7 @@ testParseArrayValue =
             <BooleanValue>FALSE</BooleanValue>
           </ArrayValue>
         |],
-        "const(array(true # false))")
+        "const(array(val(true) # val(false)))")
         ]
 
 testParseArray :: TestTree
@@ -101,7 +102,7 @@ testParseArray =
             </InitialValue>
           </DeclareArray>
         |],
-        "('a2:array(\"zero\" # \"one\" # \"two\"))"),
+        "('a2:array(val(\"zero\") # val(\"one\") # val(\"two\")))"),
         ("ArrayInteger",
         [r|
           <DeclareArray ColNo="2" LineNo="3">
@@ -124,7 +125,7 @@ testParseArray =
             </InitialValue>
           </DeclareArray>
         |],
-        "('a1:array(0 # 1 # 2 # 3 # 4 # 5 # 6 # 7 # 8 # 9))"),
+        "('a1:array(val(0) # val(1) # val(2) # val(3) # val(4) # val(5) # val(6) # val(7) # val(8) # val(9)))"),
         ("ArrayFloat",
         [r|
           <DeclareArray ColNo="2" LineNo="6">
@@ -139,7 +140,7 @@ testParseArray =
             </InitialValue>
           </DeclareArray>
         |],
-        "('a4:array(12.3 # 3456.67856))"),
+        "('a4:array(val(12.3) # val(3456.67856)))"),
         ("ArrayBoolean",
         [r|
           <DeclareArray ColNo="2" LineNo="5">
@@ -154,8 +155,8 @@ testParseArray =
             </InitialValue>
           </DeclareArray>
         |],
-        "('a3:array(true # false))")
-      ]
+        "('a3:array(val(true) # val(false)))")
+        ]
 
 testHasArrayValue1Level :: TestTree
 testHasArrayValue1Level =
@@ -171,6 +172,22 @@ testHasArrayValue1Level =
         |],
         True)
         ]
+
+testArrayAccess :: TestTree
+testArrayAccess =
+  testGroup "Access to an array" $
+    testErrorParser parseArrayElement [("ArrayAccess",
+        [r|
+          <ArrayElement>
+            <ArrayVariable>a4</ArrayVariable>
+            <Index>
+              <IntegerValue>0</IntegerValue>
+            </Index>
+          </ArrayElement>
+        |],
+        "arrayVar('a4, const(val(0)))")
+        ]
+
 
 -- testIsArrayValue :: TestTree
 -- testIsArrayValue =
