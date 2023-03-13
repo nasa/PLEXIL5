@@ -598,6 +598,11 @@ helper el children =
                     char '\'' <>
                         text ( T.unpack $ T.concat $ concatMap content $ child cursor )
                 )
+            "StringVariable" ->
+                text "var" <> parens (
+                    char '\'' <>
+                        text ( T.unpack $ T.concat $ concatMap content $ child cursor )
+                )
             "RealValue" ->
                 text "const" <> parens (
                     text "val" <> parens (
