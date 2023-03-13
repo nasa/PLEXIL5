@@ -34,6 +34,8 @@ import PSX2MaudeTests(testPSX2Maude)
 
 import TestArrays(testArrays)
 
+import TestCommon
+
 ------------------------------------------------------------
 ----------    Test helpers
 
@@ -126,6 +128,28 @@ testsLegacy =
                        </InitialValue>
                      </DeclareArray>|],
                   [r| ('bar : array(val(0.0) # val(7.0) # val(13.0))) |])
+                  ,("An empty variable declaration",
+                  [r|
+                     <DeclareVariable ColNo="4" LineNo="3">
+                      <Name>foo</Name>
+                      <Type>String</Type>
+                      <InitialValue>
+                        <StringValue />
+                      </InitialValue>
+                    </DeclareVariable>
+                    |],
+                    [r| ('foo : val("")) |])
+
+                ]
+        ,testGroup "Parse initial value" $
+            testErrorParser parseInitialSimpleValue
+                [("Empty initial value",
+                  [r|
+                    <InitialValue>
+                      <StringValue />
+                    </InitialValue>
+                    |],
+                  [r| val("") |])
                 ]
         ,testGroup "Parse an array element" $
             map (testify'' elementVisitor)

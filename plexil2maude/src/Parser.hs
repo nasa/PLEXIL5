@@ -442,7 +442,7 @@ parseDeclareVariable cursor =
                                   buildValue value = pretty
                                     where pretty = text "val" <> parens value
                                   addInitialization (var,ty) =
-                                      do tyStr <- getUniqueTextContent (:[]) ty
+                                      do tyStr <- getUniqueTextContentOrEmpty (:[]) ty
                                          case tyStr of
                                             "String" -> Right $ buildValue $ doubleQuotes PP.empty
                                             "Integer" -> Right $ buildValue $ text "0"
@@ -861,9 +861,11 @@ parseSimpleValue cursor = parseIntegerValue
         parseIntegerValue = buildValue <$> parseTag "IntegerValue" cursor
         parseBooleanValue = buildValue <$> parseTag "BooleanValue" cursor
         parseRealValue = buildValue <$> parseTag "RealValue" cursor
-        parseStringValue = buildValue' <$> parseTag "StringValue" cursor
+        parseStringValue = buildValue' <$> parseTag' "StringValue" cursor
 
         parseTag tag cursor = getUniqueTextContent (element tag) cursor
+
+        parseTag' tag cursor = getUniqueTextContentOrEmpty (element tag) cursor
 
         buildValue value = text "val" <> parens (
                              text $ T.unpack value
@@ -923,6 +925,12 @@ getUniqueTextContent axis cursor =
           then Right $ head textNodes
           else Left $ "Could not uniquely determined text content for element: " ++ show cursor ++ "\n\ttextNodes: " ++ show textNodes
 
+getUniqueTextContentOrEmpty :: Axis -> Cursor -> ParseError Text
+getUniqueTextContentOrEmpty axis cursor =
+    let textNodes = (axis >=> child >=> content) cursor
+     in if length textNodes <= 1
+          then Right $ T.concat textNodes
+          else Left $ "Could not uniquely determined text content for element: " ++ show cursor ++ "\n\ttextNodes: " ++ show textNodes
 
 data BinarizedList a = Root a | Branches (BinarizedList a) (BinarizedList a) deriving (Show,Eq)
 
