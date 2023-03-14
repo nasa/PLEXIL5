@@ -632,6 +632,7 @@ helper el children =
                     )
                 )
             "EQBoolean"  -> text "_equ_" <> parens (hcat $ punctuate comma children)
+            "NEBoolean"  -> text "_nequ_" <> parens (hcat $ punctuate comma children)
             "EQNumeric"  -> text "_equ_" <> parens (hcat $ punctuate comma children)
             "NENumeric"  -> text "_nequ_" <> parens (hcat $ punctuate comma children)
             "EQString"   -> text "_equ_" <> parens (hcat $ punctuate comma children)

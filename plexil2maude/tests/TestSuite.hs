@@ -525,6 +525,9 @@ testsParseBooleanExpression =
             ,("Equality EQBoolean",
               "<EQBoolean><BooleanValue>true</BooleanValue><BooleanValue>false</BooleanValue></EQBoolean>",
               "_equ_(const(val(true)),const(val(false)))")
+            ,("Equality NEBoolean",
+              "<NEBoolean><BooleanValue>true</BooleanValue><BooleanValue>false</BooleanValue></NEBoolean>",
+              "_nequ_(const(val(true)),const(val(false)))")
             ,("Equality EQNumeric",
               "<EQNumeric><IntegerValue>3</IntegerValue><IntegerValue>4</IntegerValue></EQNumeric>",
               "_equ_(const(val(3)),const(val(4)))")
