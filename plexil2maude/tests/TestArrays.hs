@@ -27,6 +27,7 @@ testArrays =
       -- ,testIsArrayValue
       ,testHasArrayValue1Level
       ,testArrayAccess
+      ,testArrayEquality
     ]
 
 testParseArrayValue :: TestTree
@@ -187,6 +188,18 @@ testArrayAccess =
         |],
         "arrayVar('a4, const(val(0)))")
         ]
+
+testArrayEquality :: TestTree
+testArrayEquality =
+  testGroup
+    "parseBooleanExpression" $
+        testParser elementVisitor
+            [("Equality EQArray",
+              "<EQArray><ArrayVariable>a</ArrayVariable><ArrayVariable>b</ArrayVariable></EQArray>",
+              "_equ_(arrayVar('a),arrayVar('b))")
+            ,("Non-Equality NEArray",
+              "<NEArray><ArrayVariable>a</ArrayVariable><ArrayVariable>b</ArrayVariable></NEArray>",
+              "_nequ_(arrayVar('a),arrayVar('b))")]
 
 
 -- testIsArrayValue :: TestTree

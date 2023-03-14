@@ -636,6 +636,8 @@ helper el children =
             "NENumeric"  -> text "_nequ_" <> parens (hcat $ punctuate comma children)
             "EQString"   -> text "_equ_" <> parens (hcat $ punctuate comma children)
             "NEString"   -> text "_nequ_" <> parens (hcat $ punctuate comma children)
+            "EQArray"    -> text "_equ_" <> parens (hcat $ punctuate comma children)
+            "NEArray"    -> text "_nequ_" <> parens (hcat $ punctuate comma children)
             "EQInternal" -> case prettyEQInternal cursor children of
                 Left msg -> text $ "ERROR: " ++ msg
                 Right s -> s
