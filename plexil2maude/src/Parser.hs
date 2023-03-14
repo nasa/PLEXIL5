@@ -392,7 +392,7 @@ parseNodeType cursor =
 parseSimpleAssignment :: Cursor -> ParseError Doc
 parseSimpleAssignment cursor =
     do (var,expr) <- twoChildElements cursor
-       varId <- ((fmap text $ parseVariableId var) <|> parseArrayElement var)
+       varId <- ((fmap text $ parseVariable var) <|> parseArrayElement var)
        let expr' = fix prettyElementRHS expr
        return $ parens $ varId <+> text ":=" <+> expr'
 
@@ -874,6 +874,11 @@ parseSimpleValue cursor = parseIntegerValue
                              doubleQuotes $ text $ T.unpack value
                            )
 
+parseVariable :: Cursor -> ParseError String
+parseVariable cursor =
+    do
+        v <- parseVariableId cursor
+        return $ "var( " ++ v ++ " )"
 
 parseVariableId :: Cursor -> ParseError String
 parseVariableId cursor = case toQID <$> T.unpack <$> getUniqueTextContent isDeclaredVariable cursor of

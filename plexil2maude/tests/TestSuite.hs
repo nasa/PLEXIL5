@@ -207,7 +207,7 @@ testsLegacy =
                       'ASSIGNMENT--0,
                       nilocdecl,
                       ( none ),
-                      ('r1 := lookup ('r1 , nilarg))
+                      (var('r1) := lookup ('r1 , nilarg))
                     )|])
                 ,("A simple array assignment node",
                   [r|
@@ -362,7 +362,7 @@ testsLegacy =
                          </NumericRHS>
                        </Assignment>
                      </NodeBody>|],
-                  "('r1 := lookup ('r1 , nilarg))")
+                  "(var('r1) := lookup ('r1 , nilarg))")
                 ]
         ,testGroup "Parse a command" $
             map (testify'' elementVisitor)
@@ -808,4 +808,3 @@ testLookups =
         |],
         "lookupOnChange('inConflict, nilarg, val(0.0))")
       ]
-
