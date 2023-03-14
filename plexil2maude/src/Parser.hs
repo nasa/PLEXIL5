@@ -769,6 +769,10 @@ getNodeCommandHandleValue cursor =
          "COMMAND_SUCCESS" -> "CommandSuccess"
          "COMMAND_FAILED" -> "CommandFailed"
          "COMMAND_DENIED" -> "CommandDenied"
+         "COMMAND_SENT_TO_SYSTEM" -> "CommandSentToSystem"
+         "COMMAND_ACCEPTED" -> "CommandAccepted"
+         "COMMAND_RCVD_BY_SYSTEM" -> "CommandRcvdBySystem"
+         "COMMAND_INTERFACE_ERROR" -> "CommandInterfaceError"
          _ -> "(Error: don't know how to parse: " ++ rawState ++ ")"
 
 toQID :: String -> String
