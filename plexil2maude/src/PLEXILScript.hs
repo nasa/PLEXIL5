@@ -100,7 +100,7 @@ xpOneOf =
 data Command = Command
   { cmdName   :: String
   , cmdParams :: [Parameter]
-  , cmdHandle :: CommandHandle
+  , cmdResult :: Result
   , cmdType   :: Type
   } deriving (Show,Eq)
 
@@ -111,12 +111,43 @@ xpCommand :: PU Command
 xpCommand =
   xpElem "Command" $
   xpWrap
-    ( \(n,phs,t) -> let (ps,h:_) = partitionEithers phs in Command n ps h t
-    , \a -> (cmdName a, Right (cmdHandle a):map Left (cmdParams a), cmdType a)) $
+    ( \(n,phs,t) -> let (ps,r:_) = partitionEithers phs in toCommand n phs t
+    , \a -> (cmdName a, Right (cmdResult a):map Left (cmdParams a), cmdType a)) $
   xpTriple
     (xpAttr "name" xpText)
     (xpList xpickle)
     (xpAttr "type" xpickle)
+  where
+    toCommand name paramsOrResult typ = Command name params result typ
+      where
+        (params,untypedResult:_) = partitionEithers paramsOrResult
+        result = Result $ case unResult untypedResult of
+          Values strs ->
+            case typ of
+              PXString -> case strs of
+                [str] -> TypedValue $ TVString str
+                _ -> error $ "Wrong number of values: " ++ show strs ++ " in `toCommand`"
+              PXBoolArray -> TypedValue $ TVBoolArray (map strToBool strs)
+          anotherValue -> error $ "Unsupported value: " ++ show anotherValue ++ " in `toCommand`"
+
+        strToBool str =
+          case str of
+            "1" -> True
+            "0" -> False
+            str -> error $ "Impossible to parse: '" ++ str
+              ++ "' as a PXBool from `toCommand "
+              ++ show name ++ " "
+              ++ show paramsOrResult ++ " "
+              ++ show typ ++ "`"
+
+
+
+data Result = Result { unResult :: Value } deriving (Show,Eq)
+
+instance XmlPickler Result where
+  xpickle = xpWrap ( Result . Values , unValues . unResult ) $
+    xpList1 $ xpElem "Result" $ xpWrap ( id , id ) xpText
+
 
 data CommandAck = CommandAck
   { caName   :: String
@@ -211,6 +242,7 @@ xpParameter
 
 data Value =
   Value { unValue :: String }
+  | Values { unValues :: [String] }
   | TypedValue { unTypedValue :: TypedValue } deriving (Show,Eq)
 
 data TypedValue = TVString String

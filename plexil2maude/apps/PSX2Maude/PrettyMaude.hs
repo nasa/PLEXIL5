@@ -66,7 +66,7 @@ instance Pretty Command where
   pretty (Command
     { cmdName
     , cmdParams
-    , cmdHandle
+    , cmdResult
     , cmdType
     }) =
       text "Command"
@@ -74,7 +74,7 @@ instance Pretty Command where
           hcat $ punctuate comma
             [text "'" <> text cmdName
             ,if null cmdParams then text "nilarg" else parens (hsep (map pretty cmdParams))
-            ,pretty cmdHandle]
+            ,pretty cmdResult]
         )
 
 instance Pretty CommandAck where
@@ -133,3 +133,17 @@ instance Pretty CommandHandle where
   pretty CommandSuccess = text "CommandSuccess"
   pretty CommandFailed = text "CommandFailed"
   pretty x = text $ show x
+
+instance Pretty Value where
+  pretty (Value str) = text str
+  pretty (TypedValue (TVBoolArray bs)) = text "array" <+> parens values
+    where
+      values = hcat $ punctuate (text " # ") $
+        map
+          (\b -> if b
+            then text "val(true)"
+            else text "val(false)")
+          bs
+  
+instance Pretty Result where
+  pretty = pretty . unResult

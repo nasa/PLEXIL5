@@ -7,7 +7,7 @@ module PSX2MaudeTests where
 
 import Control.Monad.Except
 import Data.Either
-import Prelude hiding ((<>)) -- (concat)
+import Prelude hiding ((<>))
 
 import Test.Tasty
 import Test.Tasty.HUnit
@@ -24,7 +24,8 @@ import Text.PrettyPrint
 testPSX2Maude :: TestTree
 testPSX2Maude =
   testGroup "PSX2Maude tests"
-    [ testCommandHandles
+    [ testCommand
+    , testCommandHandles
     , testPrettyPrint
     ]
 
@@ -56,6 +57,32 @@ testPrettyPrint = testGroup "Pretty Printer"
           (text str)
           (pretty p)
 
+
+testCommand :: TestTree
+testCommand = testGroup "Command"
+  [ testGroup "from XML"
+    [ [r|<Command name="boolArrayCommand" type="bool-array"><Result>1</Result><Result>1</Result><Result>1</Result></Command>|]
+        `testItParsesAs`
+          Command { cmdName = "boolArrayCommand"
+                  , cmdParams = []
+                  , cmdResult = Result $ TypedValue (TVBoolArray [True,True,True])
+                  , cmdType = PXBoolArray
+                  }
+    , [r|<Command name="get_string" type="string"><Result>fred</Result></Command>|]
+        `testItParsesAs`
+          Command { cmdName = "get_string"
+                  , cmdParams = []
+                  , cmdResult = Result $ TypedValue (TVString "fred")
+                  , cmdType = PXString
+                  }
+    ]
+  ]
+  where
+    testItParsesAs :: String -> Command -> TestTree
+    testItParsesAs str cmd = testCase (show cmd) $ str `parsesOnlyAs` cmd
+
+    testItPicklesAs :: Command -> String -> TestTree
+    testItPicklesAs cmd str = testCase (show cmd) $ cmd `isPickledAs` str
 
 
 testCommandHandles :: TestTree
