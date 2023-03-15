@@ -72,12 +72,12 @@ testPrettyPrint = testGroup "Pretty Printer"
 testCommand :: TestTree
 testCommand = testGroup "Command"
   [ testGroup "from XML"
-    [ [r|<Command name="boolArrayCommand" type="bool-array"><Result>1</Result><Result>1</Result><Result>1</Result></Command>|]
+    [ [r|<Command name="get_bool" type="bool"><Result>1</Result></Command>|]
         `testItParsesAs`
-          Command { cmdName = "boolArrayCommand"
+          Command { cmdName = "get_bool"
                   , cmdParams = []
-                  , cmdResult = Result $ TypedValue (TVBoolArray [True,True,True])
-                  , cmdType = PXBoolArray
+                  , cmdResult = Result $ TypedValue (TVBool True)
+                  , cmdType = PXBool
                   }
     , [r|<Command name="get_string" type="string"><Result>fred</Result></Command>|]
         `testItParsesAs`
@@ -100,6 +100,20 @@ testCommand = testGroup "Command"
                   , cmdParams = []
                   , cmdResult = Result $ TypedValue (TVReal 12.345)
                   , cmdType = PXReal
+                  }
+    , [r|<Command name="boolArrayCommand" type="bool-array"><Result>1</Result><Result>1</Result><Result>1</Result></Command>|]
+        `testItParsesAs`
+          Command { cmdName = "boolArrayCommand"
+                  , cmdParams = []
+                  , cmdResult = Result $ TypedValue (TVBoolArray [True,True,True])
+                  , cmdType = PXBoolArray
+                  }
+    , [r|<Command name="get_int_aray" type="int-array"><Result>1</Result><Result>2</Result><Result>3</Result></Command>|]
+        `testItParsesAs`
+          Command { cmdName = "get_int_aray"
+                  , cmdParams = []
+                  , cmdResult = Result $ TypedValue (TVIntArray [1,2,3])
+                  , cmdType = PXIntArray
                   }
   ]
   where

@@ -125,6 +125,9 @@ xpCommand =
         result = Result $ case unResult untypedResult of
           Values strs ->
             case typ of
+              PXBool -> case strs of
+                [str] -> TypedValue $ TVBool (strToBool str)
+                _ -> error $ "Wrong number of values: " ++ show strs ++ " in `toCommand`"
               PXInt -> case strs of
                 [str] -> TypedValue $ TVInt (read str)
                 _ -> error $ "Wrong number of values: " ++ show strs ++ " in `toCommand`"
@@ -135,6 +138,7 @@ xpCommand =
                 [str] -> TypedValue $ TVString str
                 _ -> error $ "Wrong number of values: " ++ show strs ++ " in `toCommand`"
               PXBoolArray -> TypedValue $ TVBoolArray (map strToBool strs)
+              PXIntArray  -> TypedValue $ TVIntArray (map read strs)
           anotherValue -> error $ "Unsupported value: " ++ show anotherValue ++ " in `toCommand`"
 
         strToBool str =
