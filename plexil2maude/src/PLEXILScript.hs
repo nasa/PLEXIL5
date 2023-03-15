@@ -6,7 +6,7 @@ import Text.XML.HXT.Core
 import Data.Maybe (fromJust)
 import Data.Either (partitionEithers)
 import Data.Either.Combinators (maybeToRight)
-import Data.OneOfN (OneOf3(..))
+import Data.OneOfN (OneOf3(..), OneOf4(..))
 
 data PLEXILScript = PLEXILScript
   { initialState :: InitialState
@@ -37,20 +37,20 @@ xpInitialState =
 newtype Script = Script [ScriptEntry] deriving (Show,Eq)
 
 newtype ScriptEntry = ScriptEntry
-  { unScriptEntry :: (OneOf3 State CommandAck Simultaneous)
+  { unScriptEntry :: (OneOf4 State Command CommandAck Simultaneous)
   } deriving (Show,Eq)
 
 instance XmlPickler ScriptEntry where
   xpickle = xpWrap (ScriptEntry,unScriptEntry) $ xpAlt tag ps
     where
-      tag (OneOf3   _) = 0
-      tag (TwoOf3   _) = 1
-      tag (ThreeOf3 _) = 2
+      tag (OneOf4   _) = 0
+      tag (TwoOf4   _) = 1
+      tag (ThreeOf4 _) = 2
 
       ps
-        = [ xpWrap (OneOf3,  \(OneOf3 x)   -> x) $ xpickle
-          , xpWrap (TwoOf3,  \(TwoOf3 x)   -> x) $ xpickle
-          , xpWrap (ThreeOf3,\(ThreeOf3 x) -> x) $ xpickle ]
+        = [ xpWrap (OneOf4,  \(OneOf4 x)   -> x) $ xpickle
+          , xpWrap (TwoOf4,  \(TwoOf4 x)   -> x) $ xpickle
+          , xpWrap (ThreeOf4,\(ThreeOf4 x) -> x) $ xpickle ]
 
 instance XmlPickler Script where
   xpickle = xpScript
@@ -97,6 +97,26 @@ xpOneOf =
       [ xpWrap (OneState,      \(OneState s)      -> s) $ xpickle
       , xpWrap (OneCommandAck, \(OneCommandAck a) -> a) $ xpickle ]
 
+data Command = Command
+  { cmdName   :: String
+  , cmdParams :: [Parameter]
+  , cmdHandle :: CommandHandle
+  , cmdType   :: Type
+  } deriving (Show,Eq)
+
+instance XmlPickler Command where
+  xpickle = xpCommand
+
+xpCommand :: PU Command
+xpCommand =
+  xpElem "Command" $
+  xpWrap
+    ( \(n,phs,t) -> let (ps,h:_) = partitionEithers phs in Command n ps h t
+    , \a -> (cmdName a, Right (cmdHandle a):map Left (cmdParams a), cmdType a)) $
+  xpTriple
+    (xpAttr "name" xpText)
+    (xpList xpickle)
+    (xpAttr "type" xpickle)
 
 data CommandAck = CommandAck
   { caName   :: String

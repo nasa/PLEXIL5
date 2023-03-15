@@ -6,7 +6,7 @@ module PSX2Maude.PrettyMaude where
 import PLEXILScript
 
 import Data.List (intersperse)
-import Data.OneOfN (OneOf3(..))
+import Data.OneOfN (OneOf3(..), OneOf4(..))
 import Prelude hiding ((<>))
 import Text.PrettyPrint
 
@@ -43,9 +43,9 @@ instance Pretty Script where
 
 instance Pretty ScriptEntry where
   pretty (ScriptEntry e)
-    | (OneOf3 st)    <- e = pretty st
-    | (TwoOf3 ack)   <- e = pretty ack
-    | (ThreeOf3 sim) <- e = pretty sim
+    | (OneOf4 st)    <- e = pretty st
+    | (TwoOf4 ack)   <- e = pretty ack
+    | (ThreeOf4 sim) <- e = pretty sim
 
 instance Pretty State where
   pretty (State
@@ -60,6 +60,21 @@ instance Pretty State where
             [text "'" <> text stName
             ,text "nilarg"
             ,text "val" <> (parens $ text $ unValue $ head stValue)]
+        )
+
+instance Pretty Command where
+  pretty (Command
+    { cmdName
+    , cmdParams
+    , cmdHandle
+    , cmdType
+    }) =
+      text "Command"
+        <> parens (
+          hcat $ punctuate comma
+            [text "'" <> text cmdName
+            ,if null cmdParams then text "nilarg" else parens (hsep (map pretty cmdParams))
+            ,pretty cmdHandle]
         )
 
 instance Pretty CommandAck where
@@ -117,3 +132,4 @@ instance Pretty CommandHandle where
   pretty CommandReceivedBySystem = text "CommandReceivedBySystem"
   pretty CommandSuccess = text "CommandSuccess"
   pretty CommandFailed = text "CommandFailed"
+  pretty x = text $ show x
