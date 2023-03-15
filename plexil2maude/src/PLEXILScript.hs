@@ -209,7 +209,19 @@ xpParameter
     xpPair xpText (xpAttr "type" xpickle)
 
 
-newtype Value = Value { unValue :: String } deriving (Show,Eq)
+data Value =
+  Value { unValue :: String }
+  | TypedValue { unTypedValue :: TypedValue } deriving (Show,Eq)
+
+data TypedValue = TVString String
+                | TVInt Int
+                | TVReal Double
+                | TVBool Bool
+                | TVStringArray [String]
+                | TVIntArray [Int]
+                | TVRealArray [Double]
+                | TVBoolArray [Bool]
+                deriving (Show,Eq)
 
 instance XmlPickler Value where
   xpickle = xpElem "Value" $ xpWrap ( Value, unValue ) xpText
