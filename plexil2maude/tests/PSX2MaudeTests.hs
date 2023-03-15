@@ -25,6 +25,7 @@ testPSX2Maude :: TestTree
 testPSX2Maude =
   testGroup "PSX2Maude tests"
     [ testCommand
+    , testCommandAck
     , testParameter
     , testCommandHandles
     , testPrettyPrint
@@ -132,12 +133,70 @@ testCommand = testGroup "Command"
                   , cmdResult = Result $ TypedValue (TVRealArray [1.1,2.2,3.3])
                   , cmdType = PXRealArray
                   }
+    , [r|<Command name="get_real" type="real"><Param type="string">param</Param><Result>1.1</Result></Command>|]
+        `testItParsesAs`
+          Command { cmdName = "get_real"
+                  , cmdParams = [
+                      Parameter { parValue = "param"
+                                , parType  = PXString
+                                }
+                  ]
+                  , cmdResult = Result $ TypedValue (TVReal 1.1)
+                  , cmdType = PXReal
+                  }
+    ]
   ]
   where
     testItParsesAs :: String -> Command -> TestTree
     testItParsesAs str cmd = testCase (show cmd) $ str `parsesOnlyAs` cmd
 
     testItPicklesAs :: Command -> String -> TestTree
+    testItPicklesAs cmd str = testCase (show cmd) $ cmd `isPickledAs` str
+
+testCommandAck :: TestTree
+testCommandAck = testGroup "CommandAck"
+  [ testGroup "fromXML"
+    [
+      [r|<CommandAck name="foo" type="string"><Param type="string">fred</Param><Result>COMMAND_SUCCESS</Result></CommandAck>|]
+        `testItParsesAs`
+          CommandAck { caName = "foo"
+                    , caParams = [ Parameter { parValue = "fred"
+                                              , parType  = PXString
+                                              }
+                                  ]
+                    , caHandle = CommandSuccess
+                    , caType = PXString
+                    }
+    ]
+  ]
+  where
+    testItParsesAs :: String -> CommandAck -> TestTree
+    testItParsesAs str cmd = testCase (show cmd) $ str `parsesOnlyAs` cmd
+
+    testItPicklesAs :: CommandAck -> String -> TestTree
+    testItPicklesAs cmd str = testCase (show cmd) $ cmd `isPickledAs` str
+
+testParameter :: TestTree
+testParameter = testGroup "Parameter"
+  [ testGroup "fromXML"
+    [
+      [r|<Param type="string">fred</Param>|]
+        `testItParsesAs`
+          Parameter { parValue = "fred"
+                    , parType  = PXString
+                    }
+    , [r|<Param type="string"></Param>|]
+        `testItParsesAs`
+          Parameter { parValue = ""
+                    , parType  = PXString
+                    }
+    ]
+  ]
+  where
+    testItParsesAs :: String -> Parameter -> TestTree
+    testItParsesAs str cmd = testCase (show cmd) $ str `parsesOnlyAs` cmd
+
+    testItPicklesAs :: Parameter -> String -> TestTree
     testItPicklesAs cmd str = testCase (show cmd) $ cmd `isPickledAs` str
 
 
