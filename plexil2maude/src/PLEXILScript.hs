@@ -128,6 +128,9 @@ xpCommand =
               PXInt -> case strs of
                 [str] -> TypedValue $ TVInt (read str)
                 _ -> error $ "Wrong number of values: " ++ show strs ++ " in `toCommand`"
+              PXReal -> case strs of
+                [str] -> TypedValue $ TVReal (read str)
+                _ -> error $ "Wrong number of values: " ++ show strs ++ " in `toCommand`"
               PXString -> case strs of
                 [str] -> TypedValue $ TVString str
                 _ -> error $ "Wrong number of values: " ++ show strs ++ " in `toCommand`"

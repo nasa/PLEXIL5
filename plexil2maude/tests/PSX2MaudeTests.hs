@@ -94,6 +94,13 @@ testCommand = testGroup "Command"
                   , cmdResult = Result $ TypedValue (TVInt 0)
                   , cmdType = PXInt
                   }
+    , [r|<Command name="get_real" type="real"><Result>12.345</Result></Command>|]
+        `testItParsesAs`
+          Command { cmdName = "get_real"
+                  , cmdParams = []
+                  , cmdResult = Result $ TypedValue (TVReal 12.345)
+                  , cmdType = PXReal
+                  }
   ]
   where
     testItParsesAs :: String -> Command -> TestTree
