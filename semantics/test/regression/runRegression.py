@@ -1,5 +1,7 @@
 import subprocess
 import os
+import xml.etree.ElementTree as ET
+import re
 
 # Run the regression tests
 def runRegression():
@@ -10,8 +12,6 @@ def runRegression():
     parsed_tests_path = 'semantics/test/regression/parsedTests/'
     commands_compile = []
     commands_parse = []
-    commands_maude = []
-
 
     # Get the list of plans and scripts to compile
     plans = os.listdir(plans_path)
@@ -45,6 +45,13 @@ def runRegression():
     
     for script in compiled_scripts:
         commands_parse.append('psx2maude ' + scripts_path + str(script) + ' >> ' + parsed_tests_path + 'scripts/' +  str(script[:-4] + '.maude'))
+        # Eliminate white spaces in the scripts
+        tree = ET.parse(scripts_path + script)
+        root = tree.getroot()
+        xml_str = ET.tostring(root, encoding='unicode')
+        clean_xml = re.sub(">\s+?<","><", xml_str)
+        with open(scripts_path + script, 'w') as file:
+            file.write(clean_xml)
 
     # Remove the old plans and scripts
     os.system('rm ' + parsed_tests_path + 'plans/' + '*.maude')
@@ -59,18 +66,15 @@ def runRegression():
 
     # Get the list of parsed plans and scripts
     maude_plans = os.listdir(parsed_tests_path + 'plans/')
-
-    # Run plexiltest differentiating plans with and without script
-    for compiled_plan in compiled_plans:
-        plan_script = has_script(compiled_plan[:-4], compiled_scripts)
-        os.system('plexiltest -p '+ plans_path + compiled_plan + ' -s ' + scripts_path + plan_script)
-
+        
     # Run the maude plans and generate the corresponding run.maude
     for maude_plan in maude_plans:
-        print(maude_plan)
+        os.system('rm semantics/test/regression/output.maude')
+        os.system('rm semantics/test/regression/output.plexil')
         with open('semantics/test/regression/' + 'run.maude', 'w') as file:
             file.write(f'''load ../../src/plexilite.maude
 load parsedTests/plans/{maude_plan}
+load parsedTests/scripts/{get_script_maude(maude_plan[:-6])}
             
 set print attribute on .
 set print color on .
@@ -84,15 +88,26 @@ rew run(compile(rootNode,input)) .
 q
 '''
             )
-        #Run the maude plan with the corresponding script (they have the same name)
-        os.system('maude -no-ansi-color -no-wrap -no-banner -no-advise -print-to-stderr ' + 'semantics/test/regression/' + 'run.maude ' + parsed_tests_path + 'plans/' + maude_plan + ' ' + parsed_tests_path + 'plans/' + maude_plan)
+        #Run the maude plan with the corresponding script (they have the same name) and plexiltest    
+        os.system('maude -no-ansi-color -no-wrap -no-banner -no-advise -print-to-stderr ' + 'semantics/test/regression/' + 'run.maude ' + parsed_tests_path + 'plans/' + maude_plan + ' ' + parsed_tests_path + 'plans/' + maude_plan + ' > /dev/null 2> semantics/test/regression/output.maude')
+        plan_script = get_script(maude_plan[:-6], compiled_scripts)
+        os.system('plexiltest -p '+ plans_path + maude_plan[:-6] + '.plx' + ' -s ' + scripts_path + plan_script + ' -d semantics/benchmark/Debug.AcceptanceTest.cfg' + ' > semantics/test/regression/output.plexil 2>&1')
+        os.system('plexilog-diff semantics/test/regression/output.plexil semantics/test/regression/output.maude')
+
 
 # Check if the plan has a script or return the empty input script
-def has_script(plan_name, compiled_scripts):
+def get_script(plan_name, compiled_scripts):
     for script in compiled_scripts:
         if script[:-4] == plan_name:
             return script
     return 'empty.psx'
+
+def get_script_maude(maude_plan_name):
+    maude_scripts = os.listdir('semantics/test/regression/parsedTests/scripts/')
+    for script in maude_scripts:
+        if script[:-6] == maude_plan_name:
+            return script
+    return 'empty.maude'
 
 def main():
     runRegression()
