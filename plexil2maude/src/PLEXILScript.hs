@@ -137,8 +137,9 @@ xpCommand =
               PXString -> case strs of
                 [str] -> TypedValue $ TVString str
                 _ -> error $ "Wrong number of values: " ++ show strs ++ " in `toCommand`"
-              PXBoolArray -> TypedValue $ TVBoolArray (map strToBool strs)
-              PXIntArray  -> TypedValue $ TVIntArray (map read strs)
+              PXBoolArray   -> TypedValue $ TVBoolArray (map strToBool strs)
+              PXStringArray -> TypedValue $ TVStringArray strs
+              PXIntArray    -> TypedValue $ TVIntArray (map read strs)
           anotherValue -> error $ "Unsupported value: " ++ show anotherValue ++ " in `toCommand`"
 
         strToBool str =

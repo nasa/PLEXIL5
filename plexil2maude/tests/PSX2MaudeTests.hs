@@ -108,6 +108,13 @@ testCommand = testGroup "Command"
                   , cmdResult = Result $ TypedValue (TVBoolArray [True,True,True])
                   , cmdType = PXBoolArray
                   }
+    , [r|<Command name="get_string_aray" type="string-array"><Result>john</Result><Result>paul</Result><Result>george</Result><Result>ringo</Result></Command>|]
+        `testItParsesAs`
+          Command { cmdName = "get_string_aray"
+                  , cmdParams = []
+                  , cmdResult = Result $ TypedValue (TVStringArray ["john","paul","george","ringo"])
+                  , cmdType = PXStringArray
+                  }
     , [r|<Command name="get_int_aray" type="int-array"><Result>1</Result><Result>2</Result><Result>3</Result></Command>|]
         `testItParsesAs`
           Command { cmdName = "get_int_aray"
