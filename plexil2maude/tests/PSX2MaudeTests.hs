@@ -26,6 +26,7 @@ testPSX2Maude =
   testGroup "PSX2Maude tests"
     [ testCommand
     , testCommandAck
+    , testCommandAbort
     , testParameter
     , testSimultaneous
     , testCommandHandles
@@ -175,6 +176,45 @@ testCommandAck = testGroup "CommandAck"
     testItParsesAs str cmd = testCase (show cmd) $ str `parsesOnlyAs` cmd
 
     testItPicklesAs :: CommandAck -> String -> TestTree
+    testItPicklesAs cmd str = testCase (show cmd) $ cmd `isPickledAs` str
+
+testCommandAbort :: TestTree
+testCommandAbort = testGroup "CommandAbort"
+  [ testGroup "fromXML"
+    [
+      [r|<CommandAbort name="ReceiveMessage" type="bool"><Param type="string">Foo</Param><Result>1</Result></CommandAbort>|]
+        `testItParsesAs`
+          CommandAbort { cabName = "ReceiveMessage"
+                       , cabParams = [ Parameter { parValue = "Foo"
+                                                 , parType  = PXString
+                                                 }
+                                     ]
+                       , cabResult = Result $ TypedValue (TVBool True)
+                       , cabType = PXBool
+                       }
+    , [r|<CommandAbort name="move_to_waypoint" type="int"><Param type="string">UNKNOWN</Param><Param type="real">4.0</Param><Param type="real">UNKNOWN</Param><Result>1</Result></CommandAbort>|]
+        `testItParsesAs`
+          CommandAbort { cabName = "move_to_waypoint"
+                       , cabParams = [ Parameter { parValue = "UNKNOWN"
+                                                 , parType  = PXString
+                                                 }
+                                     , Parameter { parValue = "4.0"
+                                                 , parType  = PXReal
+                                                 }
+                                     , Parameter { parValue = "UNKNOWN"
+                                                 , parType  = PXReal
+                                                 }
+                                     ]
+                       , cabResult = Result $ TypedValue (TVBool False)
+                       , cabType = PXBool
+                       }
+    ]
+  ]
+  where
+    testItParsesAs :: String -> CommandAbort -> TestTree
+    testItParsesAs str cmd = testCase (show cmd) $ str `parsesOnlyAs` cmd
+
+    testItPicklesAs :: CommandAbort -> String -> TestTree
     testItPicklesAs cmd str = testCase (show cmd) $ cmd `isPickledAs` str
 
 testParameter :: TestTree

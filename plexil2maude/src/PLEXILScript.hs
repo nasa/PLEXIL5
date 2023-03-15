@@ -214,6 +214,61 @@ xpCommandHandle = xpElem "Result" $
              ,("COMMAND_SUCCESS",CommandSuccess)
              ,("COMMAND_FAILED",CommandFailed)]
 
+data CommandAbort = CommandAbort
+  { cabName   :: String
+  , cabParams :: [Parameter]
+  , cabResult :: Result
+  , cabType   :: Type
+  } deriving (Show,Eq)
+
+instance XmlPickler CommandAbort where
+  xpickle = xpCommandAbort
+
+xpCommandAbort :: PU CommandAbort
+xpCommandAbort =
+  xpElem "CommandAbort" $
+  xpWrap
+    ( \(n,phs,t) -> let (ps,r:_) = partitionEithers phs in toCommandAbort n phs t
+    , \a -> (cabName a, Right (cabResult a):map Left (cabParams a), cabType a)) $
+  xpTriple
+    (xpAttr "name" xpText)
+    (xpList xpickle)
+    (xpAttr "type" xpickle)
+  where
+    toCommandAbort name paramsOrResult typ = CommandAbort name params result typ
+      where
+        (params,untypedResult:_) = partitionEithers paramsOrResult
+        result = Result $ case unResult untypedResult of
+          Values strs ->
+            case typ of
+              PXBool -> case strs of
+                [str] -> TypedValue $ TVBool (strToBool str)
+                _ -> error $ "Wrong number of values: " ++ show strs ++ " in `toCommandAbort`"
+              PXInt -> case strs of
+                [str] -> TypedValue $ TVInt (read str)
+                _ -> error $ "Wrong number of values: " ++ show strs ++ " in `toCommandAbort`"
+              PXReal -> case strs of
+                [str] -> TypedValue $ TVReal (read str)
+                _ -> error $ "Wrong number of values: " ++ show strs ++ " in `toCommandAbort`"
+              PXString -> case strs of
+                [str] -> TypedValue $ TVString str
+                _ -> error $ "Wrong number of values: " ++ show strs ++ " in `toCommandAbort`"
+              PXBoolArray   -> TypedValue $ TVBoolArray (map strToBool strs)
+              PXStringArray -> TypedValue $ TVStringArray strs
+              PXIntArray    -> TypedValue $ TVIntArray (map read strs)
+              PXRealArray   -> TypedValue $ TVRealArray (map read strs)
+          anotherValue -> error $ "Unsupported value: " ++ show anotherValue ++ " in `toCommandAbort`"
+
+        strToBool str =
+          case str of
+            "1" -> True
+            "0" -> False
+            str -> error $ "Impossible to parse: '" ++ str
+              ++ "' as a PXBool from `toCommandAbort "
+              ++ show name ++ " "
+              ++ show paramsOrResult ++ " "
+              ++ show typ ++ "`"
+
 data State = State
   { stName   :: String
   , stParams :: [Parameter]
