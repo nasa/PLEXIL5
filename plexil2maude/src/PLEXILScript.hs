@@ -125,6 +125,9 @@ xpCommand =
         result = Result $ case unResult untypedResult of
           Values strs ->
             case typ of
+              PXInt -> case strs of
+                [str] -> TypedValue $ TVInt (read str)
+                _ -> error $ "Wrong number of values: " ++ show strs ++ " in `toCommand`"
               PXString -> case strs of
                 [str] -> TypedValue $ TVString str
                 _ -> error $ "Wrong number of values: " ++ show strs ++ " in `toCommand`"

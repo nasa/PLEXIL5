@@ -87,6 +87,13 @@ testCommand = testGroup "Command"
                   , cmdType = PXString
                   }
     ]
+    , [r|<Command name="get_int" type="int"><Result>0</Result></Command>|]
+        `testItParsesAs`
+          Command { cmdName = "get_int"
+                  , cmdParams = []
+                  , cmdResult = Result $ TypedValue (TVInt 0)
+                  , cmdType = PXInt
+                  }
   ]
   where
     testItParsesAs :: String -> Command -> TestTree
