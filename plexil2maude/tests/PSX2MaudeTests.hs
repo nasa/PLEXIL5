@@ -27,6 +27,7 @@ testPSX2Maude =
     [ testCommand
     , testCommandAck
     , testParameter
+    , testSimultaneous
     , testCommandHandles
     , testPrettyPrint
     , testOptionalElements
@@ -199,6 +200,34 @@ testParameter = testGroup "Parameter"
     testItPicklesAs :: Parameter -> String -> TestTree
     testItPicklesAs cmd str = testCase (show cmd) $ cmd `isPickledAs` str
 
+testSimultaneous :: TestTree
+testSimultaneous = testGroup "Simultaneous"
+  [ testGroup "fromXML"
+    [
+      [r|<Simultaneous><State name="time" type="real"><Value>0.5</Value></State><State name="city" type="string"><Value>Valencia</Value></State></Simultaneous>|]
+        `testItParsesAs`
+          Simultaneous [
+                          SimultaneousEntry { unSimultaneousEntry = OneState $ State { stName = "time"
+                                                                                      , stParams = []
+                                                                                      , stValue = [Value { unValue = "0.5" }]
+                                                                                      , stType = PXReal
+                                                                                      }
+                                            }
+                        , SimultaneousEntry { unSimultaneousEntry = OneState $ State { stName = "city"
+                                                                                      , stParams = []
+                                                                                      , stValue = [Value { unValue = "Valencia" }]
+                                                                                      , stType = PXString
+                                                                                      }
+                                            }
+                        ]
+    ]
+  ]
+  where
+    testItParsesAs :: String -> Simultaneous -> TestTree
+    testItParsesAs str cmd = testCase (show cmd) $ str `parsesOnlyAs` cmd
+
+    testItPicklesAs :: Simultaneous -> String -> TestTree
+    testItPicklesAs cmd str = testCase (show cmd) $ cmd `isPickledAs` str
 
 testCommandHandles :: TestTree
 testCommandHandles = testGroup "Command Handles"
