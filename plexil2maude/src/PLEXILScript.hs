@@ -140,6 +140,7 @@ xpCommand =
               PXBoolArray   -> TypedValue $ TVBoolArray (map strToBool strs)
               PXStringArray -> TypedValue $ TVStringArray strs
               PXIntArray    -> TypedValue $ TVIntArray (map read strs)
+              PXRealArray   -> TypedValue $ TVRealArray (map read strs)
           anotherValue -> error $ "Unsupported value: " ++ show anotherValue ++ " in `toCommand`"
 
         strToBool str =

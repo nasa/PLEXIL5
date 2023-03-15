@@ -122,6 +122,13 @@ testCommand = testGroup "Command"
                   , cmdResult = Result $ TypedValue (TVIntArray [1,2,3])
                   , cmdType = PXIntArray
                   }
+    , [r|<Command name="get_real_aray" type="real-array"><Result>1.1</Result><Result>2.2</Result><Result>3.3</Result></Command>|]
+        `testItParsesAs`
+          Command { cmdName = "get_real_aray"
+                  , cmdParams = []
+                  , cmdResult = Result $ TypedValue (TVRealArray [1.1,2.2,3.3])
+                  , cmdType = PXRealArray
+                  }
   ]
   where
     testItParsesAs :: String -> Command -> TestTree
