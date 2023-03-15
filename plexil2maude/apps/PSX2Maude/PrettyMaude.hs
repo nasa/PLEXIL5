@@ -97,6 +97,9 @@ instance Pretty Parameter where
     case parType of
       PXReal -> prettyReal parValue
       PXInt  -> prettyValue parValue
+      PXString -> prettyString parValue
+      PXBool -> prettyBool parValue
+      -- PXBoolArray -> prettyBoolArray parValue
       _ -> error $ "unimplemented pretty for parameters of type " ++ show parType
     where
       prettyReal valueStr =
@@ -110,11 +113,23 @@ instance Pretty Parameter where
                 [(v :: Double,"")] -> '.' `elem` valueStr
                 _                  -> error $ "Cannot parse as number: " ++ show valueStr
 
+      prettyBool valueStr =
+        text "val" <> parens (text $ case valueStr of
+                                "1" -> "True"
+                                "0" -> "False"
+                              )
+
+      prettyString valueStr =
+        text "val" <> (parens . doubleQuotes) (text parValue)
+
       prettyValue valueStr =
         text "val" <> parens (text parValue)
 
       prettyValueWithCast typeStr valueStr =
         text "val" <> parens (text typeStr <> parens (text parValue))
+
+      -- prettyBoolArray valueStrs =
+      --   text "array" <> parens (hcat $ punctuate (text " # ") $ map prettyBool valueStrs)
 
 
 instance Pretty Simultaneous where

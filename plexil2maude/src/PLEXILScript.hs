@@ -250,8 +250,9 @@ xpParameter
     xpWrap
       ( uncurry Parameter
       , \p -> (parValue p, parType p)) $
-    xpPair xpText (xpAttr "type" xpickle)
-
+    xpPair
+      xpText0
+      (xpAttr "type" xpickle)
 
 data Value =
   Value { unValue :: String }

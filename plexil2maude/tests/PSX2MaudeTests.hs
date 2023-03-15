@@ -25,6 +25,7 @@ testPSX2Maude :: TestTree
 testPSX2Maude =
   testGroup "PSX2Maude tests"
     [ testCommand
+    , testParameter
     , testCommandHandles
     , testPrettyPrint
     , testOptionalElements
@@ -46,6 +47,9 @@ testPrettyPrint = testGroup "Pretty Printer"
     [ Parameter "10" PXReal `testPrettiesAs` "val(float(10))"
     , Parameter "10.0" PXReal `testPrettiesAs` "val(10.0)"
     , Parameter "11" PXInt  `testPrettiesAs` "val(11)"
+    , Parameter "Valencia" PXString `testPrettiesAs` "val(\"Valencia\")"
+    , Parameter "1" PXBool `testPrettiesAs` "val(True)"
+    -- , Parameter "0 0 1" PXBoolArray `testPrettiesAs` "array(val(False) # val(False) # val(True))"
     ]
   , testGroup "CommandAck"
     [ CommandAck "c1" [Parameter "1" PXInt] CommandAccepted PXString
@@ -86,7 +90,6 @@ testCommand = testGroup "Command"
                   , cmdResult = Result $ TypedValue (TVString "fred")
                   , cmdType = PXString
                   }
-    ]
     , [r|<Command name="get_int" type="int"><Result>0</Result></Command>|]
         `testItParsesAs`
           Command { cmdName = "get_int"
