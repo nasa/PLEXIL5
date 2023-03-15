@@ -30,6 +30,7 @@ instance XmlPickler InitialState where
 
 xpInitialState :: PU InitialState
 xpInitialState =
+  xpDefault (InitialState []) $
   xpElem "InitialState" $
   xpWrap (InitialState,\(InitialState x) -> x) $
   xpList xpickle

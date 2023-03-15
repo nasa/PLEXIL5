@@ -27,7 +27,18 @@ testPSX2Maude =
     [ testCommand
     , testCommandHandles
     , testPrettyPrint
+    , testOptionalElements
     ]
+
+testOptionalElements :: TestTree
+testOptionalElements = testGroup "Optional XML Elements"
+  [ testGroup "InitialState"
+    [ [r||] `testItParsesAs` InitialState []
+    ]
+  ]
+  where
+    testItParsesAs :: String -> InitialState -> TestTree
+    testItParsesAs str st = testCase (show st) $ str `parsesOnlyAs` st
 
 testPrettyPrint :: TestTree
 testPrettyPrint = testGroup "Pretty Printer"
@@ -128,7 +139,7 @@ testCommandHandles = testGroup "Command Handles"
 parsesOnlyAs :: (XmlPickler a,Eq a,Show a) => String -> a -> Assertion
 parsesOnlyAs str expectedData =
   do
-    results <- runX ( readString [] str >>> arr (unpickleDoc' xpickle) )
+    results <- runX ( readString [withErrors False] str >>> arr (unpickleDoc' xpickle) )
     case results of
       [Right  parsedData] -> assertEqual "Incorrectly parsed: " expectedData parsedData
       [Left errorMessage] -> assertFailure $ "Incorrectly parsed " ++ errorMessage
