@@ -205,8 +205,8 @@ testCommandAbort = testGroup "CommandAbort"
                                                  , parType  = PXReal
                                                  }
                                      ]
-                       , cabResult = Result $ TypedValue (TVBool False)
-                       , cabType = PXBool
+                       , cabResult = Result $ TypedValue (TVInt 1)
+                       , cabType = PXInt
                        }
     ]
   ]
