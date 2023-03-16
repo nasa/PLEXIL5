@@ -116,9 +116,28 @@ xpCommand =
     , \a -> (cmdName a, Right (cmdResult a):map Left (cmdParams a), cmdType a)) $
   xpTriple
     (xpAttr "name" xpText)
-    (xpList xpickle)
+    (xpWrap (projectOneTwo, projectLeftRight) $ xpList $ xpAlt tag ps)
     (xpAttr "type" xpickle)
   where
+    projectOneTwo [] = []
+    projectOneTwo ((OneOf3 x):xs) = Left x : projectOneTwo xs
+    projectOneTwo ((TwoOf3 x):xs) = Right x : projectOneTwo xs
+    projectOneTwo (_:xs) = projectOneTwo xs
+
+    projectLeftRight [] = []
+    projectLeftRight (Left x:xs) = OneOf3 x : projectLeftRight xs
+    projectLeftRight (Right x:xs) = TwoOf3 x : projectLeftRight xs
+    projectLeftRight (_:xs) = projectLeftRight xs
+
+    tag (OneOf3 _) = 0
+    tag (TwoOf3 _) = 1
+    tag (ThreeOf3 _) = 2
+
+    ps =
+      [ xpWrap (OneOf3, \(OneOf3 params) -> params) $ xpickle
+      , xpWrap (TwoOf3, \(TwoOf3 result) -> result) $ xpickle
+      , xpWrap (ThreeOf3, \(ThreeOf3 text) -> text) $ xpText]
+
     toCommand name paramsOrResult typ = Command name params result typ
       where
         (params,untypedResult:_) = partitionEithers paramsOrResult
@@ -135,7 +154,7 @@ xpCommand =
                 [str] -> TypedValue $ TVReal (read str)
                 _ -> error $ "Wrong number of values: " ++ show strs ++ " in `toCommand`"
               PXString -> case strs of
-                [str] -> TypedValue $ TVString str
+                [str] -> TypedValue $ TVString $ read $ ("\"") ++ str ++ "\""
                 _ -> error $ "Wrong number of values: " ++ show strs ++ " in `toCommand`"
               PXBoolArray   -> TypedValue $ TVBoolArray (map strToBool strs)
               PXStringArray -> TypedValue $ TVStringArray strs
@@ -159,7 +178,7 @@ data Result = Result { unResult :: Value } deriving (Show,Eq)
 
 instance XmlPickler Result where
   xpickle = xpWrap ( Result . Values , unValues . unResult ) $
-    xpList1 $ xpElem "Result" $ xpWrap ( id , id ) xpText
+    xpList1 $ xpElem "Result" $ xpDefault "" $ xpWrap ( id , id ) xpText
 
 
 data CommandAck = CommandAck

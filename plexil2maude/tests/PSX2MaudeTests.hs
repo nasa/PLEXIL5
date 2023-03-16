@@ -86,6 +86,33 @@ testCommand = testGroup "Command"
                   , cmdResult = Result $ TypedValue (TVBool True)
                   , cmdType = PXBool
                   }
+    , [r|
+<Command name="get_string" type="string">
+  <Result></Result>
+</Command>|]
+        `testItParsesAs`
+          Command { cmdName = "get_string"
+                  , cmdParams = []
+                  , cmdResult = Result $ TypedValue (TVString "")
+                  , cmdType = PXString
+                  }
+    , "<Command name=\"get_string\" type=\"string\"><Result> \t\n</Result></Command>"
+        `testItParsesAs`
+          Command { cmdName = "get_string"
+                  , cmdParams = []
+                  , cmdResult = Result $ TypedValue (TVString " \t\n")
+                  , cmdType = PXString
+                  }
+    , [r|
+<Command name="get_string" type="string">
+<Result> \n</Result>
+</Command>|]
+        `testItParsesAs`
+          Command { cmdName = "get_string"
+                  , cmdParams = []
+                  , cmdResult = Result $ TypedValue (TVString " \n")
+                  , cmdType = PXString
+                  }
     , [r|<Command name="get_string" type="string"><Result>fred</Result></Command>|]
         `testItParsesAs`
           Command { cmdName = "get_string"
@@ -312,7 +339,7 @@ testCommandHandles = testGroup "Command Handles"
 parsesOnlyAs :: (XmlPickler a,Eq a,Show a) => String -> a -> Assertion
 parsesOnlyAs str expectedData =
   do
-    results <- runX ( readString [withErrors False] str >>> arr (unpickleDoc' xpickle) )
+    results <- runX ( readString [withErrors no] str >>> arr (unpickleDoc' xpickle) )
     case results of
       [Right  parsedData] -> assertEqual "Incorrectly parsed: " expectedData parsedData
       [Left errorMessage] -> assertFailure $ "Incorrectly parsed " ++ errorMessage
