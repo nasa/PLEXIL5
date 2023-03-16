@@ -62,6 +62,32 @@ testPrettyPrint = testGroup "Pretty Printer"
         `testPrettiesAs`
            "commandAck('c2,(val(float(1)) val(10)),CommandDenied)"
     ]
+  , testGroup "Command"
+    [ Command "c1" [] (Result $ TypedValue (TVInt 1)) PXInt
+        `testPrettiesAs`
+           "commandResult('c1,nilarg,val(1))"
+    , Command "c2" [] (Result $ TypedValue (TVBool True)) PXBool
+        `testPrettiesAs`
+           "commandResult('c2,nilarg,val(true))"
+    , Command "c3" [] (Result $ TypedValue (TVString "Valencia")) PXString
+        `testPrettiesAs`
+           "commandResult('c3,nilarg,val(\"Valencia\"))"
+    , Command "c4" [] (Result $ TypedValue (TVReal 1.1)) PXReal
+        `testPrettiesAs`
+           "commandResult('c4,nilarg,val(1.1))"
+    , Command "ac1" [] (Result $ TypedValue (TVIntArray [1,2,3])) PXIntArray
+        `testPrettiesAs`
+           "commandResult('ac1,nilarg,array(val(1) # val(2) # val(3)))"
+    , Command "ac2" [] (Result $ TypedValue (TVBoolArray [True,False,True])) PXBoolArray
+        `testPrettiesAs`
+           "commandResult('ac2,nilarg,array(val(true) # val(false) # val(true)))"
+    , Command "ac3" [] (Result $ TypedValue (TVStringArray ["Valencia","Y nadie","Más"])) PXStringArray
+        `testPrettiesAs`
+           "commandResult('ac3,nilarg,array(val(\"Valencia\") # val(\"Y nadie\") # val(\"Más\")))"
+    , Command "ac4" [] (Result $ TypedValue (TVRealArray [1.1,2.2,3.3])) PXRealArray
+        `testPrettiesAs`
+           "commandResult('ac4,nilarg,array(val(1.1) # val(2.2) # val(3.3)))"
+    ]
   , testGroup "Emptyness of Script or Initial State"
     [ Script [] `testPrettiesAs` "nilEInputsList"
     , InitialState [] `testPrettiesAs` "noExternalInputs"

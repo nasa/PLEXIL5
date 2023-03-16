@@ -69,7 +69,7 @@ instance Pretty Command where
     , cmdResult
     , cmdType
     }) =
-      text "Command"
+      text "commandResult"
         <> parens (
           hcat $ punctuate comma
             [text "'" <> text cmdName
