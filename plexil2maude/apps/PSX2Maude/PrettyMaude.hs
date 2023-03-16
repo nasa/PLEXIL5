@@ -115,8 +115,8 @@ instance Pretty Parameter where
 
       prettyBool valueStr =
         text "val" <> parens (text $ case valueStr of
-                                "1" -> "True"
-                                "0" -> "False"
+                                "1" -> "true"
+                                "0" -> "false"
                               )
 
       prettyString valueStr =
@@ -151,7 +151,7 @@ instance Pretty CommandHandle where
 
 instance Pretty Value where
   pretty (Value str) = text str
-  pretty (TypedValue (TVBoolArray bs)) = text "array" <+> parens values
+  pretty (TypedValue (TVBoolArray bs)) = text "array" <> parens values
     where
       values = hcat $ punctuate (text " # ") $
         map
@@ -159,6 +159,29 @@ instance Pretty Value where
             then text "val(true)"
             else text "val(false)")
           bs
-  
+  pretty (TypedValue (TVStringArray ss)) = text "array" <> parens values
+    where
+      values = hcat $ punctuate (text " # ") $
+        map
+          (\s -> text "val" <> parens (doubleQuotes $ text s))
+          ss
+  pretty (TypedValue (TVIntArray is)) = text "array" <> parens values
+    where
+      values = hcat $ punctuate (text " # ") $
+        map
+          (\i -> text "val" <> parens (text $ show i))
+          is
+  pretty (TypedValue (TVRealArray rs)) = text "array" <> parens values
+    where
+      values = hcat $ punctuate (text " # ") $
+        map
+          (\r -> text "val" <> parens (text $ show r))
+          rs
+  pretty (TypedValue (TVBool b)) = text "val" <> parens (text $ if b then "true" else "false")
+  pretty (TypedValue (TVString s)) = text "val" <> parens (doubleQuotes $ text s)
+  pretty (TypedValue (TVInt i)) = text "val" <> parens (text $ show i)
+  pretty (TypedValue (TVReal r)) = text "val" <> parens (text $ show r)
+  pretty x = error $ "unimplemented pretty for value " ++ show x
+
 instance Pretty Result where
   pretty = pretty . unResult

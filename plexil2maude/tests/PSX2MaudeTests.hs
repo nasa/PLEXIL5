@@ -51,7 +51,7 @@ testPrettyPrint = testGroup "Pretty Printer"
     , Parameter "10.0" PXReal `testPrettiesAs` "val(10.0)"
     , Parameter "11" PXInt  `testPrettiesAs` "val(11)"
     , Parameter "Valencia" PXString `testPrettiesAs` "val(\"Valencia\")"
-    , Parameter "1" PXBool `testPrettiesAs` "val(True)"
+    , Parameter "1" PXBool `testPrettiesAs` "val(true)"
     -- , Parameter "0 0 1" PXBoolArray `testPrettiesAs` "array(val(False) # val(False) # val(True))"
     ]
   , testGroup "CommandAck"
