@@ -163,6 +163,7 @@ mod COMPILER is
   op getFullyQualifiedVariableId : Qualified Qualified Configuration -> Qualified .
   eq getFullyQualifiedVariableId(nilq  , Q, Cfg) = nilq .
   eq getFullyQualifiedVariableId(I . NQ, Q, Cfg) = getFullyQualifiedVariableId(I, NQ . Q, Cfg) .
+  eq getFullyQualifiedVariableId(child(NQ), Q, Cfg) = getFullyQualifiedVariableId(NQ, Q, Cfg) .
   eq getFullyQualifiedVariableId(I . Q', Q, Cfg) = getFullyQualifiedVariableId(I, Q, Cfg) [owise] .
 
   op getFullyQualifiedVariableId : Identifier Qualified Configuration -> Qualified .

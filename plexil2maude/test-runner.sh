@@ -7,7 +7,7 @@
 
 rm -f parsedTests/$1.maude
 
-cabal run plx2maude -- ~/Documents/plexil/test/TestExec-regression-test/plans/$1.plx >> parsedTests/$1.maude
+cabal run plx2maude -- ../plexil/test/TestExec-regression-test/plans/$1.plx >> parsedTests/$1.maude
 
 sed -i '1d' parsedTests/$1.maude
 

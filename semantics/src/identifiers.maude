@@ -10,6 +10,7 @@ fmod IDENTIFIER is
 
  op self    :     -> Identifier .
  op sibling : Qid -> Identifier .
+ op child   : Qid -> Identifier .
 
 endfm
 
