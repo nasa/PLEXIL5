@@ -94,42 +94,44 @@ instance Pretty CommandAck where
 
 instance Pretty Parameter where
   pretty Parameter{ parValue, parType } =
-    case parType of
-      PXReal -> prettyReal parValue
-      PXInt  -> prettyValue parValue
-      PXString -> prettyString parValue
-      PXBool -> prettyBool parValue
-      -- PXBoolArray -> prettyBoolArray parValue
-      _ -> error $ "unimplemented pretty for parameters of type " ++ show parType
-    where
-      prettyReal valueStr =
-        if isNumberWithDot valueStr
-          then prettyValue valueStr
-          else prettyValueWithCast "float" valueStr
-          where
-            isNumberWithDot :: String -> Bool
-            isNumberWithDot valueStr =
-              case reads valueStr of
-                [(v :: Double,"")] -> '.' `elem` valueStr
-                _                  -> error $ "Cannot parse as number: " ++ show valueStr
+    case parValue of
+      "UNKNOWN" -> text "unknown"
+      _ ->  case parType of
+              PXReal -> prettyReal parValue
+              PXInt  -> prettyValue parValue
+              PXString -> prettyString parValue
+              PXBool -> prettyBool parValue
+              -- PXBoolArray -> prettyBoolArray parValue
+              _ -> error $ "unimplemented pretty for parameters of type " ++ show parType
+            where
+              prettyReal valueStr =
+                if isNumberWithDot valueStr
+                  then prettyValue valueStr
+                  else prettyValueWithCast "float" valueStr
+                  where
+                    isNumberWithDot :: String -> Bool
+                    isNumberWithDot valueStr =
+                      case reads valueStr of
+                        [(v :: Double,"")] -> '.' `elem` valueStr
+                        _                  -> error $ "Cannot parse as number: " ++ show valueStr
 
-      prettyBool valueStr =
-        text "val" <> parens (text $ case valueStr of
-                                "1" -> "true"
-                                "0" -> "false"
-                              )
+              prettyBool valueStr =
+                text "val" <> parens (text $ case valueStr of
+                                        "1" -> "true"
+                                        "0" -> "false"
+                                      )
 
-      prettyString valueStr =
-        text "val" <> (parens . doubleQuotes) (text parValue)
+              prettyString valueStr =
+                text "val" <> (parens . doubleQuotes) (text parValue)
 
-      prettyValue valueStr =
-        text "val" <> parens (text parValue)
+              prettyValue valueStr =
+                text "val" <> parens (text parValue)
 
-      prettyValueWithCast typeStr valueStr =
-        text "val" <> parens (text typeStr <> parens (text parValue))
+              prettyValueWithCast typeStr valueStr =
+                text "val" <> parens (text typeStr <> parens (text parValue))
 
-      -- prettyBoolArray valueStrs =
-      --   text "array" <> parens (hcat $ punctuate (text " # ") $ map prettyBool valueStrs)
+              -- prettyBoolArray valueStrs =
+              --   text "array" <> parens (hcat $ punctuate (text " # ") $ map prettyBool valueStrs)
 
 
 instance Pretty Simultaneous where
