@@ -513,7 +513,6 @@ parseDeclareArray cursor =
                 _ -> Left $ "Don't know how to initialize type " ++ show arrType
                return $ text arrInitBuilder <> parens (text $ show len)
 
-
 elementVisitor :: Cursor -> Doc
 elementVisitor cursor = visit
     where
@@ -558,6 +557,14 @@ createArrayWithValues cursor =
                                     hcat $ punctuate (text " # ") $ map (wrapVal . text . T.unpack) $ (child >=> child >=> content) cursor
                     )
 
+-- parsePair :: Cursor -> ParseError Doc
+-- parsePair cursor =
+--   text "pair" <> parens (
+--       case children of
+--           [name, value] -> hcat $ punctuate comma $ [parseName (child >=> element "Name" ) cursor, elementVisitor value]
+--           _ -> error "Pair must have exactly two children"
+--     )
+
 wrapVal :: Doc -> Doc -- wraps document in "val(...)"
 wrapVal doc = text "val" <> parens doc
 
@@ -569,6 +576,8 @@ helper el children =
             "Node" -> errorize $ parseNode cursor children
             "NodeList" -> parens $ hsep children
             "NodeBody" -> hcat children
+            "Update" -> text "update" <> parens (hcat $ punctuate comma children)
+            "Pair" -> text "pair" <> parens (hcat $ punctuate comma children)
             "Arguments" ->
                 parens $ hsep children
             "Assignment" ->
@@ -697,7 +706,11 @@ helper el children =
                         rootNode = head $ (child >=> checkName (=="Node")) cursor
                         nodeId = errorize $ fmap text $ parseNodeId rootNode
 
-            "Name" -> text $ toQID $ T.unpack $ T.concat $ (child >=> element "StringValue" >=> child >=> content) cursor
+            "Name" -> if null ((child >=> element "StringValue") cursor)
+              then case parseName cursor of
+                Left msg -> text $ "ERROR: " ++ msg
+                Right s -> text $ toQID s
+              else text $ toQID $ T.unpack $ T.concat $ (child >=> element "StringValue" >=> child >=> content) cursor
             "LookupNow" -> text "lookup" <> parens (hcat $ punctuate comma (children ++ [text "nilarg"] ))
             "LookupOnChange" -> text "lookupOnChange" <> parens (hcat $ punctuate comma (children ++ [text "nilarg"] ++ [text "val(0.0)"]))
             _ -> text name $+$ if null children then Text.PrettyPrint.empty else ( (vcat $ map (nest 2) (punctuate comma children)))

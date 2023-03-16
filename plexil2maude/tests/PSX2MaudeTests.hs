@@ -28,6 +28,7 @@ testPSX2Maude =
     , testCommandAck
     , testCommandAbort
     , testParameter
+    , testValue
     , testSimultaneous
     , testCommandHandles
     , testPrettyPrint
@@ -92,6 +93,15 @@ testPrettyPrint = testGroup "Pretty Printer"
         `testPrettiesAs`
            "commandResult('ac4,nilarg,array(val(1.1) # val(2.2) # val(3.3)))"
     ]
+  -- , testGroup "Value"
+  --   [
+  --     Value "1"
+  --       `testPrettiesAs`
+  --         "val(1)"
+  --   , Value "UNKNOWN"
+  --       `testPrettiesAs`
+  --         "unknown"
+  --   ]
   , testGroup "Emptyness of Script or Initial State"
     [ Script [] `testPrettiesAs` "nilEInputsList"
     , InitialState [] `testPrettiesAs` "noExternalInputs"
@@ -296,6 +306,32 @@ testParameter = testGroup "Parameter"
 
     testItPicklesAs :: Parameter -> String -> TestTree
     testItPicklesAs cmd str = testCase (show cmd) $ cmd `isPickledAs` str
+
+testValue :: TestTree
+testValue = testGroup "Value"
+  [ testGroup "fromXML"
+    [
+      [r|<Value>UNKNOWN</Value>|]
+        `testItParsesAs`
+          Value { unValue = "UNKNOWN" }
+    -- , [r|<State name="st" type="int"><Value>1</Value><Value>2</Value><Value>3</Value></State>|]
+    --     `testItParsesAs`
+    --       State { stName = "st"
+    --             , stParams = []
+    --             , stValue = [ Value { unValue = "1" }
+    --                         , Value { unValue = "2" }
+    --                         , Value { unValue = "3" }
+    --                         ]
+    --             , stType = PXInt
+    --             }
+    ]
+  ]
+  where
+  testItParsesAs :: String -> Value -> TestTree
+  testItParsesAs str cmd = testCase (show cmd) $ str `parsesOnlyAs` cmd
+
+  testItPicklesAs :: Value -> String -> TestTree
+  testItPicklesAs cmd str = testCase (show cmd) $ cmd `isPickledAs` str
 
 testSimultaneous :: TestTree
 testSimultaneous = testGroup "Simultaneous"

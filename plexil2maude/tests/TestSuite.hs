@@ -68,6 +68,7 @@ testsLegacy =
         ,testsBinarizeList
         ,testsParseNodeCondition
         ,testLookups
+        ,testUpdate
         ,testGroup "Parse internal equality expression" $
             map (testify'' elementVisitor)
                 [("An icarous node failure equality expression ",
@@ -811,3 +812,52 @@ testLookups =
         |],
         "lookupOnChange('inConflict, nilarg, val(0.0))")
       ]
+
+testUpdate :: TestTree
+testUpdate =
+  testGroup "Update" $
+    map (testify'' elementVisitor)
+    [ ("Update",
+       [r|
+        <Update>
+          <Pair>
+            <Name>taskId</Name>
+            <IntegerVariable>waypt_id</IntegerVariable>
+          </Pair>
+          <Pair>
+            <Name>result</Name>
+            <IntegerVariable>cmd_return_val</IntegerVariable>
+          </Pair>
+        </Update>
+        |],
+       "update(pair('taskId, var('waypt_id)), pair('result, var('cmd_return_val)))")
+    , ("Update2",
+        [r|
+          <Update>
+            <Pair>
+              <Name>lookup</Name>
+              <LookupNow>
+                <Name>
+                  <StringValue>someValue</StringValue>
+                </Name>
+              </LookupNow>
+            </Pair>
+          </Update>
+          |],
+        "update(pair('lookup, lookup ('someValue, nilarg)))")
+    , ("UpdateVariable",
+        [r|
+          <Update>
+            <Pair>
+              <Name>realconstant</Name>
+              <RealValue>3.141</RealValue>
+            </Pair>
+            <Pair>
+              <Name>val</Name>
+              <ArrayVariable>src</ArrayVariable>
+            </Pair>
+          </Update>
+        |],
+        "update(pair('realconstant, const(val(3.141))), pair('val, arrayVar('src)))")
+
+    ]
