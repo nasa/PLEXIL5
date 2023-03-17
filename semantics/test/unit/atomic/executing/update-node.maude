@@ -7,13 +7,268 @@ mod TEST--ATOMIC--EXECUTING--UPDATE-NODE is
 
   eq tests--atomic--executing--update-node = begin tests
 
-  Pending "Executing update node follows path 1 (executing--update--01)"
-  Pending "Executing update node follows path 2 (executing--update--02)"
-  Pending "Executing update node follows path 3 (executing--update--03)"
-  Pending "Executing update node follows path 4 (executing--update--04)"
-  Pending "Executing update node follows path 5 (executing--update--05)"
-  Pending "Executing update node follows path 6 (executing--update--06)"
-  Pending "Executing update node follows path 7 (executing--update--07)"
+  assert "Executing update node follows path 1 (executing--update--01)" from
+    executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list    | inv:    const(unknown),
+                                exitc:  const(val(true)) >
+            < B . A : update  | status: executing,
+                                active: true,
+                                inv:    const(unknown),
+                                post:   const(unknown),
+                                endc:   const(unknown),
+                                exitc:  const(unknown),
+                                pairs:  pair('taskId,var('waypointId)) > ]
+        [ microacts : mtactions ]
+        [ macroacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list    | inv:    const(unknown),
+                                exitc:  const(val(true)) >
+            < B . A : update  | status: executing,
+                                active: false,
+                                inv:    const(unknown),
+                                post:   const(unknown),
+                                endc:   const(unknown),
+                                exitc:  const(unknown),
+                                pairs:  pair('taskId,var('waypointId)) > ]
+        [ microacts : setOutcome(B . A,interrupted(parentExited)),
+                      setStatus(B . A,failing),
+                      logTransition(B . A, executing, failing, 1) ]
+        [ macroacts : mtactions ]
+        [ memory : none ]
+      )
+    end
+
+  assert "Executing update node follows path 2 (executing--update--02)" from
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list    | inv: const(unknown),
+                                exitc: const(unknown) >
+            < B . A : update  | status: executing,
+                                active: true,
+                                inv: const(unknown),
+                                post: const(unknown),
+                                endc: const(unknown),
+                                exitc: const(val(true)),
+                                pairs: pair('taskId,var('waypointId)) > ]
+        [ microacts : mtactions ]
+        [ macroacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list    | inv: const(unknown),
+                                exitc: const(unknown) >
+            < B . A : update  | status: executing,
+                                active: false,
+                                inv: const(unknown),
+                                post: const(unknown),
+                                endc: const(unknown),
+                                exitc: const(val(true)),
+                                pairs: pair('taskId,var('waypointId)) > ]
+        [ microacts : setOutcome(B . A,interrupted(exited)),
+                      setStatus(B . A,failing),
+                      logTransition(B . A, executing, failing, 2) ]
+        [ macroacts : mtactions ]
+        [ memory : none ]
+      )
+    end
+
+  assert "Executing update node follows path 3 (executing--update--03)" from
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list       | inv: const(val(false)),
+                                   exitc: const(unknown) >
+            < B . A : update | status: executing,
+                                   active: true,
+                                   inv: const(unknown),
+                                   post: const(unknown),
+                                   endc: const(unknown),
+                                   exitc: const(unknown),
+                                   pairs: pair('taskId,var('waypointId)) > ]
+        [ microacts : mtactions ]
+        [ macroacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list       | inv: const(val(false)),
+                                   exitc: const(unknown) >
+            < B . A : update | status: executing,
+                                   active: false,
+                                   inv: const(unknown),
+                                   post: const(unknown),
+                                   endc: const(unknown),
+                                   exitc: const(unknown),
+                                   pairs: pair('taskId,var('waypointId)) > ]
+        [ microacts : setOutcome(B . A,failure(parentFailed)),
+                      setStatus(B . A,failing),
+                      logTransition(B . A, executing, failing, 3) ]
+        [ macroacts : mtactions ]
+        [ memory : none ]
+      )
+    end
+  assert "Executing update node follows path 4 (executing--update--04)" from
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list       | inv: const(unknown),
+                                   exitc: const(unknown) >
+            < B . A : update | status: executing,
+                                   active: true,
+                                   inv: const(val(false)),
+                                   post: const(unknown),
+                                   endc: const(unknown),
+                                   exitc: const(unknown),
+                                   pairs: pair('taskId,var('waypointId)) > ]
+        [ microacts : mtactions ]
+        [ macroacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list       | inv: const(unknown),
+                                   exitc: const(unknown) >
+            < B . A : update | status: executing,
+                                   active: false,
+                                   inv: const(val(false)),
+                                   post: const(unknown),
+                                   endc: const(unknown),
+                                   exitc: const(unknown),
+                                   pairs: pair('taskId,var('waypointId)) > ]
+        [ microacts : setOutcome(B . A,failure(invariantFailed)),
+                      setStatus(B . A,failing),
+                      logTransition(B . A, executing, failing, 4) ]
+        [ macroacts : mtactions ]
+        [ memory : none ]
+      )
+    end
+
+  assert "Executing update node follows path 5 (executing--update--05)" from
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list       | inv: const(unknown),
+                                   exitc: const(unknown) >
+            < B . A : update | status: executing,
+                                   active: true,
+                                   inv: const(unknown),
+                                   post: const(unknown),
+                                   endc: const(val(true)),
+                                   exitc: const(unknown),
+                                   pairs: pair('taskId,var('waypointId)) > ]
+        [ microacts : mtactions ]
+        [ macroacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list       | inv: const(unknown),
+                                   exitc: const(unknown) >
+            < B . A : update | status: executing,
+                                   active: false,
+                                   inv: const(unknown),
+                                   post: const(unknown),
+                                   endc: const(val(true)),
+                                   exitc: const(unknown),
+                                   pairs: pair('taskId,var('waypointId)) > ]
+        [ microacts : setOutcome(B . A,failure(postconditionFailed)),
+                      setStatus(B . A,iterationEnded),
+                      logTransition(B . A, executing, iterationEnded, 5) ]
+        [ macroacts : mtactions ]
+        [ memory : none ]
+      )
+    end
+
+  assert "Executing update node follows path 6 (executing--update--06)" from
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list       | inv: const(unknown),
+                                   exitc: const(unknown) >
+            < B . A : update | status: executing,
+                                   active: true,
+                                   inv: const(unknown),
+                                   post: const(val(true)),
+                                   endc: const(val(true)),
+                                   exitc: const(unknown),
+                                   pairs: pair('taskId,var('waypointId)) > ]
+        [ microacts : mtactions ]
+        [ macroacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list       | inv: const(unknown),
+                                   exitc: const(unknown) >
+            < B . A : update | status: executing,
+                                   active: false,
+                                   inv: const(unknown),
+                                   post: const(val(true)),
+                                   endc: const(val(true)),
+                                   exitc: const(unknown),
+                                   pairs: pair('taskId,var('waypointId)) > ]
+        [ microacts : setOutcome(B . A,success),
+                      setStatus(B . A,iterationEnded),
+                      logTransition(B . A, executing, iterationEnded, 6) ]
+        [ macroacts : mtactions ]
+        [ memory : none ]
+      )
+    end
+
+  assert "Executing update node follows path 7 (executing--update--07)" from
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list       | inv: const(unknown),
+                                   exitc: const(unknown) >
+            < B . A : update | status: executing,
+                                   active: true,
+                                   inv: const(unknown),
+                                   post: const(unknown),
+                                   endc: const(unknown),
+                                   exitc: const(unknown),
+                                   pairs: pair('taskId,var('waypointId)) > ]
+        [ microacts : mtactions ]
+        [ macroacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list       | inv: const(unknown),
+                                   exitc: const(unknown) >
+            < B . A : update | status: executing,
+                                   active: false,
+                                   inv: const(unknown),
+                                   post: const(unknown),
+                                   endc: const(unknown),
+                                   exitc: const(unknown),
+                                   pairs: pair('taskId,var('waypointId)) > ]
+        [ microacts : mtactions ]
+        [ macroacts : mtactions ]
+        [ memory : none ]
+      )
+    end
 
   end tests .
 
