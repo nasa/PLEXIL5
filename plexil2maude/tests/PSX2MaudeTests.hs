@@ -98,9 +98,9 @@ testPrettyPrint = testGroup "Pretty Printer"
            "commandResult('ac4,nilarg,array(val(1.1) # val(2.2) # val(3.3)))"
     ]
   , testGroup "UpdateAck"
-    [ UpdateAck "u1"
+    [ UpdateAck "u1" True
         `testPrettiesAs`
-           "updateAck('u1)"
+           "updateAck('u1,true)"
     ]
   , testGroup "Emptyness of Script or Initial State"
     [ Script [] `testPrettiesAs` "nilEInputsList"
@@ -406,7 +406,7 @@ testUpdateAck = testGroup "UpdateAck"
   [ testGroup "from XML"
     [ [r|<UpdateAck name="array8"/>|]
         `testItParsesAs`
-          UpdateAck { uaName = "array8" }
+          UpdateAck { uaName = "array8", uaBool = True }
     ]
   ]
   where
@@ -421,7 +421,7 @@ testScript = testGroup "Script"
   [ testGroup "from XML"
     [ [r|<Script><UpdateAck name="array8"/></Script>|]
         `testItParsesAs`
-          Script [ ScriptEntry { unScriptEntry = FiveOf5 $ UpdateAck { uaName = "array8" } } ]
+          Script [ ScriptEntry { unScriptEntry = FiveOf5 $ UpdateAck { uaName = "array8", uaBool = True } } ]
     ]
   ]
   where

@@ -315,6 +315,7 @@ xpState
 
 data UpdateAck = UpdateAck
   { uaName   :: String
+  , uaBool   :: Bool
   } deriving (Show,Eq)
 
 instance XmlPickler UpdateAck where
@@ -324,9 +325,11 @@ xpUpdateAck :: PU UpdateAck
 xpUpdateAck
   = xpElem "UpdateAck" $
     xpWrap
-      ( UpdateAck
-      , \ua -> uaName ua) $
-    xpAttr "name" xpText
+      ( uncurry UpdateAck
+      , \ua -> (uaName ua, uaBool ua)) $
+    xpPair
+      (xpAttr "name" xpText)
+      (xpDefault True $ xpZero "")
 
 data Parameter = Parameter
   { parValue :: String

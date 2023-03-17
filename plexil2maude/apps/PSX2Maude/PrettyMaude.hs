@@ -9,6 +9,7 @@ import Data.List (intersperse)
 import Data.OneOfN (OneOf3(..), OneOf5(..))
 import Prelude hiding ((<>))
 import Text.PrettyPrint
+import Data.Char (toLower)
 
 class Pretty a where
   pretty :: a -> Doc
@@ -193,6 +194,10 @@ instance Pretty Result where
 instance Pretty UpdateAck where
   pretty (UpdateAck
     { uaName
+    , uaBool
     }) =
       text "updateAck"
-        <> parens ( text $ "'" ++ uaName )
+        <> parens ( hcat $ punctuate comma
+        [text "'" <> text uaName
+        , text $ map toLower $ show uaBool]
+        )
