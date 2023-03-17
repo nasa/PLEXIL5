@@ -45,7 +45,7 @@ mod TEST--ATOMIC--EXECUTING--UPDATE-NODE is
       )
     end
 
-  assert "Executing update node follows path 2 (executing--update--02)" from
+    assert "Executing update node follows path 2 (executing--update--02)" from
       executing(
         [ environment : mtenvironment ]
         [ nodes :
@@ -83,7 +83,7 @@ mod TEST--ATOMIC--EXECUTING--UPDATE-NODE is
       )
     end
 
-  assert "Executing update node follows path 3 (executing--update--03)" from
+    assert "Executing update node follows path 3 (executing--update--03)" from
       executing(
         [ environment : mtenvironment ]
         [ nodes :
@@ -120,7 +120,8 @@ mod TEST--ATOMIC--EXECUTING--UPDATE-NODE is
         [ memory : none ]
       )
     end
-  assert "Executing update node follows path 4 (executing--update--04)" from
+
+    assert "Executing update node follows path 4 (executing--update--04)" from
       executing(
         [ environment : mtenvironment ]
         [ nodes :
@@ -158,7 +159,7 @@ mod TEST--ATOMIC--EXECUTING--UPDATE-NODE is
       )
     end
 
-  assert "Executing update node follows path 5 (executing--update--05)" from
+    assert "Executing update node follows path 5 (executing--update--05)" from
       executing(
         [ environment : mtenvironment ]
         [ nodes :
@@ -196,7 +197,7 @@ mod TEST--ATOMIC--EXECUTING--UPDATE-NODE is
       )
     end
 
-  assert "Executing update node follows path 6 (executing--update--06)" from
+    assert "Executing update node follows path 6 (executing--update--06)" from
       executing(
         [ environment : mtenvironment ]
         [ nodes :
