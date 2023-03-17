@@ -66,3 +66,22 @@ fmod COMMANDINFO is
   eq commDefault( Q ) = nilarg / Q / idle .
 
 endfm
+
+fmod ACK is
+  sort Ack .
+  op Ack : Bool -> Ack .
+endfm
+
+view Ack from TRIV to ACK is
+  sort Elt to Ack .
+endv
+
+fmod UPDATE is
+  protecting PARAMETER .
+  protecting QUALIFIED .
+  protecting ACK .
+
+  sort Update .
+
+  op _/_/_ : NeQualified Parameters Ack -> Update [prec 20] .
+endfm

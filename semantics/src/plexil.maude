@@ -24,12 +24,13 @@ mod PLEXIL is
  protecting DEFS .
  including PREPLEXIL .
  including PREPLEXILLIST .
- sorts PlexilList PlexilCommand PlexilRetCommand PlexilAssignment PlexilEmpty .
- subsort PlexilList PlexilCommand PlexilRetCommand PlexilAssignment PlexilEmpty < Plexil .
+ sorts PlexilList PlexilCommand PlexilRetCommand PlexilAssignment PlexilUpdate PlexilEmpty .
+ subsort PlexilList PlexilCommand PlexilRetCommand PlexilAssignment PlexilUpdate PlexilEmpty < Plexil .
 
  op list : Identifier LocalDecls AttributeSet PrePlexilList -> PlexilList  .
  op command : Identifier LocalDecls AttributeSet Command -> PlexilCommand  .
  op retCommand : Identifier LocalDecls AttributeSet Qualified Qualified Command -> PlexilRetCommand  .
  op assignment : Identifier LocalDecls AttributeSet Attribute -> PlexilAssignment  .
+ op update : Identifier LocalDecls AttributeSet Update -> PlexilUpdate  .
  op empty : Identifier LocalDecls AttributeSet -> PlexilEmpty .
 endm

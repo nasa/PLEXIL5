@@ -12,6 +12,7 @@ mod DEFS is
   protecting OUTCOME .
   protecting COMMAND .
   protecting COMMANDINFO .
+  protecting UPDATE .
   protecting NODE .
   protecting GLOBAL .
   protecting ENVIRONMENTS .

@@ -33,13 +33,15 @@ fmod SINGLE-INPUT is
   protecting PARAMETER .
   protecting VALUE .
   protecting COMMAND-HANDLE .
+  protecting ACK .
 
-  sort Input StateInput CommandInput .
-  subsort StateInput CommandInput < Input .
+  sort Input StateInput CommandInput UpdateInput .
+  subsort StateInput CommandInput UpdateInput < Input .
 
   op stateLookup   : Identifier Arguments Value         -> StateInput   .
   op commandResult : Identifier Arguments Value         -> CommandInput .
   op commandAck    : Identifier Arguments CommandHandle -> CommandInput .
+  op updateAck     : Identifier           Ack           -> UpdateInput  .
 endfm
 
 view Input from TRIV to SINGLE-INPUT is

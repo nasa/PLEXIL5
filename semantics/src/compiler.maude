@@ -39,6 +39,8 @@ mod COMPILER is
   = < (I . Q) : command | command: C, commandInfo: commDefault(I), defaultAttributes(command,getRepeatCondition(AtS)) / (AtS) > .
   eq compileNodes(assignment(I, LD, (AtS), (AT := E)), Q)
   = < (I . Q) : assignment | (AT := E), defaultAttributes(assignment, getRepeatCondition(AtS)) / (AtS) > .
+  eq compileNodes(update(I, LD, (AtS), U), Q)
+  = < (I . Q) : update | update: U, defaultAttributes(update, getRepeatCondition(AtS)) / (AtS) > .
   eq compileNodes(empty(I, LD, AtS), Q)
   = < (I . Q) : empty | defaultAttributes(empty,getRepeatCondition(AtS)) / (AtS) > .
 
@@ -261,5 +263,6 @@ mod COMPILER is
   vars Q Q' Q''       : Qualified .
   vars Soup Soup'     : Config .
   vars Status Status' : Status .
+  vars U U'           : Update .
   vars V V'           : Value .
 endm
