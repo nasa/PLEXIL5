@@ -8,6 +8,9 @@ in identifiers.maude
 in values.maude
 in expressions.maude
 in commands.maude
+in status.maude
+in outcome.maude
+in extended-expression.maude
 in nodes.maude
 in environment.maude
 in declarations.maude

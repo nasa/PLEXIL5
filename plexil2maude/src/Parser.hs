@@ -95,13 +95,13 @@ parseFinishedPredicate cursor = return $ "(isFinished?(" ++ dirAttrText ++ "(" +
 ------------------------------------------------------------
 ---------- NodeOutcome
 
-thisAxis :: Cursor -> [Text]
-thisAxis =
-    checkName (=="NodeOutcomeVariable")
-                    >=> child
-                    >=> checkName (=="NodeRef")
-                    >=> child
-                    >=> content
+-- thisAxis :: Cursor -> [Text]
+-- thisAxis =
+--     checkName (=="NodeOutcomeVariable")
+--                     >=> child
+--                     >=> checkName (=="NodeRef")
+--                     >=> child
+--                     >=> content
 parseNodeOutcomeVariable :: Cursor -> ParseError String
 parseNodeOutcomeVariable cursor =
     let
@@ -110,6 +110,13 @@ parseNodeOutcomeVariable cursor =
     in if null nodes
          then Left "No NodeOutcomeVariable found"
          else return $ maudifyLabel $ T.unpack identifier
+    where
+        thisAxis =
+            checkName (=="NodeOutcomeVariable")
+                            >=> child
+                            >=> checkName (\n -> n =="NodeRef" || n =="NodeId")
+                            >=> child
+                            >=> content
 
 prettyNodeOutcomeValue :: Cursor -> Doc
 prettyNodeOutcomeValue cursor =
@@ -385,7 +392,7 @@ parseNodeType cursor =
 parseSimpleAssignment :: Cursor -> ParseError Doc
 parseSimpleAssignment cursor =
     do (var,expr) <- twoChildElements cursor
-       varId <- ((fmap text $ parseVariableId var) <|> parseArrayElement var)
+       varId <- ((fmap text $ parseVariable var) <|> parseArrayElement var)
        let expr' = fix prettyElementRHS expr
        return $ parens $ varId <+> text ":=" <+> expr'
 
@@ -394,10 +401,17 @@ data ArrayElement = ArrayElement Doc Doc
 
 parseArrayElement :: Cursor -> ParseError Doc
 parseArrayElement cursor =
-    do (var,expr) <- twoChildElements cursor
-       varId <- parseVariableId var
-       let expr' = elementVisitor expr
-       return $ parens (text varId) <+> text "[" <+> expr' <+> "]"
+  if length ((child >=> isArrayVariable) cursor) == 1
+    then
+      do (var,expr) <- twoChildElements cursor
+         varId <- parseVariableId var
+         let expr' = elementVisitor expr
+         return $ "arrayVar" <> parens (text varId <+> "," <+> expr')
+    else
+      do (var,expr) <- twoChildElements cursor
+         varId <- toQID <$> parseName var
+         let expr' = elementVisitor expr
+         return $ "arrayVar" <> parens (text varId <+> "," <+> expr')
 
 parseArrayElement' :: Cursor -> ParseError Doc
 parseArrayElement' cursor =
@@ -428,7 +442,7 @@ parseDeclareVariable cursor =
                                   buildValue value = pretty
                                     where pretty = text "val" <> parens value
                                   addInitialization (var,ty) =
-                                      do tyStr <- getUniqueTextContent (:[]) ty
+                                      do tyStr <- getUniqueTextContentOrEmpty (:[]) ty
                                          case tyStr of
                                             "String" -> Right $ buildValue $ doubleQuotes PP.empty
                                             "Integer" -> Right $ buildValue $ text "0"
@@ -446,6 +460,15 @@ parseDeclareVariable cursor =
 
 fstMatch :: (Cursor -> ParseError a) -> [Cursor] -> ParseError a
 fstMatch f = msum . map f
+
+hasArrayValue1Level :: Cursor -> Bool
+hasArrayValue1Level cursor = res
+    where
+        res = length ((child >=> hasArrayValueAxis1Level) cursor) == 1
+        -- NodeElement el ->
+        --     let label = nameLocalName $ elementName el
+        --     in label == "ArrayValue"
+        -- _ -> False
 
 parseDeclareArray :: Cursor -> ParseError Doc
 parseDeclareArray cursor =
@@ -470,11 +493,15 @@ parseDeclareArray cursor =
 
         parseArrayInit :: Cursor -> ParseError Doc
         parseArrayInit cursor =
-            do checkThisElement "InitialValue" cursor
-               doc <- mapM parseSimpleValue children
-               return $ "array" <> parens (hsep $ intersperse (text "#") doc)
-            where
-                children = (child >=> isValue) cursor
+          if hasArrayValue1Level cursor
+            then
+                return (createArrayWithValues $ head $ (child >=> hasArrayValueAxis1Level) cursor)
+            else
+                do checkThisElement "InitialValue" cursor
+                   doc <- mapM parseSimpleValue children
+                   return $ "array" <> parens (hsep $ intersperse (text "#") doc)
+                where
+                    children = (child >=> isValue) cursor
 
         getDefaultArrayInit :: String -> Int -> ParseError Doc
         getDefaultArrayInit arrType len =
@@ -485,7 +512,6 @@ parseDeclareArray cursor =
                 "Boolean" -> Right "unknownBoolArray"   -- $ buildValue $ text "false"
                 _ -> Left $ "Don't know how to initialize type " ++ show arrType
                return $ text arrInitBuilder <> parens (text $ show len)
-
 
 elementVisitor :: Cursor -> Doc
 elementVisitor cursor = visit
@@ -520,6 +546,29 @@ prettyElement rec cursor
         childElements = concatMap anyElement $ child cursor
         -- cursor = fromNode $ NodeElement el
 
+createArrayWithValues :: Cursor -> Doc
+createArrayWithValues cursor =
+                    text "array" <> parens (
+                        if (concatMap T.unpack $ attribute "Type" cursor) == "String"
+                            then hcat $ punctuate (text " # ") $ map (wrapVal . doubleQuotes . text . T.unpack) $ (child >=> child >=> content) cursor
+                            else if (concatMap T.unpack $ attribute "Type" cursor) == "Boolean"
+                                then hcat $ punctuate (text " # ") $ map (wrapVal . text . T.unpack . T.toLower) $ (child >=> child >=> content) cursor
+                                else
+                                    hcat $ punctuate (text " # ") $ map (wrapVal . text . T.unpack) $ (child >=> child >=> content) cursor
+                    )
+
+-- parsePair :: Cursor -> ParseError Doc
+-- parsePair cursor =
+--   text "pair" <> parens (
+--       case children of
+--           [name, value] -> hcat $ punctuate comma $ [parseName (child >=> element "Name" ) cursor, elementVisitor value]
+--           _ -> error "Pair must have exactly two children"
+--     )
+
+wrapVal :: Doc -> Doc -- wraps document in "val(...)"
+wrapVal doc = text "val" <> parens doc
+
+
 helper el children =
         case name of
             "ArrayElement" -> errorize $ parseArrayElement cursor
@@ -527,6 +576,8 @@ helper el children =
             "Node" -> errorize $ parseNode cursor children
             "NodeList" -> parens $ hsep children
             "NodeBody" -> hcat children
+            "Update" -> parens (hcat $ punctuate space children)
+            "Pair" -> text "pair" <> parens (hcat $ punctuate comma children)
             "Arguments" ->
                 parens $ hsep children
             "Assignment" ->
@@ -556,11 +607,20 @@ helper el children =
                     char '\'' <>
                         text ( T.unpack $ T.concat $ concatMap content $ child cursor )
                 )
+            "StringVariable" ->
+                text "var" <> parens (
+                    char '\'' <>
+                        text ( T.unpack $ T.concat $ concatMap content $ child cursor )
+                )
             "RealValue" ->
                 text "const" <> parens (
                     text "val" <> parens (
                         text $ T.unpack $ T.concat $ concatMap content $ child cursor
                     )
+                )
+            "ArrayValue" ->
+                text "const" <> parens (
+                    createArrayWithValues cursor
                 )
             "IntegerValue" ->
                 text "const" <> parens (
@@ -581,8 +641,13 @@ helper el children =
                     )
                 )
             "EQBoolean"  -> text "_equ_" <> parens (hcat $ punctuate comma children)
+            "NEBoolean"  -> text "_nequ_" <> parens (hcat $ punctuate comma children)
             "EQNumeric"  -> text "_equ_" <> parens (hcat $ punctuate comma children)
             "NENumeric"  -> text "_nequ_" <> parens (hcat $ punctuate comma children)
+            "EQString"   -> text "_equ_" <> parens (hcat $ punctuate comma children)
+            "NEString"   -> text "_nequ_" <> parens (hcat $ punctuate comma children)
+            "EQArray"    -> text "_equ_" <> parens (hcat $ punctuate comma children)
+            "NEArray"    -> text "_nequ_" <> parens (hcat $ punctuate comma children)
             "EQInternal" -> case prettyEQInternal cursor children of
                 Left msg -> text $ "ERROR: " ++ msg
                 Right s -> s
@@ -641,7 +706,11 @@ helper el children =
                         rootNode = head $ (child >=> checkName (=="Node")) cursor
                         nodeId = errorize $ fmap text $ parseNodeId rootNode
 
-            "Name" -> text $ toQID $ T.unpack $ T.concat $ (child >=> element "StringValue" >=> child >=> content) cursor
+            "Name" -> if null ((child >=> element "StringValue") cursor)
+              then case parseName cursor of
+                Left msg -> text $ "ERROR: " ++ msg
+                Right s -> text $ toQID s
+              else text $ toQID $ T.unpack $ T.concat $ (child >=> element "StringValue" >=> child >=> content) cursor
             "LookupNow" -> text "lookup" <> parens (hcat $ punctuate comma (children ++ [text "nilarg"] ))
             "LookupOnChange" -> text "lookupOnChange" <> parens (hcat $ punctuate comma (children ++ [text "nilarg"] ++ [text "val(0.0)"]))
             _ -> text name $+$ if null children then Text.PrettyPrint.empty else ( (vcat $ map (nest 2) (punctuate comma children)))
@@ -663,8 +732,15 @@ helper el children =
 
 getNodeOutcomeVariable :: Cursor -> Doc
 getNodeOutcomeVariable cursor =
-    let nodeReference:_ = (child >=> element "NodeOutcomeVariable" >=> child >=> element "NodeRef") cursor
-     in text $ '\'':(maudifyLabel $ T.unpack $ head $ (child >=> content) nodeReference)
+    -- let nodeReference:_ = (child >=> element "NodeOutcomeVariable" >=> child >=> element "NodeRef") cursor
+    -- in text $ '\'':(maudifyLabel $ T.unpack $ head $ (child >=> content) nodeReference)
+    if length ((child >=> element "NodeOutcomeVariable" >=> child >=> element "NodeRef") cursor) == 1
+    then
+      let nodeReference:_ = (child >=> element "NodeOutcomeVariable" >=> child >=> element "NodeRef") cursor
+      in text $ '\'':(maudifyLabel $ T.unpack $ head $ (child >=> content) nodeReference)
+    else
+      let nodeReference:_ = (child >=> element "NodeOutcomeVariable" >=> child >=> element "NodeId") cursor
+      in text $ '\'':(maudifyLabel $ T.unpack $ head $ (child >=> content) nodeReference)
 
 getNodeOutcomeValue :: Cursor -> String
 getNodeOutcomeValue cursor =
@@ -707,6 +783,10 @@ getNodeCommandHandleValue cursor =
          "COMMAND_SUCCESS" -> "CommandSuccess"
          "COMMAND_FAILED" -> "CommandFailed"
          "COMMAND_DENIED" -> "CommandDenied"
+         "COMMAND_SENT_TO_SYSTEM" -> "CommandSentToSystem"
+         "COMMAND_ACCEPTED" -> "CommandAccepted"
+         "COMMAND_RCVD_BY_SYSTEM" -> "CommandRcvdBySystem"
+         "COMMAND_INTERFACE_ERROR" -> "CommandInterfaceError"
          _ -> "(Error: don't know how to parse: " ++ rawState ++ ")"
 
 toQID :: String -> String
@@ -801,14 +881,24 @@ parseSimpleValue cursor = parseIntegerValue
         parseIntegerValue = buildValue <$> parseTag "IntegerValue" cursor
         parseBooleanValue = buildValue <$> parseTag "BooleanValue" cursor
         parseRealValue = buildValue <$> parseTag "RealValue" cursor
-        parseStringValue = buildValue <$> parseTag "StringValue" cursor
+        parseStringValue = buildValue' <$> parseTag' "StringValue" cursor
 
         parseTag tag cursor = getUniqueTextContent (element tag) cursor
+
+        parseTag' tag cursor = getUniqueTextContentOrEmpty (element tag) cursor
 
         buildValue value = text "val" <> parens (
                              text $ T.unpack value
                            )
+        buildValue' value = text "val" <> parens (
+                             doubleQuotes $ text $ T.unpack value
+                           )
 
+parseVariable :: Cursor -> ParseError String
+parseVariable cursor =
+    do
+        v <- parseVariableId cursor
+        return $ "var( " ++ v ++ " )"
 
 parseVariableId :: Cursor -> ParseError String
 parseVariableId cursor = case toQID <$> T.unpack <$> getUniqueTextContent isDeclaredVariable cursor of
@@ -824,6 +914,16 @@ isValue :: Axis
 isValue = checkName isValueElement
   where isValueElement :: XML.Name -> Bool
         isValueElement name = "Value" `T.isSuffixOf` (nameLocalName name)
+
+isArrayVariable :: Axis
+isArrayVariable = checkName isArrayValueElement
+  where isArrayValueElement :: XML.Name -> Bool
+        isArrayValueElement name = "ArrayVariable" `T.isSuffixOf` (nameLocalName name)
+
+hasArrayValueAxis1Level :: Axis
+hasArrayValueAxis1Level = checkName isArrayValueElement
+  where isArrayValueElement :: XML.Name -> Bool
+        isArrayValueElement name = "ArrayValue" `T.isSuffixOf` (nameLocalName name)
 
 isDeclaredVariable :: Axis
 isDeclaredVariable = checkName isVariableElement
@@ -850,6 +950,12 @@ getUniqueTextContent axis cursor =
           then Right $ head textNodes
           else Left $ "Could not uniquely determined text content for element: " ++ show cursor ++ "\n\ttextNodes: " ++ show textNodes
 
+getUniqueTextContentOrEmpty :: Axis -> Cursor -> ParseError Text
+getUniqueTextContentOrEmpty axis cursor =
+    let textNodes = (axis >=> child >=> content) cursor
+     in if length textNodes <= 1
+          then Right $ T.concat textNodes
+          else Left $ "Could not uniquely determined text content for element: " ++ show cursor ++ "\n\ttextNodes: " ++ show textNodes
 
 data BinarizedList a = Root a | Branches (BinarizedList a) (BinarizedList a) deriving (Show,Eq)
 

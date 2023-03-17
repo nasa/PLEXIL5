@@ -22,7 +22,85 @@ mod TEST-SUITE is
     + expressions--tests
     + model-checking--tests
     + compiler--tests
-    .
+    +
+begin tests
+
+    assert "An Update node" from
+      testConfiguration(
+        < 'anUpdate : update |
+          pairs: (pair('val,const(val("foo"))) pair('taskId,var('waypointId))),
+          ack: false >
+      )
+    reaches
+      testConfiguration(
+        < 'anUpdate : update |
+          pairs: (pair('val,const(val("foo"))) pair('taskId,var('waypointId))),
+          ack: false >
+      )
+    end
+
+    assert "Compile Update node 1" from
+      testConfiguration(
+        compileNodes(update('anId, nilocdecl, none, pair('taskId,var('waypointId))), 'aRootId)
+      )
+    reaches
+      testConfiguration(
+        < 'anId . 'aRootId : update |
+          defaultInternalAttributes,
+          pairs:   pair('taskId,var('waypointId)),
+          startc:  const(val(true)),
+          skip:    const(val(false)),
+          pre:     const(val(true)),
+          inv:     const(val(true)),
+          exitc:   const(val(false)),
+          repeatc: const(val(false)),
+          post:    const(val(true)),
+          endc:    hasRcvAck?('anId . 'aRootId) >
+      )
+    end
+
+    assert "Compile Update node 2" from
+      testConfiguration(
+        compileNodes(update('anId, nilocdecl, endc: const(val(false)), pair('taskId,var('waypointId))), 'aRootId)
+      )
+    reaches
+      testConfiguration(
+        < 'anId . 'aRootId : update |
+          defaultInternalAttributes,
+          pairs:   pair('taskId,var('waypointId)),
+          startc:  const(val(true)),
+          skip:    const(val(false)),
+          pre:     const(val(true)),
+          inv:     const(val(true)),
+          exitc:   const(val(false)),
+          repeatc: const(val(false)),
+          post:    const(val(true)),
+          endc:    const(val(false)) and hasRcvAck?('anId . 'aRootId) >
+      )
+    end
+
+    assert "Compile Update node with multiple pairs" from
+      testConfiguration(
+        compileNodes(update('anId, nilocdecl, endc: const(val(false)), pair('taskId,var('waypointId)) pair('taskId2,var('waypointId2))), 'aRootId)
+      )
+    reaches
+      testConfiguration(
+        < 'anId . 'aRootId : update |
+          defaultInternalAttributes,
+          pairs:   pair('taskId,var('waypointId)) pair('taskId2,var('waypointId2)),
+          startc:  const(val(true)),
+          skip:    const(val(false)),
+          pre:     const(val(true)),
+          inv:     const(val(true)),
+          exitc:   const(val(false)),
+          repeatc: const(val(false)),
+          post:    const(val(true)),
+          endc:    const(val(false)) and hasRcvAck?('anId . 'aRootId) >
+      )
+    end
+
+end tests
+.
 
 endm
 

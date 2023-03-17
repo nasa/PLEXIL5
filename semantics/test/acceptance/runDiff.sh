@@ -3,7 +3,6 @@
 TIMEOUT=${1:-timeout}
 MD5=${2:-md5sum}
 MAUDE=${3:-maude}
-MAUDE=${3:-maude}
 
 pushd ../../benchmark/icarous/ > /dev/null
 for i in `ls | grep -E '^[0-9]+$'`; do
@@ -18,7 +17,7 @@ for i in `ls | grep -E '^[0-9]+$'`; do
 done
 popd > /dev/null
 
-readlink=greadlink
+readlink=readlink
 
 # cognition tests
 echo

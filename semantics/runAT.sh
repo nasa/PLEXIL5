@@ -1,4 +1,4 @@
-#!/usr/bin/env zsh
+#!/bin/bash
 
 TIMEOUT=${1:-timeout}
 MD5=${2:-md5sum}

@@ -19,7 +19,7 @@ mod TEST--ATOMIC--EXECUTING--ASSIGNMENT-NODE is
                                    post: const(unknown),
                                    endc: const(unknown),
                                    exitc: const(unknown),
-                                   (M . A := const(val(2))) > ]
+                                   (var(M . A) := const(val(2))) > ]
         [ microacts : mtactions ]
         [ macroacts : mtactions ]
         [ memory : none ]
@@ -36,7 +36,7 @@ mod TEST--ATOMIC--EXECUTING--ASSIGNMENT-NODE is
                                    post: const(unknown),
                                    endc: const(unknown),
                                    exitc: const(unknown),
-                                   (M . A := const(val(2))) > ]
+                                   (var(M . A) := const(val(2))) > ]
         [ microacts : setOutcome(B . A,interrupted(parentExited)),
                       setStatus(B . A,failing),
                       logTransition(B . A, executing, failing, 1) ]
@@ -57,7 +57,7 @@ mod TEST--ATOMIC--EXECUTING--ASSIGNMENT-NODE is
                                    post: const(unknown),
                                    endc: const(unknown),
                                    exitc: const(val(true)),
-                                   (M . A := const(val(2))) > ]
+                                   (var(M . A) := const(val(2))) > ]
         [ microacts : mtactions ]
         [ macroacts : mtactions ]
         [ memory : none ]
@@ -74,7 +74,7 @@ mod TEST--ATOMIC--EXECUTING--ASSIGNMENT-NODE is
                                    post: const(unknown),
                                    endc: const(unknown),
                                    exitc: const(val(true)),
-                                   (M . A := const(val(2))) > ]
+                                   (var(M . A) := const(val(2))) > ]
         [ microacts : setOutcome(B . A,interrupted(exited)),
                       setStatus(B . A,failing),
                       logTransition(B . A, executing, failing, 2) ]
@@ -95,7 +95,7 @@ mod TEST--ATOMIC--EXECUTING--ASSIGNMENT-NODE is
                                    post: const(unknown),
                                    endc: const(unknown),
                                    exitc: const(unknown),
-                                   (M . A := const(val(2))) > ]
+                                   (var(M . A) := const(val(2))) > ]
         [ microacts : mtactions ]
         [ macroacts : mtactions ]
         [ memory : none ]
@@ -112,7 +112,7 @@ mod TEST--ATOMIC--EXECUTING--ASSIGNMENT-NODE is
                                    post: const(unknown),
                                    endc: const(unknown),
                                    exitc: const(unknown),
-                                   (M . A := const(val(2))) > ]
+                                   (var(M . A) := const(val(2))) > ]
         [ microacts : setOutcome(B . A,failure(parentFailed)),
                       setStatus(B . A,failing),
                       logTransition(B . A, executing, failing, 3) ]
@@ -133,7 +133,7 @@ mod TEST--ATOMIC--EXECUTING--ASSIGNMENT-NODE is
                                    post: const(unknown),
                                    endc: const(unknown),
                                    exitc: const(unknown),
-                                   (M . A := const(val(2))) > ]
+                                   (var(M . A) := const(val(2))) > ]
         [ microacts : mtactions ]
         [ macroacts : mtactions ]
         [ memory : none ]
@@ -150,7 +150,7 @@ mod TEST--ATOMIC--EXECUTING--ASSIGNMENT-NODE is
                                    post: const(unknown),
                                    endc: const(unknown),
                                    exitc: const(unknown),
-                                   (M . A := const(val(2))) > ]
+                                   (var(M . A) := const(val(2))) > ]
         [ microacts : setOutcome(B . A,failure(invariantFailed)),
                       setStatus(B . A,failing),
                       logTransition(B . A, executing, failing, 4) ]
@@ -171,7 +171,7 @@ mod TEST--ATOMIC--EXECUTING--ASSIGNMENT-NODE is
                                    post: const(unknown),
                                    endc: const(val(true)),
                                    exitc: const(unknown),
-                                   (M . A := const(val(2))) > ]
+                                   (var(M . A) := const(val(2))) > ]
         [ microacts : mtactions ]
         [ macroacts : mtactions ]
         [ memory : none ]
@@ -188,7 +188,7 @@ mod TEST--ATOMIC--EXECUTING--ASSIGNMENT-NODE is
                                    post: const(unknown),
                                    endc: const(val(true)),
                                    exitc: const(unknown),
-                                   (M . A := const(val(2))) > ]
+                                   (var(M . A) := const(val(2))) > ]
         [ microacts : setOutcome(B . A,failure(postconditionFailed)),
                       setStatus(B . A,iterationEnded),
                       logTransition(B . A, executing, iterationEnded, 5) ]
@@ -209,7 +209,7 @@ mod TEST--ATOMIC--EXECUTING--ASSIGNMENT-NODE is
                                    post: const(val(true)),
                                    endc: const(val(true)),
                                    exitc: const(unknown),
-                                   (M . A := const(val(2))) > ]
+                                   (var(M . A) := const(val(2))) > ]
         [ microacts : mtactions ]
         [ macroacts : mtactions ]
         [ memory : none ]
@@ -226,7 +226,7 @@ mod TEST--ATOMIC--EXECUTING--ASSIGNMENT-NODE is
                                    post: const(val(true)),
                                    endc: const(val(true)),
                                    exitc: const(unknown),
-                                   (M . A := const(val(2))) > ]
+                                   (var(M . A) := const(val(2))) > ]
         [ microacts : setOutcome(B . A,success),
                       setStatus(B . A,iterationEnded),
                       logTransition(B . A, executing, iterationEnded, 6) ]
@@ -247,7 +247,7 @@ mod TEST--ATOMIC--EXECUTING--ASSIGNMENT-NODE is
                                    post: const(unknown),
                                    endc: const(unknown),
                                    exitc: const(unknown),
-                                   (M . A := const(val(2))) > ]
+                                   (var(M . A) := const(val(2))) > ]
         [ microacts : mtactions ]
         [ macroacts : mtactions ]
         [ memory : none ]
@@ -264,7 +264,7 @@ mod TEST--ATOMIC--EXECUTING--ASSIGNMENT-NODE is
                                    post: const(unknown),
                                    endc: const(unknown),
                                    exitc: const(unknown),
-                                   (M . A := const(val(2))) > ]
+                                   (var(M . A) := const(val(2))) > ]
         [ microacts : mtactions ]
         [ macroacts : mtactions ]
         [ memory : none ]

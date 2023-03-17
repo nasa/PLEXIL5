@@ -19,8 +19,6 @@ import Data.String (fromString)
 import Prelude hiding ((<>)) -- (concat)
 -- import System.Environment
 -- import System.Exit
-
--- import Debug.Trace
 -- import Data.Text.Internal.Lazy
 import Test.Tasty
 import Test.Tasty.HUnit
@@ -33,6 +31,10 @@ import Text.XML.Cursor
 
 import Benchmarks(testBenchmarks)
 import PSX2MaudeTests(testPSX2Maude)
+
+import TestArrays(testArrays)
+
+import TestCommon
 
 ------------------------------------------------------------
 ----------    Test helpers
@@ -50,6 +52,7 @@ main = defaultMain $
     [testsLegacy
     ,testBenchmarks
     ,testPSX2Maude
+    ,testArrays
     ]
 
 testsLegacy :: TestTree
@@ -65,6 +68,7 @@ testsLegacy =
         ,testsBinarizeList
         ,testsParseNodeCondition
         ,testLookups
+        ,testUpdate
         ,testGroup "Parse internal equality expression" $
             map (testify'' elementVisitor)
                 [("An icarous node failure equality expression ",
@@ -125,6 +129,27 @@ testsLegacy =
                        </InitialValue>
                      </DeclareArray>|],
                   [r| ('bar : array(val(0.0) # val(7.0) # val(13.0))) |])
+                  ,("An empty variable declaration",
+                  [r|
+                     <DeclareVariable ColNo="4" LineNo="3">
+                      <Name>foo</Name>
+                      <Type>String</Type>
+                      <InitialValue>
+                        <StringValue />
+                      </InitialValue>
+                    </DeclareVariable>
+                    |],
+                    [r| ('foo : val("")) |])
+                ]
+        ,testGroup "Parse initial value" $
+            testErrorParser parseInitialSimpleValue
+                [("Empty initial value",
+                  [r|
+                    <InitialValue>
+                      <StringValue />
+                    </InitialValue>
+                    |],
+                  [r| val("") |])
                 ]
         ,testGroup "Parse an array element" $
             map (testify'' elementVisitor)
@@ -137,7 +162,7 @@ testsLegacy =
                        </Index>
                      </ArrayElement>
                     |],
-                  [r| ( 'foo ) [ var( 'i ) ] |])
+                  [r| arrayVar('foo,var('i)) |])
                 ]
         ,testGroup "Parse an empty node" $
             map (testify'' elementVisitor)
@@ -183,7 +208,7 @@ testsLegacy =
                       'ASSIGNMENT--0,
                       nilocdecl,
                       ( none ),
-                      ('r1 := lookup ('r1 , nilarg))
+                      (var('r1) := lookup ('r1 , nilarg))
                     )|])
                 ,("A simple array assignment node",
                   [r|
@@ -206,10 +231,7 @@ testsLegacy =
                     |],
                   [r|
                     assignment(
-                      'SimpleArrayAssignment1,
-                       nilocdecl,
-                       ( none ),
-                       ( ('foo ) [ var('i) ] := const(val(1.0)))
+                      'SimpleArrayAssignment1,nilocdecl,(none),(arrayVar('foo,var('i)):=const(val(1.0)))
                     )
                     |])
                 ,("An icarous complex array assignment node",
@@ -232,7 +254,7 @@ testsLegacy =
                      </Assignment>
                     |],
                   [r|
-                       ( ('velCmd ) [ const(val(0)) ] := ( arrayVar('acVelocity,const(val(0))) ) )
+                       ( arrayVar('velCmd,const(val(0))):=(arrayVar('acVelocity,const(val(0)))) )
                     |])
 
                 ]
@@ -341,7 +363,7 @@ testsLegacy =
                          </NumericRHS>
                        </Assignment>
                      </NodeBody>|],
-                  "('r1 := lookup ('r1 , nilarg))")
+                  "(var('r1) := lookup ('r1 , nilarg))")
                 ]
         ,testGroup "Parse a command" $
             map (testify'' elementVisitor)
@@ -466,7 +488,8 @@ testsParseNodeOutcomeVariable :: TestTree
 testsParseNodeOutcomeVariable =
     testGroup "parseNodeOutcomeVariable" $
         map (testify'' elementVisitor)
-            [("Simple child identifier", "<NodeOutcomeVariable><NodeRef dir=\"child\">Printer0</NodeRef></NodeOutcomeVariable>", "Printer0")
+            [("Simple child identifier with NodeRef", "<NodeOutcomeVariable><NodeRef dir=\"child\">Printer0</NodeRef></NodeOutcomeVariable>", "Printer0"),
+             ("Simple child identifier with NodeId", "<NodeOutcomeVariable><NodeId>callBoolArrayCommand</NodeId></NodeOutcomeVariable>", "callBoolArrayCommand")
             ]
 
 testsParseBooleanExpression :: TestTree
@@ -503,6 +526,9 @@ testsParseBooleanExpression =
             ,("Equality EQBoolean",
               "<EQBoolean><BooleanValue>true</BooleanValue><BooleanValue>false</BooleanValue></EQBoolean>",
               "_equ_(const(val(true)),const(val(false)))")
+            ,("Equality NEBoolean",
+              "<NEBoolean><BooleanValue>true</BooleanValue><BooleanValue>false</BooleanValue></NEBoolean>",
+              "_nequ_(const(val(true)),const(val(false)))")
             ,("Equality EQNumeric",
               "<EQNumeric><IntegerValue>3</IntegerValue><IntegerValue>4</IntegerValue></EQNumeric>",
               "_equ_(const(val(3)),const(val(4)))")
@@ -512,6 +538,12 @@ testsParseBooleanExpression =
             ,("Non-Equality NENumeric",
               "<NENumeric><IntegerValue>3</IntegerValue><IntegerValue>4</IntegerValue></NENumeric>",
               "_nequ_(const(val(3)),const(val(4)))")
+            ,("Equality EQString",
+              "<EQString><StringValue>a</StringValue><StringValue>b</StringValue></EQString>",
+              "_equ_(const(val(\"a\")),const(val(\"b\")))")
+            ,("Non-Equality NEString",
+              "<NEString><StringValue>a</StringValue><StringValue>b</StringValue></NEString>",
+              "_nequ_(const(val(\"a\")),const(val(\"b\")))")
             ,("NoChildFailed",
               [r|
                 <NoChildFailed>
@@ -780,3 +812,52 @@ testLookups =
         |],
         "lookupOnChange('inConflict, nilarg, val(0.0))")
       ]
+
+testUpdate :: TestTree
+testUpdate =
+  testGroup "Update" $
+    map (testify'' elementVisitor)
+    [ ("Update",
+       [r|
+        <Update>
+          <Pair>
+            <Name>taskId</Name>
+            <IntegerVariable>waypt_id</IntegerVariable>
+          </Pair>
+          <Pair>
+            <Name>result</Name>
+            <IntegerVariable>cmd_return_val</IntegerVariable>
+          </Pair>
+        </Update>
+        |],
+       "(pair('taskId, var('waypt_id)) pair('result, var('cmd_return_val)))")
+    , ("Update2",
+        [r|
+          <Update>
+            <Pair>
+              <Name>lookup</Name>
+              <LookupNow>
+                <Name>
+                  <StringValue>someValue</StringValue>
+                </Name>
+              </LookupNow>
+            </Pair>
+          </Update>
+          |],
+        "(pair('lookup, lookup ('someValue, nilarg)))")
+    , ("UpdateVariable",
+        [r|
+          <Update>
+            <Pair>
+              <Name>realconstant</Name>
+              <RealValue>3.141</RealValue>
+            </Pair>
+            <Pair>
+              <Name>val</Name>
+              <ArrayVariable>src</ArrayVariable>
+            </Pair>
+          </Update>
+        |],
+        "(pair('realconstant, const(val(3.141))) pair('val, arrayVar('src)))")
+
+    ]

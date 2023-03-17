@@ -66,3 +66,30 @@ fmod COMMANDINFO is
   eq commDefault( Q ) = nilarg / Q / idle .
 
 endfm
+
+fmod ACK is
+  sort Ack .
+  subsort Bool < Ack .
+endfm
+
+view Ack from TRIV to ACK is
+  sort Elt to Ack .
+endv
+
+fmod PAIR is
+  protecting EXPRESSION .
+  protecting QID .
+
+  sort Pair .
+  op pair : Qid Expression -> Pair [ctor] .
+endfm
+
+view Pair from TRIV to PAIR is
+  sort Elt to Pair .
+endv
+
+fmod UPDATE is
+  protecting ACK .
+  protecting LIST{Pair} .
+  protecting QUALIFIED .
+endfm

@@ -37,10 +37,14 @@ mod COMPILER is
     = (compileNodes(PL, (I . Q)) compileNodes(list(I, LD, (AtS), PLL), Q)) .
   eq compileNodes(command(I, LD, (AtS), C), Q)
   = < (I . Q) : command | command: C, commandInfo: commDefault(I), defaultAttributes(command,getRepeatCondition(AtS)) / (AtS) > .
-  eq compileNodes(assignment(I, LD, (AtS), (Q' := E)), Q)
-  = < (I . Q) : assignment | (Q' := E), defaultAttributes(assignment, getRepeatCondition(AtS)) / (AtS) > .
-  eq compileNodes(assignment(I, LD, (AtS), (Q' [ E' ] := E)), Q)
-  = < (I . Q) : assignment | (Q' [ E' ] := E), defaultAttributes(assignment, getRepeatCondition(AtS)) / (AtS) > .
+  eq compileNodes(assignment(I, LD, (AtS), (AT := E)), Q)
+  = < (I . Q) : assignment | (AT := E), defaultAttributes(assignment, getRepeatCondition(AtS)) / (AtS) > .
+  eq compileNodes(update(I, LD, (AtS), PS:List{Pair}), Q)
+  = < (I . Q) : update |
+    pairs: PS:List{Pair},
+    defaultAttributes(update, getRepeatCondition(AtS))
+      / defaultAttributeEnrichments(I . Q, update,AtS)
+    > .
   eq compileNodes(empty(I, LD, AtS), Q)
   = < (I . Q) : empty | defaultAttributes(empty,getRepeatCondition(AtS)) / (AtS) > .
 
@@ -77,8 +81,7 @@ mod COMPILER is
   eq sanitizeIdsOnParams(nilpar, NQ, Cfg) = nilpar .
 
   op  sanitizeIdsOnAttr : Attribute NeQualified Configuration -> Attribute .
-  eq  sanitizeIdsOnAttr((Q      := E),  NQ, Cfg) = getFullyQualifiedVariableId(Q, NQ, Cfg) := sanitizeIds(E, NQ, Cfg) .
-  eq  sanitizeIdsOnAttr((Q [E'] := E),  NQ, Cfg) = getFullyQualifiedVariableId(Q, NQ, Cfg) [sanitizeIds(E', NQ, Cfg)] := sanitizeIds(E, NQ, Cfg) .
+  eq  sanitizeIdsOnAttr((AT := E),  NQ, Cfg) = sanitizeIds(AT, NQ, Cfg) := sanitizeIds(E, NQ, Cfg) .
   eq  sanitizeIdsOnAttr((command: NQ' / Ps / Q), NQ, Cfg) = command: NQ' / sanitizeIdsOnParams(Ps,NQ,Cfg) / getFullyQualifiedVariableId(Q, NQ, Cfg) .
   eq  sanitizeIdsOnAttr((command: NQ' / Ps),     NQ, Cfg) = command: NQ' / sanitizeIdsOnParams(Ps,NQ,Cfg) .
   ceq sanitizeIdsOnAttr(At,             NQ, Cfg) = At'
@@ -166,6 +169,7 @@ mod COMPILER is
   op getFullyQualifiedVariableId : Qualified Qualified Configuration -> Qualified .
   eq getFullyQualifiedVariableId(nilq  , Q, Cfg) = nilq .
   eq getFullyQualifiedVariableId(I . NQ, Q, Cfg) = getFullyQualifiedVariableId(I, NQ . Q, Cfg) .
+  eq getFullyQualifiedVariableId(child(NQ), Q, Cfg) = getFullyQualifiedVariableId(NQ, Q, Cfg) .
   eq getFullyQualifiedVariableId(I . Q', Q, Cfg) = getFullyQualifiedVariableId(I, Q, Cfg) [owise] .
 
   op getFullyQualifiedVariableId : Identifier Qualified Configuration -> Qualified .
@@ -226,13 +230,14 @@ mod COMPILER is
   eq < NQ : assignment | endc: default, AtS >
     = < NQ : assignment | endc: const(val(true)), AtS > .
   *** TODO: Do it!
-  *** eq < NQ : update | endc: default, AtS >
-  ***  = < NQ : update | endc: const(val(true)), AtS > .
+  eq < NQ : update | endc: default, AtS >
+   = < NQ : update | endc: hasRcvAck?(NQ), AtS > .
 
   --- uninitialized variables of types Boolean, Integer, Real, and String
   --- are given the value Unknown
 
   vars Args Args'     : Arguments .
+  vars AT AT'         : AssignmentTarget .
   vars At At'         : Attribute .
   vars AtS AtS'       : AttributeSet .
   vars B B'           : Bool .
@@ -259,8 +264,10 @@ mod COMPILER is
   vars PL             : Plexil .
   vars PLL            : PrePlexilList .
   vars Ps             : Parameters .
+  vars Pairs          : List{Pair} .
   vars Q Q' Q''       : Qualified .
   vars Soup Soup'     : Config .
   vars Status Status' : Status .
+  --- vars U U'           : Update .
   vars V V'           : Value .
 endm
