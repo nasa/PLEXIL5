@@ -20,6 +20,8 @@ import PLEXILScript
 import PSX2Maude.PrettyMaude
 import Text.PrettyPrint
 
+import Data.OneOfN (OneOf5(..))
+
 
 testPSX2Maude :: TestTree
 testPSX2Maude =
@@ -31,6 +33,8 @@ testPSX2Maude =
     , testValue
     , testSimultaneous
     , testCommandHandles
+    , testUpdateAck
+    , testScript
     , testPrettyPrint
     , testOptionalElements
     ]
@@ -93,15 +97,11 @@ testPrettyPrint = testGroup "Pretty Printer"
         `testPrettiesAs`
            "commandResult('ac4,nilarg,array(val(1.1) # val(2.2) # val(3.3)))"
     ]
-  -- , testGroup "Value"
-  --   [
-  --     Value "1"
-  --       `testPrettiesAs`
-  --         "val(1)"
-  --   , Value "UNKNOWN"
-  --       `testPrettiesAs`
-  --         "unknown"
-  --   ]
+  , testGroup "UpdateAck"
+    [ UpdateAck "u1"
+        `testPrettiesAs`
+           "updateAck('u1)"
+    ]
   , testGroup "Emptyness of Script or Initial State"
     [ Script [] `testPrettiesAs` "nilEInputsList"
     , InitialState [] `testPrettiesAs` "noExternalInputs"
@@ -401,6 +401,35 @@ testCommandHandles = testGroup "Command Handles"
     testItPicklesAs :: CommandHandle -> String -> TestTree
     testItPicklesAs cmdHandle str = testCase (show cmdHandle) $ cmdHandle `isPickledAs` str
 
+testUpdateAck :: TestTree
+testUpdateAck = testGroup "UpdateAck"
+  [ testGroup "from XML"
+    [ [r|<UpdateAck name="array8"/>|]
+        `testItParsesAs`
+          UpdateAck { uaName = "array8" }
+    ]
+  ]
+  where
+    testItParsesAs :: String -> UpdateAck -> TestTree
+    testItParsesAs str cmd = testCase (show cmd) $ str `parsesOnlyAs` cmd
+
+    testItPicklesAs :: UpdateAck -> String -> TestTree
+    testItPicklesAs cmd str = testCase (show cmd) $ cmd `isPickledAs` str
+
+testScript :: TestTree
+testScript = testGroup "Script"
+  [ testGroup "from XML"
+    [ [r|<Script><UpdateAck name="array8"/></Script>|]
+        `testItParsesAs`
+          Script [ ScriptEntry { unScriptEntry = FiveOf5 $ UpdateAck { uaName = "array8" } } ]
+    ]
+  ]
+  where
+    testItParsesAs :: String -> Script -> TestTree
+    testItParsesAs str cmd = testCase (show cmd) $ str `parsesOnlyAs` cmd
+
+    testItPicklesAs :: Script -> String -> TestTree
+    testItPicklesAs cmd str = testCase (show cmd) $ cmd `isPickledAs` str
 
 parsesOnlyAs :: (XmlPickler a,Eq a,Show a) => String -> a -> Assertion
 parsesOnlyAs str expectedData =

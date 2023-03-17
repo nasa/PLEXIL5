@@ -6,7 +6,7 @@ module PSX2Maude.PrettyMaude where
 import PLEXILScript
 
 import Data.List (intersperse)
-import Data.OneOfN (OneOf3(..), OneOf4(..))
+import Data.OneOfN (OneOf3(..), OneOf5(..))
 import Prelude hiding ((<>))
 import Text.PrettyPrint
 
@@ -43,9 +43,11 @@ instance Pretty Script where
 
 instance Pretty ScriptEntry where
   pretty (ScriptEntry e)
-    | (OneOf4 st)    <- e = pretty st
-    | (TwoOf4 ack)   <- e = pretty ack
-    | (ThreeOf4 sim) <- e = pretty sim
+    | (OneOf5 st)    <- e = pretty st
+    | (TwoOf5 cmd)   <- e = pretty cmd
+    | (ThreeOf5 ca) <- e = pretty ca
+    | (FourOf5 sim)  <- e = pretty sim
+    | (FiveOf5 ua)   <- e = pretty ua
 
 instance Pretty State where
   pretty (State
@@ -187,3 +189,10 @@ instance Pretty Value where
 
 instance Pretty Result where
   pretty = pretty . unResult
+
+instance Pretty UpdateAck where
+  pretty (UpdateAck
+    { uaName
+    }) =
+      text "updateAck"
+        <> parens ( text $ "'" ++ uaName )
