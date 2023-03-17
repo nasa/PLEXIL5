@@ -79,6 +79,26 @@ begin tests
       )
     end
 
+    assert "Compile Update node with multiple pairs" from
+      testConfiguration(
+        compileNodes(update('anId, nilocdecl, endc: const(val(false)), pair('taskId,var('waypointId)) pair('taskId2,var('waypointId2))), 'aRootId)
+      )
+    reaches
+      testConfiguration(
+        < 'anId . 'aRootId : update |
+          defaultInternalAttributes,
+          pairs:   pair('taskId,var('waypointId)) pair('taskId2,var('waypointId2)),
+          startc:  const(val(true)),
+          skip:    const(val(false)),
+          pre:     const(val(true)),
+          inv:     const(val(true)),
+          exitc:   const(val(false)),
+          repeatc: const(val(false)),
+          post:    const(val(true)),
+          endc:    const(val(false)) and hasRcvAck?('anId . 'aRootId) >
+      )
+    end
+
 end tests
 .
 
