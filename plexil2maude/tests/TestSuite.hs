@@ -830,7 +830,7 @@ testUpdate =
           </Pair>
         </Update>
         |],
-       "update(pair('taskId, var('waypt_id)), pair('result, var('cmd_return_val)))")
+       "(pair('taskId, var('waypt_id)) pair('result, var('cmd_return_val)))")
     , ("Update2",
         [r|
           <Update>
@@ -844,7 +844,7 @@ testUpdate =
             </Pair>
           </Update>
           |],
-        "update(pair('lookup, lookup ('someValue, nilarg)))")
+        "(pair('lookup, lookup ('someValue, nilarg)))")
     , ("UpdateVariable",
         [r|
           <Update>
@@ -858,6 +858,6 @@ testUpdate =
             </Pair>
           </Update>
         |],
-        "update(pair('realconstant, const(val(3.141))), pair('val, arrayVar('src)))")
+        "(pair('realconstant, const(val(3.141))) pair('val, arrayVar('src)))")
 
     ]

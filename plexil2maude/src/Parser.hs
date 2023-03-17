@@ -576,7 +576,7 @@ helper el children =
             "Node" -> errorize $ parseNode cursor children
             "NodeList" -> parens $ hsep children
             "NodeBody" -> hcat children
-            "Update" -> text "update" <> parens (hcat $ punctuate comma children)
+            "Update" -> parens (hcat $ punctuate space children)
             "Pair" -> text "pair" <> parens (hcat $ punctuate comma children)
             "Arguments" ->
                 parens $ hsep children
