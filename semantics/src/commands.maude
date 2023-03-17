@@ -69,19 +69,27 @@ endfm
 
 fmod ACK is
   sort Ack .
-  op Ack : Bool -> Ack .
+  subsort Bool < Ack .
 endfm
 
 view Ack from TRIV to ACK is
   sort Elt to Ack .
 endv
 
+fmod PAIR is
+  protecting EXPRESSION .
+  protecting QID .
+
+  sort Pair .
+  op pair : Qid Expression -> Pair [ctor] .
+endfm
+
+view Pair from TRIV to PAIR is
+  sort Elt to Pair .
+endv
+
 fmod UPDATE is
-  protecting PARAMETER .
-  protecting QUALIFIED .
   protecting ACK .
-
-  sort Update .
-
-  op _/_/_ : NeQualified Parameters Ack -> Update [prec 20] .
+  protecting LIST{Pair} .
+  protecting QUALIFIED .
 endfm

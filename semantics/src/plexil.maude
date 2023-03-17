@@ -31,6 +31,6 @@ mod PLEXIL is
  op command : Identifier LocalDecls AttributeSet Command -> PlexilCommand  .
  op retCommand : Identifier LocalDecls AttributeSet Qualified Qualified Command -> PlexilRetCommand  .
  op assignment : Identifier LocalDecls AttributeSet Attribute -> PlexilAssignment  .
- op update : Identifier LocalDecls AttributeSet Update -> PlexilUpdate  .
+ op update : Identifier LocalDecls AttributeSet List{Pair} -> PlexilUpdate  .
  op empty : Identifier LocalDecls AttributeSet -> PlexilEmpty .
 endm

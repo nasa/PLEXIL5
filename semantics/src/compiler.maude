@@ -39,8 +39,12 @@ mod COMPILER is
   = < (I . Q) : command | command: C, commandInfo: commDefault(I), defaultAttributes(command,getRepeatCondition(AtS)) / (AtS) > .
   eq compileNodes(assignment(I, LD, (AtS), (AT := E)), Q)
   = < (I . Q) : assignment | (AT := E), defaultAttributes(assignment, getRepeatCondition(AtS)) / (AtS) > .
-  eq compileNodes(update(I, LD, (AtS), U), Q)
-  = < (I . Q) : update | update: U, defaultAttributes(update, getRepeatCondition(AtS)) / (AtS) > .
+  eq compileNodes(update(I, LD, (AtS), PS:List{Pair}), Q)
+  = < (I . Q) : update |
+    pairs: PS:List{Pair},
+    defaultAttributes(update, getRepeatCondition(AtS))
+      / defaultAttributeEnrichments(I . Q, update,AtS)
+    > .
   eq compileNodes(empty(I, LD, AtS), Q)
   = < (I . Q) : empty | defaultAttributes(empty,getRepeatCondition(AtS)) / (AtS) > .
 
@@ -226,8 +230,8 @@ mod COMPILER is
   eq < NQ : assignment | endc: default, AtS >
     = < NQ : assignment | endc: const(val(true)), AtS > .
   *** TODO: Do it!
-  *** eq < NQ : update | endc: default, AtS >
-  ***  = < NQ : update | endc: const(val(true)), AtS > .
+  eq < NQ : update | endc: default, AtS >
+   = < NQ : update | endc: hasRcvAck?(NQ), AtS > .
 
   --- uninitialized variables of types Boolean, Integer, Real, and String
   --- are given the value Unknown
@@ -260,9 +264,10 @@ mod COMPILER is
   vars PL             : Plexil .
   vars PLL            : PrePlexilList .
   vars Ps             : Parameters .
+  vars Pairs          : List{Pair} .
   vars Q Q' Q''       : Qualified .
   vars Soup Soup'     : Config .
   vars Status Status' : Status .
-  vars U U'           : Update .
+  --- vars U U'           : Update .
   vars V V'           : Value .
 endm
