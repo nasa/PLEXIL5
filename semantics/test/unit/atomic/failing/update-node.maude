@@ -1,0 +1,55 @@
+mod TEST--ATOMIC--FAILING--UPDATE-NODE is
+
+  pr TEST-BASE .
+
+  op tests--atomic--failing--update-node : -> TestResults .
+
+  eq tests--atomic--failing--update-node = begin tests
+
+    assert "Failing update node follows path 1 (failing--update--01)" from
+    failing(
+        [ nodes :
+            < A     : update | status: failing,
+                               active: false,
+                               outcome: failure(exited),
+                               ack: false > ]
+        [ microacts : mtactions ]
+      )
+    reaches
+      failing(
+        [ nodes :
+            < A     : update | status: failing,
+                               active: false,
+                               outcome: failure(exited),
+                               ack: false > ]
+        [ microacts : mtactions ]
+      )
+    end
+
+***    assert "Failing update node follows path 2 (failing--update--02)" from
+***    failing(
+***        [ nodes :
+***            < A     : update | status: failing,
+***                               active: false,
+***                               outcome: failure(parentExited),
+***                               ack: true >]
+***        [ microacts : mtactions ]
+***      )
+***    reaches
+***      failing(
+***        [ nodes :
+***            < A     : update | status: failing,
+***                               active: false,
+***                               outcome: failure(parentExited),
+***                               ack: true > ]
+***        [ microacts : setStatus(A,finished),
+***                      logTransition(A, failing, finished, 2) ]
+***      )
+***    end
+
+***  Pending "Failing update node follows path 3 (failing--update--03)"
+***  Pending "Failing update node follows path 4 (failing--update--04)"
+
+  end tests .
+
+endm

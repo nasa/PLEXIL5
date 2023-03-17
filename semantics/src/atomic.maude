@@ -410,7 +410,7 @@ mod ATOMIC is
 
   op failing : Config -> Config .
   eq failing(CONF)
-   = failinglist(failingcommand(failingassignment(CONF))) .
+   = failinglist(failingcommand(failingassignment(failingupdate(CONF)))) .
 
   op getFailureType : Outcome -> FailureType .
   eq getFailureType(failure(FTyp)) = FTyp .
@@ -458,6 +458,25 @@ mod ATOMIC is
   /\ Nds' := < A : command | status: failing, active: false, outcome: Out, AtS > PS
   /\ FTyp := getFailureType(Out) .
   eq failingcommand(CONF)
+   = CONF [owise] .
+
+  op failingupdate : Config -> Config .
+ ceq failingupdate( [ nodes : < A : update | status: failing, active: true, outcome: Out, AtS > PS ]
+                    [ environment : GAMMA ] [ microacts : AS ] CONF)
+   = failingupdate( [ nodes : Nds' ] [ environment : GAMMA ] CONF
+     if isTrue(hasRcvAck?(A))
+       then [ microacts : AS ]
+          ---  if FTyp == parentExited
+          ---    then [ microacts : setStatus(A, finished),logTransition(A,failing,finished,2),AS]
+          ---    else [ microacts : AS ]
+          ---  fi
+       else [ microacts : AS ]
+     fi
+      )
+  if Nds  := < A : update | status: failing, active: true, outcome: Out, AtS > PS
+  /\ Nds' := < A : update | status: failing, active: false, outcome: Out, AtS > PS
+  /\ FTyp := getFailureType(Out) .
+  eq failingupdate(CONF)
    = CONF [owise] .
 
   op failinglist : Config -> Config .
