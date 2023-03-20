@@ -94,6 +94,13 @@ mod NODE is
     =
     endc: E and hasRcvAck?(NQ),
     defaultAttributeEnrichments(NQ, update, AtS) .
+  eq defaultAttributeEnrichments(NQ, command, (endc: E, AtS))
+    =
+    endc: E or
+              (cmdHandleIs?(NQ, CommandDenied)
+              or
+              cmdHandleIs?(NQ, CommandFailed)),
+    defaultAttributeEnrichments(NQ, update, AtS) .
   eq defaultAttributeEnrichments(NQ, NTy, AtS)
     = AtS [owise] .
 

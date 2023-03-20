@@ -36,7 +36,12 @@ mod COMPILER is
   eq compileNodes(list(I, LD, (AtS), (PL PLL)), Q)
     = (compileNodes(PL, (I . Q)) compileNodes(list(I, LD, (AtS), PLL), Q)) .
   eq compileNodes(command(I, LD, (AtS), C), Q)
-  = < (I . Q) : command | command: C, commandInfo: commDefault(I), defaultAttributes(command,getRepeatCondition(AtS)) / (AtS) > .
+  = < (I . Q) : command |
+    command: C,
+    commandInfo: commDefault(I),
+    defaultAttributes(command,getRepeatCondition(AtS))
+      / defaultAttributeEnrichments(I . Q, command,AtS)
+    > .
   eq compileNodes(assignment(I, LD, (AtS), (AT := E)), Q)
   = < (I . Q) : assignment | (AT := E), defaultAttributes(assignment, getRepeatCondition(AtS)) / (AtS) > .
   eq compileNodes(update(I, LD, (AtS), PS:List{Pair}), Q)

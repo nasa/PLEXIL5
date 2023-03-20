@@ -105,6 +105,50 @@ begin tests
       )
     end
 
+    assert "Compile Command node 1" from
+      testConfiguration(
+        compileNodes(command('anId, nilocdecl, endc: const(val(false)), 'boolArrayCommand / nilpar / 'myBooleanArray), 'aRootId)
+      )
+    reaches
+      testConfiguration(
+        < 'anId . 'aRootId : command |
+          defaultInternalAttributes,
+          command: 'boolArrayCommand / nilpar / 'myBooleanArray,
+          commandInfo: nilarg / 'anId / idle,
+          startc:  const(val(true)),
+          skip:    const(val(false)),
+          pre:     const(val(true)),
+          inv:     const(val(true)),
+          exitc:   const(val(false)),
+          repeatc: const(val(false)),
+          post:    const(val(true)),
+          endc:    const(val(false)) or (cmdHandleIs?('anId . 'aRootId, CommandDenied) or cmdHandleIs?('anId . 'aRootId, CommandFailed))
+        >
+      )
+    end
+
+    assert "Compile Command node 2" from
+      testConfiguration(
+        compileNodes(command('anId, nilocdecl, endc: const(val(true)), 'boolArrayCommand / nilpar / 'myBooleanArray), 'aRootId)
+      )
+    reaches
+      testConfiguration(
+        < 'anId . 'aRootId : command |
+          defaultInternalAttributes,
+          command: 'boolArrayCommand / nilpar / 'myBooleanArray,
+          commandInfo: nilarg / 'anId / idle,
+          startc:  const(val(true)),
+          skip:    const(val(false)),
+          pre:     const(val(true)),
+          inv:     const(val(true)),
+          exitc:   const(val(false)),
+          repeatc: const(val(false)),
+          post:    const(val(true)),
+          endc:    const(val(true)) or (cmdHandleIs?('anId . 'aRootId, CommandDenied) or cmdHandleIs?('anId . 'aRootId, CommandFailed))
+        >
+      )
+    end
+
 end tests
 .
 
