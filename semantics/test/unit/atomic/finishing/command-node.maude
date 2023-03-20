@@ -1,0 +1,253 @@
+mod TEST--ATOMIC--FINISHING--COMMAND-NODE is
+
+  pr TEST-BASE .
+
+
+  op tests--atomic--finishing--command-node : -> TestResults .
+
+  eq tests--atomic--finishing--command-node = begin tests
+
+    assert "Finishing command node follows path 1 (finishing--command--01)" from
+      finishing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : command | inv: const(unknown),
+                             exitc: const(val(true)) >
+            < B . A : command | status: finishing,
+                             active: true,
+                             inv: const(unknown),
+                             post: const(unknown),
+                             exitc: const(unknown) > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+        [ interface : none ]
+      )
+    reaches
+      finishing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : command | inv: const(unknown),
+                             exitc: const(val(true)) >
+            < B . A : command | status: finishing,
+                             active: false,
+                             inv: const(unknown),
+                             post: const(unknown),
+                             exitc: const(unknown) > ]
+        [ microacts : setOutcome(B . A,interrupted(parentExited)),
+                      setStatus(B . A,failing),
+                      logTransition(B . A, finishing, failing, 1) ]
+        [ memory : none ]
+        [ interface : none ]
+      )
+    end
+
+    assert "Finishing command node follows path 2 (finishing--command--02)" from
+      finishing(
+        [ environment : mtenvironment ]
+        [ nodes : < A     : command | inv: const(unknown),
+                           exitc: const(unknown) >
+          < B . A : command | status: finishing,
+                           active: true,
+                           inv: const(unknown),
+                           post: const(unknown),
+                           exitc: const(val(true)) > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+        [ interface : none ]
+      )
+    reaches
+      finishing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : command | inv: const(unknown),
+                             exitc: const(unknown) >
+            < B . A : command | status: finishing,
+                             active: false,
+                             inv: const(unknown),
+                             post: const(unknown),
+                             exitc: const(val(true)) > ]
+        [ microacts : setOutcome(B . A,interrupted(exited)),
+                      setStatus(B . A,failing),
+                      logTransition(B . A, finishing, failing, 2) ]
+        [ memory : none ]
+        [ interface : none ]
+      )
+    end
+
+    assert "Finishing command node follows path 3 (finishing--command--03)" from
+      finishing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : command | inv: const(val(false)),
+                             exitc: const(unknown) >
+            < B . A : command | status: finishing,
+                             active: true,
+                             inv: const(unknown),
+                             post: const(unknown),
+                             exitc: const(unknown) > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+        [ interface : none ]
+      )
+    reaches
+      finishing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : command | inv: const(val(false)),
+                             exitc: const(unknown) >
+            < B . A : command | status: finishing,
+                             active: false,
+                             inv: const(unknown),
+                             post: const(unknown),
+                             exitc: const(unknown) > ]
+        [ microacts : setOutcome(B . A,failure(parentFailed)),
+                      setStatus(B . A,failing),
+                      logTransition(B . A, finishing, failing, 3) ]
+        [ memory : none ]
+        [ interface : none ]
+      )
+    end
+
+    assert "Finishing command node follows path 4 (finishing--command--04)" from
+      finishing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : command | inv: const(unknown),
+                             exitc: const(unknown) >
+            < B . A : command | status: finishing,
+                             active: true,
+                             inv: const(val(false)),
+                             post: const(unknown),
+                             exitc: const(unknown) > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+        [ interface : none ]
+      )
+    reaches
+      finishing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : command | inv: const(unknown),
+                             exitc: const(unknown) >
+            < B . A : command | status: finishing,
+                             active: false,
+                             inv: const(val(false)),
+                             post: const(unknown),
+                             exitc: const(unknown) > ]
+        [ microacts : setOutcome(B . A,failure(invariantFailed)),
+                      setStatus(B . A,failing),
+                      logTransition(B . A, finishing, failing, 4) ]
+        [ memory : none ]
+        [ interface : none ]
+      )
+    end
+
+        assert "Finishing command node follows path 5 (finishing--command--05)" from
+      finishing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A         : command  | inv: const(unknown),
+                                  exitc: const(unknown) >
+            < B . A     : command  | status: finishing,
+                                  active: true,
+                                  inv: const(unknown),
+                                  post: const(val(false)),
+                                  exitc: const(unknown) >
+            < C . B . A : empty | status: waiting > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+        [ interface : < (B . A) : command-on-execution | arguments: nilarg, handle: just(CommandSuccess) > ]
+      )
+    reaches
+      finishing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A         : command  | inv: const(unknown),
+                                  exitc: const(unknown) >
+            < B . A     : command  | status: finishing,
+                                  active: false,
+                                  inv: const(unknown),
+                                  post: const(val(false)),
+                                  exitc: const(unknown) >
+            < C . B . A : empty | status: waiting > ]
+        [ microacts : setOutcome(B . A, failure(postconditionFailed)),
+                      setStatus(B . A, iterationEnded),
+                      logTransition(B . A,finishing,iterationEnded,5) ]
+        [ memory : none ]
+        [ interface : < (B . A) : command-on-execution | arguments: nilarg, handle: just(CommandSuccess) > ]
+      )
+    end
+
+      assert "Finishing command node follows path 6 (finishing--command--06)" from
+      finishing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A         : command  | inv: const(unknown),
+                                  exitc: const(unknown) >
+            < B . A     : command  | status: finishing,
+                                  active: true,
+                                  inv: const(unknown),
+                                  post: const(val(true)),
+                                  exitc: const(unknown) >
+            < C . B . A : empty | status: finished > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+        [ interface : < (B . A) : command-on-execution | arguments: nilarg, handle: just(CommandSuccess) > ]
+      )
+    reaches
+      finishing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A         : command  | inv: const(unknown),
+                                  exitc: const(unknown) >
+            < B . A     : command  | status: finishing,
+                                  active: false,
+                                  inv: const(unknown),
+                                  post: const(val(true)),
+                                  exitc: const(unknown) >
+            < C . B . A : empty | status: finished > ]
+        [ microacts : setOutcome(B . A,success),
+                      setStatus(B . A,iterationEnded),
+                      logTransition(B . A, finishing, iterationEnded, 6) ]
+        [ memory : none ]
+        [ interface : < (B . A) : command-on-execution | arguments: nilarg, handle: just(CommandSuccess) >  ]
+      )
+    end
+
+    assert "Finishing command node follows path 7 (finishing--command--07)" from
+      finishing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A         : command  | inv: const(unknown),
+                                  exitc: const(unknown) >
+            < B . A     : command  | status: finishing,
+                                  active: true,
+                                  inv: const(unknown),
+                                  post: const(unknown),
+                                  exitc: const(unknown) >
+            < C . B . A : empty | status: executing > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+        [ interface : none ]
+      )
+    reaches
+      finishing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A         : command  | inv: const(unknown),
+                                  exitc: const(unknown) >
+            < B . A     : command  | status: finishing,
+                                  active: false,
+                                  inv: const(unknown),
+                                  post: const(unknown),
+                                  exitc: const(unknown) >
+            < C . B . A : empty | status: executing > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+        [ interface : none ]
+      )
+    end
+
+  end tests .
+
+endm
