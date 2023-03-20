@@ -55,7 +55,9 @@ begin tests
           exitc:   const(val(false)),
           repeatc: const(val(false)),
           post:    const(val(true)),
-          endc:    hasRcvAck?('anId . 'aRootId) >
+          endc:    hasRcvAck?('anId . 'aRootId),
+          ack: false
+        >
       )
     end
 
@@ -75,7 +77,9 @@ begin tests
           exitc:   const(val(false)),
           repeatc: const(val(false)),
           post:    const(val(true)),
-          endc:    const(val(false)) and hasRcvAck?('anId . 'aRootId) >
+          endc:    const(val(false)) and hasRcvAck?('anId . 'aRootId),
+          ack: false
+        >
       )
     end
 
@@ -95,7 +99,9 @@ begin tests
           exitc:   const(val(false)),
           repeatc: const(val(false)),
           post:    const(val(true)),
-          endc:    const(val(false)) and hasRcvAck?('anId . 'aRootId) >
+          endc:    const(val(false)) and hasRcvAck?('anId . 'aRootId),
+          ack: false
+        >
       )
     end
 
