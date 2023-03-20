@@ -149,6 +149,32 @@ begin tests
       )
     end
 
+    assert "CommandAbort 1" from
+      testConfiguration(
+        updateCommandInputs(
+          < 'anId . 'aRootId : command-on-execution | arguments: nilarg, aborted: false >,
+          (commandAbort('anId, nilarg, val(true)))
+        )
+      )
+    reaches
+      testConfiguration(
+        < 'anId . 'aRootId : command-on-execution | arguments: nilarg, aborted: true >
+      )
+    end
+
+    assert "CommandAck 1" from
+      testConfiguration(
+        updateCommandInputs(
+          < 'anId . 'aRootId : command-on-execution | arguments: nilarg, handle: nothing >,
+          (commandAck('anId, nilarg, CommandDenied))
+        )
+      )
+    reaches
+      testConfiguration(
+        < 'anId . 'aRootId : command-on-execution | arguments: nilarg, handle: just(CommandDenied) >
+      )
+    end
+
 end tests
 .
 

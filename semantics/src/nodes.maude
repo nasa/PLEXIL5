@@ -37,6 +37,7 @@ mod NODE is
  op handle:_         : Maybe{CommandHandle} -> Attribute [ctor gather (&)] .
  op value:_          : Nat -> Attribute [ctor gather (&)] .
  op returnVariable:_ : Qualified -> Attribute [ctor gather (&)] .
+ op aborted:_        : Bool -> Attribute [ctor gather (&)] .
 
  op ack:_            : Ack        -> Attribute  [ctor gather (&)] .
  op pairs:_          : List{Pair} -> Attribute [ctor gather (&)] .

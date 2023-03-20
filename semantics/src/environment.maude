@@ -38,9 +38,10 @@ fmod SINGLE-INPUT is
   sort Input StateInput CommandInput UpdateInput .
   subsort StateInput CommandInput UpdateInput < Input .
 
-  op stateLookup   : Identifier Arguments Value         -> StateInput   .
-  op commandResult : Identifier Arguments Value         -> CommandInput .
+  op commandAbort  : Identifier Arguments Value         -> CommandInput .
   op commandAck    : Identifier Arguments CommandHandle -> CommandInput .
+  op commandResult : Identifier Arguments Value         -> CommandInput .
+  op stateLookup   : Identifier Arguments Value         -> StateInput   .
   op updateAck     : Identifier           Ack           -> UpdateInput  .
 endfm
 

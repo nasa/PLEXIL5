@@ -104,4 +104,15 @@ mod INTERFACE is
   .
   eq updateCommandValues(Cmds,MEM,noExternalInputs) = MEM .
 
+  op updateCommandInputs : Configuration ExternalInputs -> Configuration .
+  eq updateCommandInputs( Cmds, (commandAck(CmdId, Args, Hndl') EInput))
+    = updateCommandHandles( Cmds, (commandAck(CmdId, Args, Hndl') EInput)) .
+  eq updateCommandInputs(
+    < CmdId . Q : command-on-execution | arguments: Args, aborted: false, AtS > Cmds,
+    (commandAbort(CmdId, Args, V) EInput)
+  )
+  =
+    < CmdId . Q : command-on-execution | arguments: Args, aborted: true, AtS > .
+  eq updateCommandInputs(Cmds, (commandAbort(CmdId, Args, V) EInput)) = updateCommandInputs(Cmds, EInput) [owise] .
+
 endm
