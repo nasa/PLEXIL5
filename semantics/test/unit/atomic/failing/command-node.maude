@@ -1,0 +1,91 @@
+mod TEST--ATOMIC--FAILING--COMMAND-NODE is
+
+  pr TEST-BASE .
+
+
+  op tests--atomic--failing--command-node : -> TestResults .
+
+  eq tests--atomic--failing--command-node = begin tests
+
+  *** TODO: uncomment the line when abortComplete is implemented
+
+***    assert "Failing command node follows path 1 (failing--command--01)" from
+***      failing(
+***        [ nodes :
+***            < A : command | status: failing,
+***                               active: true,
+***                               outcome: failure(exited) > ]
+***        [ microacts : mtactions ] [ environment : mtenvironment ]
+***      )
+***    reaches
+***      failing(
+***        [ nodes :
+***            < A : command | status: failing,
+***                               active: false,
+***                               outcome: failure(exited) > ]
+***        [ microacts : mtactions ] [ environment : mtenvironment ]
+***      )
+***    end
+
+    assert "Failing command node follows path 2 (failing--command--02)" from
+      failing(
+        [ nodes :
+            < A : command | status: failing,
+                               active: true,
+                               outcome: failure(parentExited) > ]
+        [ microacts : mtactions ] [ environment : mtenvironment ]
+      )
+    reaches
+      failing(
+        [ nodes :
+            < A : command | status: failing,
+                               active: false,
+                               outcome: failure(parentExited) > ]
+        [ microacts : setStatus(A, finished),logTransition(A,failing,finished,1) ]
+        [ environment : mtenvironment ]
+      )
+    end
+
+        assert "Failing command node follows path 3 (failing--command--03)" from
+      failing(
+        [ nodes :
+            < A : command | status: failing,
+                               active: true,
+                               outcome: failure(parentFailed) > ]
+        [ microacts : mtactions ] [ environment : mtenvironment ]
+      )
+    reaches
+      failing(
+        [ nodes :
+            < A : command | status: failing,
+                               active: false,
+                               outcome: failure(parentFailed) > ]
+        [ microacts : setStatus(A, finished),logTransition(A,failing,finished,2) ]
+        [ environment : mtenvironment ]
+      )
+    end
+
+
+        assert "Failing command node follows path 4 (failing--command--04)" from
+      failing(
+        [ nodes :
+            < A : command | status: failing,
+                               active: true,
+                               outcome: failure(exited) > ]
+        [ microacts : mtactions ] [ environment : mtenvironment ]
+      )
+    reaches
+      failing(
+        [ nodes :
+            < A : command | status: failing,
+                               active: false,
+                               outcome: failure(exited) > ]
+        [ microacts : setStatus(A, iterationEnded),logTransition(A,failing,iterationEnded,3) ]
+        [ environment : mtenvironment ]
+      )
+    end
+
+
+  end tests .
+
+endm
