@@ -149,7 +149,7 @@ begin tests
       )
     end
 
-    assert "CommandAbort 1" from
+    assert "Update interface with a CommandAbort 1" from
       testConfiguration(
         updateCommandInputs(
           < 'anId . 'aRootId : command-on-execution | arguments: nilarg, aborted: false >,
@@ -162,7 +162,7 @@ begin tests
       )
     end
 
-    assert "CommandAck 1" from
+    assert "Update interface with a CommandAck 1" from
       testConfiguration(
         updateCommandInputs(
           < 'anId . 'aRootId : command-on-execution | arguments: nilarg, handle: nothing >,
@@ -172,6 +172,42 @@ begin tests
     reaches
       testConfiguration(
         < 'anId . 'aRootId : command-on-execution | arguments: nilarg, handle: just(CommandDenied) >
+      )
+    end
+
+    assert "Get command inputs 1" from
+      testExternalInputs(
+        getCommandInputs(
+          commandAck('anId, nilarg, CommandDenied)
+        )
+      )
+    reaches
+      testExternalInputs(
+        commandAck('anId, nilarg, CommandDenied)
+      )
+    end
+
+    assert "Get command inputs 2" from
+      testExternalInputs(
+        getCommandInputs(
+          commandAbort('anId, nilarg, val(true))
+        )
+      )
+    reaches
+      testExternalInputs(
+        commandAbort('anId, nilarg, val(true))
+      )
+    end
+
+    assert "Get command inputs 3" from
+      testExternalInputs(
+        getCommandInputs(
+          commandAbort('anId, nilarg, val(true)) commandAck('anId, nilarg, CommandDenied)
+        )
+      )
+    reaches
+      testExternalInputs(
+        commandAbort('anId, nilarg, val(true)) commandAck('anId, nilarg, CommandDenied)
       )
     end
 

@@ -27,7 +27,7 @@ mod INTERFACE is
       Cfg,
       EInput)
     = [ environment : updateInternalEnvironment(Env, getLookups(EInput), mtenvironment) ]
-      [ interface : updateCommandHandles(Cmds, getCommandHandles(EInput)) ]
+      [ interface : updateCommandInputs(Cmds, getCommandInputs(EInput)) ]
       [ memory : updateCommandValues(Cmds,MEM, getCommandValues(EInput)) ]
       updateInterfaceHistory(Cfg,EInput)
   .
@@ -48,10 +48,11 @@ mod INTERFACE is
   eq getLookups(EInput stateLookup(Q,Args,V) EInput') = stateLookup(Q,Args,V) getLookups(EInput EInput') .
   eq getLookups(EInput) = noExternalInputs [owise] .
 
-  op getCommandHandles : ExternalInputs -> ExternalInputs .
-  eq getCommandHandles(commandAck(CmdId,Args,Hndl) EInput) = commandAck(CmdId,Args,Hndl) getCommandHandles(EInput) . --- [print "getCommandHandles1(" CmdId "," Args "," Hndl ")"] .
-  eq getCommandHandles(noExternalInputs) = noExternalInputs .
-  eq getCommandHandles(In EInput) = getCommandHandles(EInput) [owise] .
+  op getCommandInputs : ExternalInputs -> ExternalInputs .
+  eq getCommandInputs(commandAck(CmdId,Args,Hndl) EInput) = commandAck(CmdId,Args,Hndl) getCommandInputs(EInput) . --- [print "getCommandInputs1(" CmdId "," Args "," Hndl ")"] .
+  eq getCommandInputs(commandAbort(CmdId,Args,V) EInput) = commandAbort(CmdId,Args,V) getCommandInputs(EInput) .
+  eq getCommandInputs(noExternalInputs) = noExternalInputs .
+  eq getCommandInputs(In EInput) = getCommandInputs(EInput) [owise] .
 
   op getCommandValues : ExternalInputs -> ExternalInputs .
   eq getCommandValues(commandResult(CmdId,Args,V) EInput) = commandResult(CmdId,Args,V) getCommandValues(EInput) .
