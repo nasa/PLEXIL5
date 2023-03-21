@@ -631,9 +631,16 @@ helper el children =
             "BooleanValue" ->
                 text "const" <> parens (
                     text "val" <> parens (
-                        text $ T.unpack $ T.concat $ concatMap (map T.toLower . content) $ child cursor
+                        text $ T.unpack $ T.concat $ concatMap (map obtain . content) $ child cursor
                     )
                 )
+                where
+                  obtain v =
+                    if v == "1"
+                      then "true"
+                      else if v == "0"
+                        then "false"
+                        else T.toLower v
             "StringValue" ->
                 text "const" <> parens (
                     text "val" <> parens (
