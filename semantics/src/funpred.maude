@@ -186,11 +186,23 @@ mod FUNPRED is
   eq isCommandHandleKnown(Q, < Q : command-on-execution | handle: just(CH), AtS > IFACE) = true  .
   eq isCommandHandleKnown(Q, IFACE) = false [owise] .
 
+
+  var xf : XFlag .
   *** TODO: fix the implementation once the representation for command
   *** handles is final
-  op abortCompleted : Environment Configuration Qualified -> Bool .
-  eq abortCompleted(Gamma, PS, Q)
-   = true .
+  op abortCompleted : Configuration Configuration Qualified -> Bool .
+  eq abortCompleted(
+      < Q : command-on-execution | aborted: true, AtS > IFACE,
+      < Q : command | AtS' > PS,
+        Q )
+    = true .
+  eq abortCompleted(
+      < Q : command-on-execution | aborted: false, AtS > IFACE,
+      < Q : command | AtS' > PS,
+        Q )
+    = false .
+  eq abortCompleted(IFACE, PS, Q)
+    = false [owise] .
 
 *** Type of node
  op nodeType : Object -> Cid .

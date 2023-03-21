@@ -211,6 +211,34 @@ begin tests
       )
     end
 
+    assert "Command abort completed 1" from
+      testBool(
+        abortCompleted(
+          < 'anId : command-on-execution | aborted: true >,
+          < 'anId : command | active: true >,
+          'anId
+        )
+      )
+    reaches
+      testBool(
+        true
+      )
+    end
+
+    assert "Command abort completed 2" from
+      testBool(
+        abortCompleted(
+          < 'anId : command-on-execution | aborted: false >,
+          < 'anId : command | active: true >,
+          'anId
+        )
+      )
+    reaches
+      testBool(
+        false
+      )
+    end
+
 end tests
 .
 
