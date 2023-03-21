@@ -162,6 +162,19 @@ begin tests
       )
     end
 
+    assert "Update interface with empty external inputs" from
+      testConfiguration(
+        updateCommandInputs(
+          < 'anId . 'aRootId : command-on-execution | arguments: nilarg, aborted: false >,
+          noExternalInputs
+        )
+      )
+    reaches
+      testConfiguration(
+        < 'anId . 'aRootId : command-on-execution | arguments: nilarg, aborted: false >
+      )
+    end
+
     assert "Update interface with a CommandAck 1" from
       testConfiguration(
         updateCommandInputs(

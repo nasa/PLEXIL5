@@ -114,6 +114,7 @@ mod INTERFACE is
   )
   =
     < CmdId . Q : command-on-execution | arguments: Args, aborted: true, AtS > .
-  eq updateCommandInputs(Cmds, (commandAbort(CmdId, Args, V) EInput)) = updateCommandInputs(Cmds, EInput) [owise] .
+  eq updateCommandInputs(Cmds, (commandAbort(CmdId, Args, V) EInput)) = updateCommandInputs(Cmds, EInput) .
+  eq updateCommandInputs(Cmds, noExternalInputs) = Cmds .
 
 endm
