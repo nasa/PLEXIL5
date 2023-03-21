@@ -104,6 +104,7 @@ mod INTERFACE is
     updateCommandValues(Cmds,MEM,EInput)
   .
   eq updateCommandValues(Cmds,MEM,noExternalInputs) = MEM .
+  eq updateCommandValues(Cmds,MEM,EInput) = MEM [owise print "Could not match: " EInput " with any running command in " Cmds] .
 
   op updateCommandInputs : Configuration ExternalInputs -> Configuration .
   eq updateCommandInputs( Cmds, (commandAck(CmdId, Args, Hndl') EInput))
