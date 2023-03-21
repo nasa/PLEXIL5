@@ -356,7 +356,7 @@ mod ATOMIC is
              if isFalse(eval(GAMMA, Nds MEM, InvC))
              then [ microacts : setOutcome(A, failure(invariantFailed)),setStatus(A, failing),logTransition(A,finishing,failing,4),AS ]
              else
-               if isCommandHandleKnown(A,IFACE)
+               if isCommandHandleKnown(getCommandId(A,Nds) . A,IFACE)
                then
                  if not isTrue(eval(GAMMA, Nds MEM, PostC))
                  then [ microacts : setOutcome(A, failure(postconditionFailed)),setStatus(A, iterationEnded),logTransition(A,finishing,iterationEnded,5),AS ]
