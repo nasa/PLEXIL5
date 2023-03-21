@@ -283,7 +283,7 @@ vars AtS AtS' : AttributeSet .
  eq $childrenMemories(Q, PS, PS') = PS' [owise] .
 
  *** Auxiliary boolean expression predicates
- ops isTrue isFalse isUnknown : Expression -> Bool .
+ ops isTrue isFalse isUnknown : Expression ~> Bool .
  eq isTrue(const(val(true))) = true .
  eq isTrue(const(val(false))) = false .
  eq isTrue(const(unknown)) = false .
