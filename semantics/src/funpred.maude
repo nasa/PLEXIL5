@@ -190,18 +190,18 @@ mod FUNPRED is
   var xf : XFlag .
   *** TODO: fix the implementation once the representation for command
   *** handles is final
-  op abortCompleted : Configuration Configuration Qualified -> Bool .
-  eq abortCompleted(
+  op hasAborted : Configuration Configuration Qualified -> Bool .
+  eq hasAborted(
       < Q : command-on-execution | aborted: true, AtS > IFACE,
       < Q : command | AtS' > PS,
         Q )
     = true .
-  eq abortCompleted(
+  eq hasAborted(
       < Q : command-on-execution | aborted: false, AtS > IFACE,
       < Q : command | AtS' > PS,
         Q )
     = false .
-  eq abortCompleted(IFACE, PS, Q)
+  eq hasAborted(IFACE, PS, Q)
     = false [owise] .
 
 *** Type of node
