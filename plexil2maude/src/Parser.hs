@@ -552,7 +552,7 @@ createArrayWithValues cursor =
                         if (concatMap T.unpack $ attribute "Type" cursor) == "String"
                             then hcat $ punctuate (text " # ") $ map (wrapVal . doubleQuotes . text . T.unpack) $ (child >=> child >=> content) cursor
                             else if (concatMap T.unpack $ attribute "Type" cursor) == "Boolean"
-                                then hcat $ punctuate (text " # ") $ map (wrapVal . text . T.unpack . T.toLower) $ (child >=> child >=> content) cursor
+                                then hcat $ punctuate (text " # ") $ map (errorize . parseSimpleValue) $ (child >=> anyElement) cursor
                                 else
                                     hcat $ punctuate (text " # ") $ map (wrapVal . text . T.unpack) $ (child >=> child >=> content) cursor
                     )
@@ -628,25 +628,15 @@ helper el children =
                         text $ T.unpack $ T.concat $ concatMap content $ child cursor
                     )
                 )
-            "BooleanValue" ->
-                text "const" <> parens (
-                    text "val" <> parens (
-                        text $ T.unpack $ T.concat $ concatMap (map obtain . content) $ child cursor
-                    )
-                )
-                where
-                  obtain v =
-                    if v == "1"
-                      then "true"
-                      else if v == "0"
-                        then "false"
-                        else T.toLower v
             "StringValue" ->
                 text "const" <> parens (
                     text "val" <> parens (
                         text $ show ( T.unpack $ T.concat $ concatMap content $ child cursor )
                     )
                 )
+            "BooleanValue" ->
+                text "const" <> parens (
+                    errorize $ parseSimpleValue cursor)
             "EQBoolean"  -> text "_equ_" <> parens (hcat $ punctuate comma children)
             "NEBoolean"  -> text "_nequ_" <> parens (hcat $ punctuate comma children)
             "EQNumeric"  -> text "_equ_" <> parens (hcat $ punctuate comma children)
@@ -880,13 +870,13 @@ checkThisElement name cursor =
 
 
 parseSimpleValue :: Cursor -> ParseError Doc
-parseSimpleValue cursor = parseIntegerValue
-                      <|> parseBooleanValue
+parseSimpleValue cursor = parseBooleanValue
+                      <|> parseIntegerValue
                       <|> parseRealValue
                       <|> parseStringValue
     where
         parseIntegerValue = buildValue <$> parseTag "IntegerValue" cursor
-        parseBooleanValue = buildValue <$> parseTag "BooleanValue" cursor
+        parseBooleanValue = buildBoolValue <$> parseTag "BooleanValue" cursor
         parseRealValue = buildValue <$> parseTag "RealValue" cursor
         parseStringValue = buildValue' <$> parseTag' "StringValue" cursor
 
@@ -900,6 +890,16 @@ parseSimpleValue cursor = parseIntegerValue
         buildValue' value = text "val" <> parens (
                              doubleQuotes $ text $ T.unpack value
                            )
+        buildBoolValue value = text "val" <> parens (
+                        text $ T.unpack $ obtain value
+                    )
+                where
+                  obtain v =
+                    if v == "1"
+                      then "true"
+                      else if v == "0"
+                        then "false"
+                        else (T.toLower v)
 
 parseVariable :: Cursor -> ParseError String
 parseVariable cursor =

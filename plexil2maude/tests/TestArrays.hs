@@ -156,6 +156,21 @@ testParseArray =
             </InitialValue>
           </DeclareArray>
         |],
+        "('a3:array(val(true) # val(false)))"),
+        ("ArrayBooleanWithNumbers",
+        [r|
+          <DeclareArray ColNo="2" LineNo="5">
+            <Name>a3</Name>
+            <Type>Boolean</Type>
+            <MaxSize>500</MaxSize>
+            <InitialValue>
+               <ArrayValue Type="Boolean">
+                  <BooleanValue>1</BooleanValue>
+                  <BooleanValue>0</BooleanValue>
+               </ArrayValue>
+            </InitialValue>
+          </DeclareArray>
+        |],
         "('a3:array(val(true) # val(false)))")
         ]
 
