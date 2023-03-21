@@ -84,7 +84,12 @@ fmod VALUE is
  --- eq unknownStringArray(N:NzNat) = unknownString .
 
  vars FV FV' : FloatValue .
+ vars SV SV' : StringValue .
+ vars BV BV' : BoolValue .
  vars IV IV' : IntValue .
+ vars BArr : BoolArray .
+ vars IArr : IntArray .
+ vars SArr : StringArray .
  vars FArr : FloatArray .
  vars N N' : Nat .
  vars Nz Nz' : NzNat .
@@ -109,6 +114,16 @@ fmod VALUE is
  eq nth'(array(FV),0) = FV .
  eq nth'(array(FV # FArr),0) = FV .
  eq nth'(array(FV # FArr),s N) = nth'(array(FArr),N) .
+ eq nth'(array(BV),0) = BV .
+ eq nth'(array(BV # BArr),0) = BV .
+ eq nth'(array(BV # BArr),s N) = nth'(array(BArr),N) .
+ eq nth'(array(SV),0) = SV .
+ eq nth'(array(SV # SArr),0) = SV .
+ eq nth'(array(SV # SArr),s N) = nth'(array(SArr),N) .
+ eq nth'(array(IV),0) = IV .
+ eq nth'(array(IV # IArr),0) = IV .
+ eq nth'(array(IV # IArr),s N) = nth'(array(IArr),N) .
+
 
 endfm
 
