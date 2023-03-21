@@ -95,6 +95,21 @@ instance Pretty CommandAck where
             ,pretty caHandle]
         )
 
+instance Pretty CommandAbort where
+  pretty (CommandAbort
+    { cabName
+    , cabParams
+    , cabResult
+    , cabType
+    }) =
+      text "commandAbort"
+        <> parens (
+          hcat $ punctuate comma
+            [text "'" <> text cabName
+            ,if null cabParams then text "nilarg" else parens (hsep (map pretty cabParams))
+            , pretty cabResult]
+        )
+
 instance Pretty Parameter where
   pretty Parameter{ parValue, parType } =
     case parValue of

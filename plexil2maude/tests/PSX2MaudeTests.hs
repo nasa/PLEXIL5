@@ -71,6 +71,14 @@ testPrettyPrint = testGroup "Pretty Printer"
         `testPrettiesAs`
            "commandAck('c2,(val(float(1)) val(10)),CommandDenied)"
     ]
+  , testGroup "CommandAbort"
+    [ CommandAbort "c1" [] (Result $ TypedValue (TVBool True)) PXBool
+        `testPrettiesAs`
+           "commandAbort('c1,nilarg,val(true))"
+    , CommandAbort "c2" [] (Result $ TypedValue (TVBool False)) PXBool
+        `testPrettiesAs`
+           "commandAbort('c2,nilarg,val(false))"
+    ]
   , testGroup "Command"
     [ Command "c1" [] (Result $ TypedValue (TVInt 1)) PXInt
         `testPrettiesAs`
