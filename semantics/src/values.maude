@@ -71,20 +71,21 @@ fmod VALUE is
  *** op array : List{PrimitiveValue} NzNat -> Array .
  *** op array : List{IntValue} NzNat -> IntArray .
 
- op unknownIntArray : NzNat -> ArrayValue .
- --- eq unknownIntArray(N:NzNat) = unknownInt .
- op unknownBoolArray : NzNat -> ArrayValue .
- --- eq unknownBoolArray(N:NzNat) = unknownBool .
- op unknownRealArray : NzNat -> ArrayValue .
- eq unknownRealArray(Nz) = array(unknownRealArray'(Nz)) .
- op unknownRealArray' : NzNat -> FloatArray .
+ op unknownIntArray : Nat -> ArrayValue .
+ eq unknownIntArray(N:Nat) = array(unknownInt # unknownInt # unknownInt # unknownInt) .
+ op unknownBoolArray : Nat -> ArrayValue .
+ eq unknownBoolArray(N:Nat) = array(unknownBool # unknownBool # unknownBool # unknownBool) .
+ op unknownRealArray' : Nat -> FloatArray .
  eq unknownRealArray'(s Nz) = unknownFloat # unknownRealArray'(Nz) .
- eq unknownRealArray'(s 0) = unknownFloat .
+ op unknownRealArray : Nat -> ArrayValue .
+ eq unknownRealArray(N:Nat) = array(unknownFloat # unknownFloat # unknownFloat # unknownFloat) .
 
  --- eq unknownRealArray(N:NzNat) = unknownFloat .
- op unknownFloatArray : NzNat -> ArrayValue .
+ op unknownFloatArray : Nat -> ArrayValue .
+ eq unknownFloatArray(N:Nat) = array(unknownFloat # unknownFloat # unknownFloat # unknownFloat) .
  --- eq unknownFloatArray(N:NzNat) = unknownFloat .
- op unknownStringArray : NzNat -> ArrayValue .
+ op unknownStringArray : Nat -> ArrayValue .
+ eq unknownStringArray(N:Nat) = array(unknownString # unknownString # unknownString # unknownString) .
  --- eq unknownStringArray(N:NzNat) = unknownString .
 
  vars FV FV' : FloatValue .
