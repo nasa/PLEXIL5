@@ -1,0 +1,37 @@
+mod TEST--INTERFACE is
+
+  pr TEST-BASE .
+
+  op interface--tests : -> TestResults .
+
+  op myGenerator : -> ExternalInputGenerator .
+
+  eq interface--tests =
+    begin tests
+
+      assert "updateInterface calls update on the generator" from
+        updateGenerator(
+          [ environment : mtenvironment ]
+          [ interface : none ]
+          [ memory : none ]
+          [ generator : myGenerator ]
+          , noExternalInputs
+        )
+      reaches
+          [ environment : mtenvironment ]
+          [ interface : none ]
+          [ memory : none ]
+          [ generator : update(
+                          myGenerator,
+                          [ environment : mtenvironment ]
+                          [ interface : none ]
+                          [ memory : none ]
+                          [ generator : myGenerator ],
+                          noExternalInputs
+                        ) ]
+      end
+
+    end tests
+    .
+
+endm
