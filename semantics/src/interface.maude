@@ -19,6 +19,8 @@ mod INTERFACE is
   vars AtS AtS'        : AttributeSet .
   vars In              : Input .
 
+  var GEN : ExternalInputGenerator .
+
   op updateInterface : Config ExternalInputs -> Config .
   eq updateInterface(
       [ environment : Env ]
@@ -35,11 +37,17 @@ mod INTERFACE is
   op interface-history : -> CellId .
   op `[_:_`] : CellId EInputsList -> Cell [format (n d d ++i --i d)] .
 
+  op updateGenerator : Config ExternalInputs -> Config .
+  eq updateGenerator(
+      Cfg [ generator : GEN ],
+      EInput )
+    = Cfg [ generator : update( GEN, [ generator : GEN ] Cfg, EInput ) ] .
+
   op updateInterfaceHistory : Config ExternalInputs -> Config .
   eq updateInterfaceHistory(
       [ interface-history : EIns ]
       Cfg,
-      EInput)
+      EInput )
     = [ interface-history : EInput EIns ]
       Cfg .
   eq updateInterfaceHistory(Cfg,EInput) = [ interface-history : EInput ] Cfg [owise] .

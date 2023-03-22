@@ -6,6 +6,7 @@ in ./reductions/test.maude
 in ./expressions/test.maude
 in ./model-checking.maude
 in ./compiler/test.maude
+in ./interface.maude
 
 mod TEST-SUITE is
 
@@ -14,6 +15,7 @@ mod TEST-SUITE is
   pr TEST--EXPRESSIONS .
   pr TEST--MODEL-CHECKING .
   pr TEST--COMPILER .
+  pr TEST--INTERFACE .
 
   eq tests =
     AllTestsPassed
@@ -22,6 +24,7 @@ mod TEST-SUITE is
     + expressions--tests
     + model-checking--tests
     + compiler--tests
+    + interface--tests
     +
 begin tests
 

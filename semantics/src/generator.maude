@@ -4,5 +4,5 @@ mod GENERATOR{X :: TRIV} is
 
   op isConsumed? : Generator{X} X$Elt -> Bool .
   op generate    : Generator{X} X$Elt -> EInputsList .
-  op update      : Generator{X} X$Elt -> Generator{X} .
+  op update      : Generator{X} X$Elt ExternalInputs -> Generator{X} .
 endm

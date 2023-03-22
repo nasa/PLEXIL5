@@ -25,7 +25,7 @@ mod EMPTY-GENERATOR is
 
   op noEnvGen : -> ExternalInputGenerator .
   eq generate(noEnvGen,Conf) = nilEInputsList .
-  eq update(noEnvGen,Conf) = noEnvGen .
+  eq update(noEnvGen,Conf,EI:ExternalInputs) = noEnvGen .
   eq isConsumed?(noEnvGen,Conf) = true .
 
   vars Conf : Config .
@@ -34,7 +34,7 @@ mod EMPTY-GENERATOR is
   eq generate(emptyEnvGen(s N:Nat),Conf) = noExternalInputs .
   eq generate(emptyEnvGen(0),Conf) = nilEInputsList .
 
-  eq update(emptyEnvGen(s N:Nat),Conf) = emptyEnvGen(N:Nat) .
+  eq update(emptyEnvGen(s N:Nat),Conf,EI:ExternalInputs) = emptyEnvGen(N:Nat) .
 
   eq isConsumed?(emptyEnvGen(s N:Nat),Conf) = false .
   eq isConsumed?(emptyEnvGen(0),Conf) = true [owise] .
@@ -142,15 +142,15 @@ mod SEQUENCE-GENERATOR is
 
   op sequenceGenerator : EInputsList GeneratorStatus -> ExternalInputGenerator [ctor] .
   eq generate(sequenceGenerator(EInput # EIL, started),Conf) = EInput .
-  eq update(sequenceGenerator(EIL,uninitialized),Conf) = sequenceGenerator(EIL,started) .
-  eq update(sequenceGenerator(EInput # EIL,started),Conf) = sequenceGenerator(EIL,started) .
-  eq update(sequenceGenerator(nilEInputsList,GS:GeneratorStatus),Conf) = noEnvGen .
+  eq update(sequenceGenerator(EIL,uninitialized),Conf,EI:ExternalInputs) = sequenceGenerator(EIL,started) .
+  eq update(sequenceGenerator(EInput # EIL,started),Conf,EI:ExternalInputs) = sequenceGenerator(EIL,started) .
+  eq update(sequenceGenerator(nilEInputsList,GS:GeneratorStatus),Conf,EI:ExternalInputs) = noEnvGen .
   eq isConsumed?(sequenceGenerator(EInput # EIL,GS:GeneratorStatus),Conf) = false .
   eq isConsumed?(sequenceGenerator(EIL,GS:GeneratorStatus),Conf) = true [owise] .
 
   op sequenceGenerator : EnvironmentList -> ExternalInputGenerator [ctor] .
   eq generate(sequenceGenerator(E:Environment # EL),Conf) = noExternalInputs .
-  eq update(sequenceGenerator(E:Environment # EL),Conf) = sequenceGenerator(EL) .
+  eq update(sequenceGenerator(E:Environment # EL),Conf,EI:ExternalInputs) = sequenceGenerator(EL) .
   eq isConsumed?(sequenceGenerator(E:Environment # EL),Conf) = false .
   eq isConsumed?(sequenceGenerator(EL),Conf) = true [owise] .
 
@@ -176,9 +176,12 @@ mod COMMAND-ACK-GENERATOR is
       else computeCommandAcks(Conf)
       fi .
 
-  eq update(commandAckGenerator(EInput,PrevConf,Ites,0,uninitialized),Conf) = commandAckGenerator(EInput,Conf,Ites,0,firstIteration) .
-  eq update(commandAckGenerator(EInput,PrevConf,Ites,0,firstIteration),Conf) = commandAckGenerator(EInput,Conf,Ites,1,started) .
-  eq update(commandAckGenerator(EInput,PrevConf,Ites,It,started),Conf) = commandAckGenerator(EInput,Conf,Ites,s It,started) .
+  eq update(commandAckGenerator(EInput,PrevConf,Ites,0,uninitialized),Conf,EI:ExternalInputs)
+    = commandAckGenerator(EInput,Conf,Ites,0,firstIteration) .
+  eq update(commandAckGenerator(EInput,PrevConf,Ites,0,firstIteration),Conf,EI:ExternalInputs)
+    = commandAckGenerator(EInput,Conf,Ites,1,started) .
+  eq update(commandAckGenerator(EInput,PrevConf,Ites,It,started),Conf,EI:ExternalInputs)
+    = commandAckGenerator(EInput,Conf,Ites,s It,started) .
 
   eq isConsumed?(commandAckGenerator(EInput,PrevConf,Ites,It,GenStatus),Conf) = Ites <= It .
 
@@ -211,15 +214,17 @@ mod COMMAND-ACK-GENERATOR is
     [owise]
     .
 
-  eq update(commandAckGeneratorEx(EInput,EInput',Ites,0,uninitialized),Conf) = commandAckGeneratorEx(EInput,EInput',Ites,0,firstIteration) .
-  eq update(commandAckGeneratorEx(EInput,EInput',Ites,0,firstIteration),Conf) = commandAckGeneratorEx(EInput,EInput',Ites,1,started) .
-  ceq update(GEN,Conf) =
+  eq update(commandAckGeneratorEx(EInput,EInput',Ites,0,uninitialized),Conf,EI:ExternalInputs)
+    = commandAckGeneratorEx(EInput,EInput',Ites,0,firstIteration) .
+  eq update(commandAckGeneratorEx(EInput,EInput',Ites,0,firstIteration),Conf,EI:ExternalInputs)
+    = commandAckGeneratorEx(EInput,EInput',Ites,1,started) .
+  ceq update(GEN,Conf,EI:ExternalInputs) =
       if Ites == s It
       then commandAckGeneratorEx(EInput,noExternalInputs,s s s Ites, s It, cleaning)
       else commandAckGeneratorEx(EInput,EInput',Ites,s It,started)
       fi
     if commandAckGeneratorEx(EInput,EInput',Ites,It,started) := GEN .
-  ceq update(GEN,Conf) =
+  ceq update(GEN,Conf,EI:ExternalInputs) =
       if Ites == s It
       then noEnvGen
       else commandAckGeneratorEx(EInput,EInput',Ites,s It,cleaning)
@@ -242,9 +247,12 @@ mod COMMAND-ACK-GENERATOR is
     /\ EIL' := add(EInput'',EIL,nilEInputsList)
   .
 
-  eq update(infiniteCommandAckGeneratorEx(EInput,EILRef,uninitialized),Conf) = infiniteCommandAckGeneratorEx(EInput,EILRef,firstIteration) .
-  eq update(infiniteCommandAckGeneratorEx(EInput,EILRef,firstIteration),Conf) = infiniteCommandAckGeneratorEx(EInput,EILRef,started) .
-  eq update(infiniteCommandAckGeneratorEx(EInput,EILRef,started),Conf) = infiniteCommandAckGeneratorEx(EInput,EILRef,started) .
+  eq update(infiniteCommandAckGeneratorEx(EInput,EILRef,uninitialized),Conf,EI:ExternalInputs)
+    = infiniteCommandAckGeneratorEx(EInput,EILRef,firstIteration) .
+  eq update(infiniteCommandAckGeneratorEx(EInput,EILRef,firstIteration),Conf,EI:ExternalInputs)
+    = infiniteCommandAckGeneratorEx(EInput,EILRef,started) .
+  eq update(infiniteCommandAckGeneratorEx(EInput,EILRef,started),Conf,EI:ExternalInputs)
+    = infiniteCommandAckGeneratorEx(EInput,EILRef,started) .
 
   eq isConsumed?(infiniteCommandAckGeneratorEx(EInput,EILRef,GenStatus),Conf) = false .
 

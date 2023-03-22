@@ -46,7 +46,7 @@ mod REDUCTIONS is
   op micro-blocked : Config -> [Config] [ctor] .
 
   *** NOTE: This bootstraps the generator with one update
-  eq [start] : start | [ generator : EG ] Cfg = macro | [ generator : update(EG,Cfg) ] Cfg .
+  eq [start] : start | [ generator : EG ] Cfg = macro | [ generator : update(EG,Cfg,noExternalInputs) ] Cfg .
 
   op run : GlobalConfig -> GlobalConfig .
   eq [run] : run(stop | Cfg) = start | Cfg .
@@ -68,7 +68,7 @@ mod REDUCTIONS is
     then
       stop  | [ generator : EG ] Cfg
     else
-      macroND(generate(EG,Cfg)) | cleanTrace([ generator : update(EG,Cfg) ] Cfg)
+      macroND(generate(EG,Cfg)) | cleanTrace([ generator : EG ] Cfg)
     fi
     if EIns := generate(EG,Cfg)
   .
@@ -77,7 +77,7 @@ mod REDUCTIONS is
   rl [MACRO-nd-choose-external-input] :
     macroND(EIns # EIn # EIns') | Cfg
     =>
-    macro-log | updateInterface(Cfg,EIn)
+    macro-log | updateInterface(updateGenerator(Cfg,EIn),EIn)
   .
 
   op macro-log : -> Operation .
