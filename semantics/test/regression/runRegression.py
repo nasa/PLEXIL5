@@ -36,6 +36,7 @@ def runRegression():
     compiled_scripts = os.listdir(scripts_path)
     compiled_scripts = [script for script in compiled_scripts if script.endswith('.psx')]
 
+    check_dir_exists(parsed_tests_path)
 
     parse_plans_and_scripts(plans_root=plans_path, scripts_root=scripts_path, compiled_plans=compiled_plans, compiled_scripts=compiled_scripts, parsed_tests_root=parsed_tests_path, args=args)
 
@@ -83,6 +84,14 @@ def compile_plans_and_scripts(*, plans_root, scripts_root, plans, scripts, args)
         procs = [subprocess.Popen(i, shell=True) for i in commands_compile[i*n: min((i+1)*n, len(commands_compile))]]
         for p in procs:
             p.wait()
+
+def check_dir_exists(parsed_tests_path):
+    if not os.path.exists(parsed_tests_path):
+        os.makedirs(parsed_tests_path)
+    if not os.path.exists(parsed_tests_path + 'plans/'):
+        os.makedirs(parsed_tests_path + 'plans/')
+    if not os.path.exists(parsed_tests_path + 'scripts/'):
+        os.makedirs(parsed_tests_path + 'scripts/')
 
 def parse_plans_and_scripts(*, plans_root, scripts_root, compiled_plans, compiled_scripts, parsed_tests_root, args):
     commands_parse = []
