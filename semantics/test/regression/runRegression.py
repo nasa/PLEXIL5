@@ -9,7 +9,10 @@ def runRegression():
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--compile', action='store_true', help="compile plans and scripts")
     parser.add_argument('-t', '--test', nargs='?', const='.', help="test to be executed (and compiled if chosen)")
+    parser.add_argument('-p', '--path', nargs='?', const = '/dev/null', help="path to redirect maude standard output")
     args = parser.parse_args()
+    if args.path is None:
+        args.path = '/dev/null'
 
 
     os.chdir(os.path.dirname(__file__))
@@ -33,7 +36,8 @@ def runRegression():
     compiled_scripts = os.listdir(scripts_path)
     compiled_scripts = [script for script in compiled_scripts if script.endswith('.psx')]
 
-    parse_plans_and_scripts(plans_root=plans_path, scripts_root=scripts_path, compiled_plans=compiled_plans, compiled_scripts=compiled_scripts, parsed_tests_root=parsed_tests_path)
+
+    parse_plans_and_scripts(plans_root=plans_path, scripts_root=scripts_path, compiled_plans=compiled_plans, compiled_scripts=compiled_scripts, parsed_tests_root=parsed_tests_path, args=args)
 
     # Get the list of parsed plans and scripts
     maude_plans = os.listdir(parsed_tests_path + 'plans/')
@@ -80,14 +84,18 @@ def compile_plans_and_scripts(*, plans_root, scripts_root, plans, scripts, args)
         for p in procs:
             p.wait()
 
-def parse_plans_and_scripts(*, plans_root, scripts_root, compiled_plans, compiled_scripts, parsed_tests_root):
+def parse_plans_and_scripts(*, plans_root, scripts_root, compiled_plans, compiled_scripts, parsed_tests_root, args):
     commands_parse = []
     for plan in compiled_plans:
-        commands_parse.append('plx2maude ' + plans_root + str(plan) + ' >> ' + parsed_tests_root + 'plans/' + str(plan[:-4] + '.maude'))
+        if str(args.test) in str(plan) or args.test is None:
+            commands_parse.append('plx2maude ' + plans_root + str(plan) + ' >> ' + parsed_tests_root + 'plans/' + str(plan[:-4] + '.maude'))
 
     for script in compiled_scripts:
-        commands_parse.append('psx2maude ' + scripts_root + str(script) + ' >> ' + parsed_tests_root + 'scripts/' +  str(script[:-4] + '.maude'))
-        remove_extra_whitespace(scripts_root=scripts_root, script=script)
+        if str(args.test) in str(script) or args.test is None:
+            commands_parse.append('psx2maude ' + scripts_root + str(script) + ' >> ' + parsed_tests_root + 'scripts/' +  str(script[:-4] + '.maude'))
+            remove_extra_whitespace(scripts_root=scripts_root, script=script)
+
+    commands_parse.append('psx2maude ' + scripts_root + 'empty.psx' + ' >> ' + parsed_tests_root + 'scripts/' +  'empty.maude')
 
     # Remove the old plans and scripts
     os.system('rm ' + parsed_tests_root + 'plans/' + '*.maude')
@@ -123,7 +131,7 @@ q
 '''
             )
             #Run the maude plan with the corresponding script (they have the same name) and plexiltest
-            os.system('maude -no-ansi-color -no-wrap -no-banner -no-advise -print-to-stderr ' + 'semantics/test/regression/' + 'run.maude ' + parsed_tests_root + 'plans/' + maude_plan + ' ' + parsed_tests_root + 'plans/' + maude_plan + ' > /dev/null 2> semantics/test/regression/output.maude')
+            os.system('maude -no-ansi-color -no-wrap -no-banner -no-advise -print-to-stderr ' + 'semantics/test/regression/' + 'run.maude ' + parsed_tests_root + 'plans/' + maude_plan + ' ' + parsed_tests_root + 'plans/' + maude_plan + ' > ' + args.path + ' 2> semantics/test/regression/output.maude')
             plan_script = get_script(maude_plan[:-6], compiled_scripts)
             os.system('plexiltest -p '+ plans_root + maude_plan[:-6] + '.plx' + ' -s ' + scripts_root + plan_script + ' -d semantics/benchmark/Debug.AcceptanceTest.cfg' + ' > semantics/test/regression/output.plexil 2>&1')
             print('\n\n' + '--------------------------------' + maude_plan + '--------------------------------' + '\n')
