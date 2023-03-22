@@ -100,12 +100,10 @@ def parse_plans_and_scripts(*, plans_root, scripts_root, compiled_plans, compile
             commands_parse.append('plx2maude ' + plans_root + str(plan) + ' >> ' + parsed_tests_root + 'plans/' + str(plan[:-4] + '.maude'))
 
     for script in compiled_scripts:
-        if str(args.test) in str(script) or args.test is None:
-            commands_parse.append('psx2maude ' + scripts_root + str(script) + ' >> ' + parsed_tests_root + 'scripts/' +  str(script[:-4] + '.maude'))
-            remove_extra_whitespace(scripts_root=scripts_root, script=script)
+        commands_parse.append('psx2maude ' + scripts_root + str(script) + ' >> ' + parsed_tests_root + 'scripts/' +  str(script[:-4] + '.maude'))
+        remove_extra_whitespace(scripts_root=scripts_root, script=script)
 
     commands_parse.append('psx2maude ' + scripts_root + 'empty.psx' + ' >> ' + parsed_tests_root + 'scripts/' +  'empty.maude')
-
     # Remove the old plans and scripts
     os.system('rm ' + parsed_tests_root + 'plans/' + '*.maude')
     os.system('rm ' + parsed_tests_root + 'scripts/' + '*.maude')
