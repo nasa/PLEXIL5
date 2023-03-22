@@ -21,6 +21,7 @@ mod REDUCTIONS is
   vars Q              : Qualified .
   vars TL TL'         : TraceList .
   vars V V' V''       : Value .
+  vars KConf : [Config] .
 
 
   **************************************************
@@ -28,17 +29,21 @@ mod REDUCTIONS is
   *** under the maximal redices strategy         ***
   **************************************************
 
-  op computeTransitions : Config -> Config .
+  op computeTransitions : Config ~> Config .
   eq computeTransitions(St) = finished(iterended(finishing(failing(executing(waiting(inactive(activateRedexes(St)))))))) .
 
-  op executeTransitions : Config -> Config .
+  op executeTransitions : Config ~> Config .
   eq executeTransitions(St) = applyActions(St) .
 
-  op micro : Config -> Config .
+  op micro : Config ~> Config .
  ceq micro(Conf) = executeTransitions(computeTransitions(Conf))
   if not hasMicroactions?(Conf)   *** TODO: this check shouldn't be done on production
   /\ not hasMacroactions?(Conf) . *** IMPORTANT: this check here is MANDATORY!
-  eq micro(Conf) = Conf [owise] .
+ ceq micro(Conf) = Conf
+  if hasMacroactions?(Conf) .
+  eq micro(KConf) = micro-blocked(KConf) [owise] .
+
+  op micro-blocked : Config -> [Config] [ctor] .
 
   *** NOTE: This bootstraps the generator with one update
   eq [start] : start | [ generator : EG ] Cfg = macro | [ generator : update(EG,Cfg) ] Cfg .

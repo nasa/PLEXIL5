@@ -172,8 +172,10 @@ mod FUNPRED is
    = Q' .
 
   *** Command arguments of node
-  op getCommandArguments : Qualified Configuration -> Expression .
+  op getCommandArguments : Qualified Configuration ~> Expression .
   eq getCommandArguments(Q, < Q : command | command: Q' / Params, AtS > PS)
+   = Params .
+  eq getCommandArguments(Q, < Q : command | command: Q' / Params / Q'' , AtS > PS)
    = Params .
 
   var CH : CommandHandle .
@@ -181,11 +183,10 @@ mod FUNPRED is
 
   var IFACE : Configuration .
 
-  op isCommandHandleKnown : Qualified Configuration -> Bool .
+  op isCommandHandleKnown : Qualified Configuration ~> Bool .
   eq isCommandHandleKnown('pprint . Q, IFACE) = true .
-  eq isCommandHandleKnown(Q, < Q : command-on-execution | handle: just(CH), AtS > IFACE) = true  .
-  eq isCommandHandleKnown(Q, IFACE) = false [owise] .
-
+  eq isCommandHandleKnown(Q, < Q' . Q : command-on-execution | handle: just(CH), AtS > IFACE) = true  .
+  eq isCommandHandleKnown(Q, < Q' . Q : command-on-execution | handle: nothing, AtS > IFACE) = false  .
 
   var xf : XFlag .
   *** TODO: fix the implementation once the representation for command
@@ -205,7 +206,7 @@ mod FUNPRED is
     = false [owise] .
 
 *** Type of node
- op nodeType : Object -> Cid .
+ op nodeType : Object ~> Cid .
  eq nodeType( < Q : list | Ats > ) = list .
  eq nodeType( < Q : command | Ats > ) = command .
  eq nodeType( < Q : assignment | Ats > ) = assignment .

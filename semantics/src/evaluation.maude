@@ -135,7 +135,7 @@ mod EVAL is
  eq eval(C,PL,E equ E') = eval(C,PL,E) equ eval(C,PL,E') .
  eq eval(C,PL,E nequ E') = not eval(C,PL,E equ E') .
 
- ceq eval(C,PL,isKnown(E)) = const(val(V =/= unknown)) if const(V) := eval(C,PL,E) .
+ ceq eval(C,PL,isKnown(E)) = const(val(if V == unknown or V == unknownFloat or V == unknownInt or V == unknownBool or V == unknownString then false else true fi)) if const(V) := eval(C,PL,E) .
 
  var ArrV : ArrayValue .
 

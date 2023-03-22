@@ -35,7 +35,7 @@ mod ATOMIC is
   var NTy        : NodeType .
 
   *** Inactive
-  op inactive : Config -> Config .
+  op inactive : Config ~> Config .
  ceq inactive( [ nodes : < A : C | status: inactive, active: true, AtS > PS ]
                [ environment : GAMMA ]
                [ memory : MEM ]
@@ -72,7 +72,7 @@ mod ATOMIC is
 
   *** TODO: Manage race conditions for assignments at the `micro` level
   *** TODO: Change setMem implementation
-  op waiting : Config -> Config .
+  op waiting : Config ~> Config .
  ceq waiting( [ nodes : < A : C | status: waiting,
                                   active: true,
                                   suspended: false,
@@ -148,11 +148,11 @@ mod ATOMIC is
   eq waiting(CONF)
    = CONF [owise] .
 
-  op executing : Config -> Config .
+  op executing : Config ~> Config .
   eq executing(CONF)
    = execlibrary(execlist(execcommand(execassignment(execempty(execupdate(CONF)))))) .
 
-  op execempty : Config -> Config .
+  op execempty : Config ~> Config .
  ceq execempty( [ nodes : < A : empty | status: executing, active: true, inv: InvC, post: PostC, endc: EndC, exitc: ExitC, AtS > PS ]
                 [ environment : GAMMA ] [ memory : MEM ] [ microacts : AS ] CONF )
    = execempty( [ nodes : Nds' ] [ environment : GAMMA ] [ memory : MEM ] CONF
@@ -186,7 +186,7 @@ mod ATOMIC is
   eq execempty(CONF)
    = CONF [owise] .
 
-  op execassignment : Config -> Config .
+  op execassignment : Config ~> Config .
  ceq execassignment( [ nodes : < A : assignment | status: executing, active: true, inv: InvC, post: PostC, endc: EndC, exitc: ExitC, AtS > PS ]
                      [ environment : GAMMA ] [ memory : MEM ] [ microacts : AS ] [ macroacts : AS' ] CONF)
    = execassignment( [ nodes : Nds' ] [ environment : GAMMA ] [ memory : MEM ] CONF
@@ -226,7 +226,7 @@ mod ATOMIC is
   eq execassignment(CONF)
    = CONF [owise] .
 
-  op execupdate : Config -> Config .
+  op execupdate : Config ~> Config .
  ceq execupdate ( [ nodes : < A : update | status: executing, active: true, inv: InvC, post: PostC, endc: EndC, exitc: ExitC, AtS > PS ]
                      [ environment : GAMMA ] [ memory : MEM ] [ microacts : AS ] [ macroacts : AS' ] CONF)
    = execupdate ( [ nodes : Nds' ] [ environment : GAMMA ] [ memory : MEM ]
@@ -266,7 +266,7 @@ mod ATOMIC is
   eq execupdate(CONF)
    = CONF [owise] .
 
-  op execcommand : Config -> Config .
+  op execcommand : Config ~> Config .
  ceq execcommand( [ nodes : < A : command | status: executing, active: true, inv: InvC, endc: EndC, exitc: ExitC, AtS > PS ]
                   [ environment : GAMMA ] [ memory : MEM ] [ microacts : AS ] [ interface : IFACE ] CONF)
    = execcommand( [ nodes : Nds' ] [ environment : GAMMA ] [ memory : MEM ] [ interface : IFACE ] CONF
@@ -296,13 +296,13 @@ mod ATOMIC is
   eq execcommand(CONF)
    = CONF [owise] .
 
-  op execlist : Config -> Config .
+  op execlist : Config ~> Config .
   eq execlist(Conf) = execListAndLibrary(list,Conf) .
 
-  op execlibrary : Config -> Config .
+  op execlibrary : Config ~> Config .
   eq execlibrary(Conf) = execListAndLibrary(library,Conf) .
 
-  op execListAndLibrary : NodeType Config -> Config .
+  op execListAndLibrary : NodeType Config ~> Config .
 
  ceq execListAndLibrary(C, [ nodes : < A : C | status: executing, active: true, inv: InvC, endc: EndC, exitc: ExitC, AtS > PS ]
                [ environment : GAMMA ] [ microacts : AS ] [ memory : MEM ] CONF)
@@ -334,13 +334,13 @@ mod ATOMIC is
    = CONF [owise] .
 
   *** Finishing
-  op finishing : Config -> Config .
+  op finishing : Config ~> Config .
   eq finishing(CONF)
    = finishinglist(finishingcommand(CONF)) .
 
   var IFACE : Configuration .
 
-  op finishingcommand : Config -> Config .
+  op finishingcommand : Config ~> Config .
  ceq finishingcommand( [ nodes : < A : command | status: finishing, active: true, inv: InvC, post: PostC, exitc: ExitC, AtS > PS ]
                        [ environment : GAMMA ] [ interface : IFACE ] [ memory : MEM ] [ microacts : AS ] CONF)
    = finishingcommand( [ nodes : Nds' ] [ environment : GAMMA ] [ interface : IFACE ] [ memory : MEM ]   CONF
@@ -356,7 +356,7 @@ mod ATOMIC is
              if isFalse(eval(GAMMA, Nds MEM, InvC))
              then [ microacts : setOutcome(A, failure(invariantFailed)),setStatus(A, failing),logTransition(A,finishing,failing,4),AS ]
              else
-               if isCommandHandleKnown(getCommandId(A,Nds) . A,IFACE)
+               if isCommandHandleKnown(A,IFACE)
                then
                  if not isTrue(eval(GAMMA, Nds MEM, PostC))
                  then [ microacts : setOutcome(A, failure(postconditionFailed)),setStatus(A, iterationEnded),logTransition(A,finishing,iterationEnded,5),AS ]
@@ -374,7 +374,7 @@ mod ATOMIC is
   eq finishingcommand(CONF)
    = CONF [owise] .
 
-  op finishinglist : Config -> Config .
+  op finishinglist : Config ~> Config .
  ceq finishinglist( [ nodes : < A : list | status: finishing, active: true, inv: InvC, post: PostC, exitc: ExitC, AtS > PS ]
                     [ memory : MEM ]
                     [ environment : GAMMA ] [ microacts : AS ] CONF)
@@ -409,7 +409,7 @@ mod ATOMIC is
   eq finishinglist(CONF)
    = CONF [owise] .
 
-  op failing : Config -> Config .
+  op failing : Config ~> Config .
   eq failing(CONF)
    = failingupdate(failinglist(failingcommand(failingassignment(CONF)))) .
 
@@ -417,7 +417,7 @@ mod ATOMIC is
   eq getFailureType(failure(FTyp)) = FTyp .
   eq getFailureType(interrupted(FTyp)) = FTyp .
 
-  op failingassignment : Config -> Config .
+  op failingassignment : Config ~> Config .
  ceq failingassignment( [ nodes : < A : assignment | status: failing, active: true, outcome: Out, AtS > PS ]
                         [ microacts : AS ] CONF)
    = failingassignment( [ nodes : Nds' ] CONF
@@ -438,7 +438,7 @@ mod ATOMIC is
   [owise]
   .
 
-  op failingcommand : Config -> Config .
+  op failingcommand : Config ~> Config .
  ceq failingcommand( [ nodes : < A : command | status: failing, active: true, outcome: Out, AtS > PS ]
                      [ microacts : AS ] [ interface : IFACE ] CONF)
    = failingcommand( [ nodes : Nds' ] [ interface : IFACE ] CONF
@@ -461,7 +461,7 @@ mod ATOMIC is
   eq failingcommand(CONF)
    = CONF [owise] .
 
-  op failingupdate : Config -> Config .
+  op failingupdate : Config ~> Config .
  ceq failingupdate( [ nodes : < A : update | status: failing, active: true, outcome: Out, ack: a, AtS > PS ]
                     [ environment : GAMMA ] [ microacts : AS ] [ memory : MEM ] CONF )
    = failingupdate( [ nodes : Nds' ] [ environment : GAMMA ] [ memory : MEM ] CONF
@@ -484,7 +484,7 @@ mod ATOMIC is
   eq failingupdate(CONF)
    = CONF [owise] .
 
-  op failinglist : Config -> Config .
+  op failinglist : Config ~> Config .
  ceq failinglist( [ nodes : < A : list | status: failing, active: true, outcome: Out, AtS > PS ]
                   [ microacts : AS ] CONF)
    = failinglist( [ nodes : Nds' ] CONF
@@ -508,7 +508,7 @@ mod ATOMIC is
    = CONF [owise] .
 
   *** Iteration ended
-  op iterended : Config -> Config .
+  op iterended : Config ~> Config .
  ceq iterended( [ nodes : < A : C | status: iterationEnded, active: true, repeatc: RepC, AtS > PS ]
                 [ environment : GAMMA ] [ memory : MEM ] [ microacts : AS ] CONF )
    = iterended( [ nodes : Nds' ] [ environment : GAMMA ] [ memory : MEM ] CONF
@@ -538,7 +538,7 @@ mod ATOMIC is
   eq iterended(CONF)
    = CONF [owise] .
 
-  op finished : Config -> Config .
+  op finished : Config ~> Config .
  ceq finished( [ nodes : < A : C | status: finished, active: true, AtS > PS ]
                [ microacts : AS ] CONF )
    = finished( [ nodes : Nds' ] CONF

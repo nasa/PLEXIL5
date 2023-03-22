@@ -29,7 +29,7 @@ var TS           : TransitionSet .
 vars V V' V''    : Value .
 
 
-op applyActions : Config -> Config .
+op applyActions : Config ~> Config .
 eq applyActions ([ trace :         TL ] Conf)
  = applyActions'([ trace : mttrans TL ] Conf) .
 

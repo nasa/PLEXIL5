@@ -35,18 +35,22 @@ fmod VALUE is
 
  sort IntArray .
  subsort IntValue < IntArray .
+ op mtIntArray : -> IntArray [ctor] .
  op _#_ : IntArray IntArray -> IntArray [assoc] .
 
  sort BoolArray .
  subsort BoolValue < BoolArray .
+ op mtBoolArray : -> BoolArray [ctor] .
  op _#_ : BoolArray BoolArray -> BoolArray [assoc] .
 
  sort FloatArray .
  subsort FloatValue < FloatArray .
+ op mtFloatArray : -> FloatArray [ctor] .
  op _#_ : FloatArray FloatArray -> FloatArray [assoc] .
 
  sort StringArray .
  subsort StringValue < StringArray .
+ op mtStringArray : -> StringArray [ctor] .
  op _#_ : StringArray StringArray -> StringArray [assoc] .
 
  op array : IntArray    -> ArrayValue .
@@ -111,19 +115,26 @@ fmod VALUE is
  op nth : ArrayValue Int -> PrimitiveValue .
  eq nth(Arr,I) = nth'(Arr,abs(I)) .
  op nth' : ArrayValue Nat -> PrimitiveValue .
+ eq nth'(array(mtFloatArray),N) = unknownFloat .
  eq nth'(array(FV),0) = FV .
+ eq nth'(array(FV),s N) = unknownFloat .
  eq nth'(array(FV # FArr),0) = FV .
  eq nth'(array(FV # FArr),s N) = nth'(array(FArr),N) .
+ eq nth'(array(mtBoolArray),N) = unknownBool .
  eq nth'(array(BV),0) = BV .
+ eq nth'(array(BV),s N) = unknownBool .
  eq nth'(array(BV # BArr),0) = BV .
  eq nth'(array(BV # BArr),s N) = nth'(array(BArr),N) .
+ eq nth'(array(mtStringArray),N) = unknownString .
  eq nth'(array(SV),0) = SV .
+ eq nth'(array(SV),s N) = unknownString .
  eq nth'(array(SV # SArr),0) = SV .
  eq nth'(array(SV # SArr),s N) = nth'(array(SArr),N) .
+ eq nth'(array(mtIntArray),N) = unknownInt .
  eq nth'(array(IV),0) = IV .
+ eq nth'(array(IV),s N) = unknownInt .
  eq nth'(array(IV # IArr),0) = IV .
  eq nth'(array(IV # IArr),s N) = nth'(array(IArr),N) .
-
 
 endfm
 

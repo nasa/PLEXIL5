@@ -40,7 +40,7 @@ mod INTERFACE is
       [ interface-history : EIns ]
       Cfg,
       EInput)
-    = [ interface-history : EInput ]
+    = [ interface-history : EInput EIns ]
       Cfg .
   eq updateInterfaceHistory(Cfg,EInput) = [ interface-history : EInput ] Cfg [owise] .
 
