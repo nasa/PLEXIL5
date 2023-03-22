@@ -148,7 +148,8 @@ mod TEST--ATOMIC--FINISHING--COMMAND-NODE is
         [ nodes :
             < A         : command  | inv: const(unknown),
                                   exitc: const(unknown) >
-            < B . A     : command  | status: finishing,
+            < B . A     : command  | command: 'boolArrayCommand / nilpar / 'myBooleanArraynilpar,
+                                  status: finishing,
                                   active: true,
                                   inv: const(unknown),
                                   post: const(val(false)),
@@ -156,7 +157,7 @@ mod TEST--ATOMIC--FINISHING--COMMAND-NODE is
             < C . B . A : empty | status: waiting > ]
         [ microacts : mtactions ]
         [ memory : none ]
-        [ interface : < (B . A) : command-on-execution | arguments: nilarg, handle: just(CommandSuccess) > ]
+        [ interface : < 'boolArrayCommand . B . A : command-on-execution |  handle: just(CommandSuccess) > ]
       )
     reaches
       finishing(
@@ -164,7 +165,8 @@ mod TEST--ATOMIC--FINISHING--COMMAND-NODE is
         [ nodes :
             < A         : command  | inv: const(unknown),
                                   exitc: const(unknown) >
-            < B . A     : command  | status: finishing,
+            < B . A     : command  | command: 'boolArrayCommand / nilpar / 'myBooleanArraynilpar,
+                                  status: finishing,
                                   active: false,
                                   inv: const(unknown),
                                   post: const(val(false)),
@@ -174,7 +176,7 @@ mod TEST--ATOMIC--FINISHING--COMMAND-NODE is
                       setStatus(B . A, iterationEnded),
                       logTransition(B . A,finishing,iterationEnded,5) ]
         [ memory : none ]
-        [ interface : < (B . A) : command-on-execution | arguments: nilarg, handle: just(CommandSuccess) > ]
+        [ interface : < 'boolArrayCommand . B . A : command-on-execution | handle: just(CommandSuccess) > ]
       )
     end
 
@@ -184,7 +186,8 @@ mod TEST--ATOMIC--FINISHING--COMMAND-NODE is
         [ nodes :
             < A         : command  | inv: const(unknown),
                                   exitc: const(unknown) >
-            < B . A     : command  | status: finishing,
+            < B . A     : command  | command: 'boolArrayCommand / nilpar / 'myBooleanArraynilpar,
+                                  status: finishing,
                                   active: true,
                                   inv: const(unknown),
                                   post: const(val(true)),
@@ -192,7 +195,7 @@ mod TEST--ATOMIC--FINISHING--COMMAND-NODE is
             < C . B . A : empty | status: finished > ]
         [ microacts : mtactions ]
         [ memory : none ]
-        [ interface : < (B . A) : command-on-execution | arguments: nilarg, handle: just(CommandSuccess) > ]
+        [ interface : < 'boolArrayCommand . B . A : command-on-execution | handle: just(CommandSuccess) > ]
       )
     reaches
       finishing(
@@ -200,7 +203,8 @@ mod TEST--ATOMIC--FINISHING--COMMAND-NODE is
         [ nodes :
             < A         : command  | inv: const(unknown),
                                   exitc: const(unknown) >
-            < B . A     : command  | status: finishing,
+            < B . A     : command  | command: 'boolArrayCommand / nilpar / 'myBooleanArraynilpar,
+                                  status: finishing,
                                   active: false,
                                   inv: const(unknown),
                                   post: const(val(true)),
@@ -210,7 +214,7 @@ mod TEST--ATOMIC--FINISHING--COMMAND-NODE is
                       setStatus(B . A,iterationEnded),
                       logTransition(B . A, finishing, iterationEnded, 6) ]
         [ memory : none ]
-        [ interface : < (B . A) : command-on-execution | arguments: nilarg, handle: just(CommandSuccess) >  ]
+        [ interface : < 'boolArrayCommand . B . A : command-on-execution | handle: just(CommandSuccess) >  ]
       )
     end
 
@@ -220,7 +224,8 @@ mod TEST--ATOMIC--FINISHING--COMMAND-NODE is
         [ nodes :
             < A         : command  | inv: const(unknown),
                                   exitc: const(unknown) >
-            < B . A     : command  | status: finishing,
+            < B . A     : command  | command: 'boolArrayCommand / nilpar / 'myBooleanArraynilpar,
+                                  status: finishing,
                                   active: true,
                                   inv: const(unknown),
                                   post: const(unknown),
@@ -228,7 +233,7 @@ mod TEST--ATOMIC--FINISHING--COMMAND-NODE is
             < C . B . A : empty | status: executing > ]
         [ microacts : mtactions ]
         [ memory : none ]
-        [ interface : none ]
+        [ interface : < 'boolArrayCommand . B . A : command-on-execution | handle: nothing >  ]
       )
     reaches
       finishing(
@@ -236,7 +241,8 @@ mod TEST--ATOMIC--FINISHING--COMMAND-NODE is
         [ nodes :
             < A         : command  | inv: const(unknown),
                                   exitc: const(unknown) >
-            < B . A     : command  | status: finishing,
+            < B . A     : command  | command: 'boolArrayCommand / nilpar / 'myBooleanArraynilpar,
+                                  status: finishing,
                                   active: false,
                                   inv: const(unknown),
                                   post: const(unknown),
@@ -244,7 +250,7 @@ mod TEST--ATOMIC--FINISHING--COMMAND-NODE is
             < C . B . A : empty | status: executing > ]
         [ microacts : mtactions ]
         [ memory : none ]
-        [ interface : none ]
+        [ interface : < 'boolArrayCommand . B . A : command-on-execution | handle: nothing >  ]
       )
     end
 
