@@ -57,13 +57,17 @@ instance Pretty State where
     , stValue
     , stType
     }) =
-      text "stateLookup"
-        <> parens (
-          hcat $ punctuate comma
-            [text "'" <> text stName
-            ,text "nilarg"
-            ,text "val" <> (parens $ text $ unValue $ head stValue)]
-        )
+        text "stateLookup"
+          <> parens (
+            hcat $ punctuate comma
+              [text "'" <> text stName
+              ,text "nilarg"
+              , case stType of PXBoolArray   -> text "array" <> parens (hcat $ punctuate (text " # ") $ [map unValue $ head stValue])
+                               PXIntArray    -> text "array" <> parens (hcat $ punctuate (text " # ") $ [map unValue $ head stValue])
+                               PXRealArray   -> text "array" <> parens (hcat $ punctuate (text " # ") $ [map unValue $ head stValue])
+                               PXStringArray -> text "array" <> parens (hcat $ punctuate (text " # ") $ [map unValue $ head stValue])
+                               _            -> text "val" <> (parens $ text $ unValue $ head stValue)]
+          )
 
 instance Pretty Command where
   pretty (Command

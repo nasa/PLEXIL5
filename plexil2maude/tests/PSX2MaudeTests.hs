@@ -37,6 +37,7 @@ testPSX2Maude =
     , testScript
     , testPrettyPrint
     , testOptionalElements
+    , testState
     ]
 
 testOptionalElements :: TestTree
@@ -322,16 +323,6 @@ testValue = testGroup "Value"
       [r|<Value>UNKNOWN</Value>|]
         `testItParsesAs`
           Value { unValue = "UNKNOWN" }
-    -- , [r|<State name="st" type="int"><Value>1</Value><Value>2</Value><Value>3</Value></State>|]
-    --     `testItParsesAs`
-    --       State { stName = "st"
-    --             , stParams = []
-    --             , stValue = [ Value { unValue = "1" }
-    --                         , Value { unValue = "2" }
-    --                         , Value { unValue = "3" }
-    --                         ]
-    --             , stType = PXInt
-    --             }
     ]
   ]
   where
@@ -340,6 +331,23 @@ testValue = testGroup "Value"
 
   testItPicklesAs :: Value -> String -> TestTree
   testItPicklesAs cmd str = testCase (show cmd) $ cmd `isPickledAs` str
+
+testState :: TestTree
+testState = testGroup "State"
+  [ testGroup "fromXML"
+    [
+          State "st" [] [ Value { unValue = "1" }, Value { unValue = "2" }, Value { unValue = "3" }] PXIntArray
+            `testPrettiesAs`
+              "stateLookup('st,nilarg,array(val(1) # val(2) # val(3)))"
+    ]
+  ]
+  where
+    testPrettiesAs :: forall a. (Pretty a,Show a) => a -> String -> TestTree
+    testPrettiesAs p str =
+      testCase (show p) $
+        assertEqual "is not pretty printed as"
+          (text str)
+          (pretty p)
 
 testSimultaneous :: TestTree
 testSimultaneous = testGroup "Simultaneous"
