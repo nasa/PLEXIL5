@@ -115,7 +115,7 @@ testsLegacy =
                        <Type>Real</Type>
                        <MaxSize>3</MaxSize>
                      </DeclareArray>|],
-                  [r| ('acPosition : unknownRealArray(3)) |])
+                  [r| 'acPosition:createArray(3,unknownArray(3)) |])
                 ,("An icarous array declaration with explicit initialization",
                   [r|
                      <DeclareArray LineNo="4" ColNo="2">
@@ -128,7 +128,7 @@ testsLegacy =
                          <RealValue>13.0</RealValue>
                        </InitialValue>
                      </DeclareArray>|],
-                  [r| ('bar : array(val(0.0) # val(7.0) # val(13.0))) |])
+                  [r| 'bar:createArray(3,val(0.0)#val(7.0)#val(13.0)) |])
                   ,("An empty variable declaration",
                   [r|
                      <DeclareVariable ColNo="4" LineNo="3">

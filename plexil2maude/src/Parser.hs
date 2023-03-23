@@ -476,7 +476,7 @@ parseDeclareArray cursor =
        arrType <- fstMatch parseType children
        arrSize <- fstMatch parseMaxSize children
        arrInit <- fstMatch parseArrayInit children <|> getDefaultArrayInit arrType arrSize
-       return $ parens $ (text arrName) <+> colon <+> arrInit
+       return $ (text arrName) <+> colon <+> text "createArray" <> parens ((text (show arrSize)) <+> comma <+> arrInit)
     where
         children = child cursor
 
@@ -499,17 +499,17 @@ parseDeclareArray cursor =
             else
                 do checkThisElement "InitialValue" cursor
                    doc <- mapM parseSimpleValue children
-                   return $ "array" <> parens (hsep $ intersperse (text "#") doc)
+                   return $ hsep $ intersperse (text "#") doc
                 where
                     children = (child >=> isValue) cursor
 
         getDefaultArrayInit :: String -> Int -> ParseError Doc
         getDefaultArrayInit arrType len =
             do arrInitBuilder <- case arrType of
-                "String"  -> Right "unknownStringArray" -- $ buildValue $ doubleQuotes PP.empty
-                "Integer" -> Right "unknownIntArray"    -- $ buildValue $ text "0"
-                "Real"    -> Right "unknownRealArray"   -- $ buildValue $ text "0.0"
-                "Boolean" -> Right "unknownBoolArray"   -- $ buildValue $ text "false"
+                "String"  -> Right "unknownArray" -- $ buildValue $ doubleQuotes PP.empty
+                "Integer" -> Right "unknownArray"    -- $ buildValue $ text "0"
+                "Real"    -> Right "unknownArray"   -- $ buildValue $ text "0.0"
+                "Boolean" -> Right "unknownArray"   -- $ buildValue $ text "false"
                 _ -> Left $ "Don't know how to initialize type " ++ show arrType
                return $ text arrInitBuilder <> parens (text $ show len)
 
@@ -548,7 +548,7 @@ prettyElement rec cursor
 
 createArrayWithValues :: Cursor -> Doc
 createArrayWithValues cursor =
-                    text "array" <> parens (
+                    text "" <> (
                         if (concatMap T.unpack $ attribute "Type" cursor) == "String"
                             then hcat $ punctuate (text " # ") $ map (wrapVal . doubleQuotes . text . T.unpack) $ (child >=> child >=> content) cursor
                             else if (concatMap T.unpack $ attribute "Type" cursor) == "Boolean"
@@ -620,7 +620,9 @@ helper el children =
                 )
             "ArrayValue" ->
                 text "const" <> parens (
-                    createArrayWithValues cursor
+                    text "array" <> parens (
+                        createArrayWithValues cursor
+                    )
                 )
             "IntegerValue" ->
                 text "const" <> parens (
