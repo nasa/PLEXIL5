@@ -1,141 +1,230 @@
 fmod PRIMITIVE-VALUE is
- protecting INT .
- protecting FLOAT .
- protecting STRING .
- sort PrimitiveValue .
- sorts   IntValue BoolValue FloatValue StringValue .
- subsort IntValue BoolValue FloatValue StringValue < PrimitiveValue .
+  protecting INT .
+  protecting FLOAT .
+  protecting STRING .
+  sort PrimitiveValue .
+  sorts   IntValue BoolValue FloatValue StringValue .
+  subsort IntValue BoolValue FloatValue StringValue < PrimitiveValue .
 
- sort Value .
- subsort PrimitiveValue < Value .
+  sort Value .
+  subsort PrimitiveValue < Value .
 
- op val : Int    -> IntValue .
- op val : Bool   -> BoolValue .
- op val : Float  -> FloatValue .
- op val : String -> StringValue .
+  op val : Int    -> IntValue .
+  op val : Bool   -> BoolValue .
+  op val : Float  -> FloatValue .
+  op val : String -> StringValue .
 
- ops unknownInt abortedInt defaultInt : -> IntValue .
- ops unknownBool abortedBool defaultBool : -> BoolValue .
- ops unknownFloat abortedFloat defaultFloat : -> FloatValue .
- ops unknownString abortedString defaultString : -> StringValue .
- ops unknown aborted default : -> PrimitiveValue .
- op unknownUnknown : -> Value .
+  ops unknownInt abortedInt defaultInt : -> IntValue .
+  ops unknownBool abortedBool defaultBool : -> BoolValue .
+  ops unknownFloat abortedFloat defaultFloat : -> FloatValue .
+  ops unknownString abortedString defaultString : -> StringValue .
+  ops unknown aborted default : -> PrimitiveValue .
+  op unknownUnknown : -> Value .
 endfm
 
 view PrimitiveValue from TRIV to PRIMITIVE-VALUE is
- sort Elt to PrimitiveValue .
+  sort Elt to PrimitiveValue .
 endv
 
 fmod VALUE is
- protecting PRIMITIVE-VALUE .
- protecting CONVERSION .
+  protecting PRIMITIVE-VALUE .
+  protecting CONVERSION .
 
- sort ArrayValue .
- subsort ArrayValue < Value .
 
- sort IntArray .
- subsort IntValue < IntArray .
- op mtIntArray : -> IntArray [ctor] .
- op _#_ : IntArray IntArray -> IntArray [assoc] .
+  sort ArrayValue .
+  subsort ArrayValue < Value .
 
- sort BoolArray .
- subsort BoolValue < BoolArray .
- op mtBoolArray : -> BoolArray [ctor] .
- op _#_ : BoolArray BoolArray -> BoolArray [assoc] .
+  sort IntArray .
+  subsort IntValue < IntArray .
+  op mtIntArray : -> IntArray [ctor] .
+  op _#_ : IntArray IntArray -> IntArray [assoc] .
 
- sort FloatArray .
- subsort FloatValue < FloatArray .
- op mtFloatArray : -> FloatArray [ctor] .
- op _#_ : FloatArray FloatArray -> FloatArray [assoc] .
+  sort BoolArray .
+  subsort BoolValue < BoolArray .
+  op mtBoolArray : -> BoolArray [ctor] .
+  op _#_ : BoolArray BoolArray -> BoolArray [assoc] .
 
- sort StringArray .
- subsort StringValue < StringArray .
- op mtStringArray : -> StringArray [ctor] .
- op _#_ : StringArray StringArray -> StringArray [assoc] .
+  sort FloatArray .
+  subsort FloatValue < FloatArray .
+  op mtFloatArray : -> FloatArray [ctor] .
+  op _#_ : FloatArray FloatArray -> FloatArray [assoc] .
 
- op array : IntArray    -> ArrayValue .
- op array : BoolArray   -> ArrayValue .
- op array : FloatArray  -> ArrayValue .
- op array : StringArray -> ArrayValue .
- *** sorts   BoolArrayValue IntArrayValue FloatArrayValue StringArrayValue .
- *** subsort BoolArrayValue IntArrayValue FloatArrayValue StringArrayValue < ArrayValue .
+  sort StringArray .
+  subsort StringValue < StringArray .
+  op mtStringArray : -> StringArray [ctor] .
+  op _#_ : StringArray StringArray -> StringArray [assoc] .
 
- *** op val : Array       -> ArrayValue       .
- *** op val : IntArray    -> IntArrayValue    .
- *** op val : BoolArray   -> BoolArrayValue   .
- *** op val : FloatArray  -> FloatArrayValue  .
- *** op val : StringArray -> StringArrayValue .
+  op array : IntArray    -> ArrayValue .
+  op array : BoolArray   -> ArrayValue .
+  op array : FloatArray  -> ArrayValue .
+  op array : StringArray -> ArrayValue .
 
- *** sorts Array IntArray BoolArray FloatArray StringArray .
- *** subsort IntArray BoolArray FloatArray StringArray < Array .
- *** op array : List{PrimitiveValue} NzNat -> Array .
- *** op array : List{IntValue} NzNat -> IntArray .
+  op length : ArrayValue -> Nat .
+  eq length(array(Arr)) = length(Arr) .
 
- op unknownIntArray : Nat -> ArrayValue .
- eq unknownIntArray(N:Nat) = array(unknownInt # unknownInt # unknownInt # unknownInt) .
- op unknownBoolArray : Nat -> ArrayValue .
- eq unknownBoolArray(N:Nat) = array(unknownBool # unknownBool # unknownBool # unknownBool) .
- op unknownRealArray' : Nat -> FloatArray .
- eq unknownRealArray'(s Nz) = unknownFloat # unknownRealArray'(Nz) .
- op unknownRealArray : Nat -> ArrayValue .
- eq unknownRealArray(N:Nat) = array(unknownFloat # unknownFloat # unknownFloat # unknownFloat) .
+  op length : IntArray -> Nat .
+  eq length(mtIntArray) = 0 .
+  eq length(IV) = 1 .
+  eq length(IV # IArr) = s(length(IArr)) .
 
- --- eq unknownRealArray(N:NzNat) = unknownFloat .
- op unknownFloatArray : Nat -> ArrayValue .
- eq unknownFloatArray(N:Nat) = array(unknownFloat # unknownFloat # unknownFloat # unknownFloat) .
- --- eq unknownFloatArray(N:NzNat) = unknownFloat .
- op unknownStringArray : Nat -> ArrayValue .
- eq unknownStringArray(N:Nat) = array(unknownString # unknownString # unknownString # unknownString) .
- --- eq unknownStringArray(N:NzNat) = unknownString .
+  op length : BoolArray -> Nat .
+  eq length(mtBoolArray) = 0 .
+  eq length(BV) = 1 .
+  eq length(BV # BArr) = s(length(BArr)) .
 
- vars FV FV' : FloatValue .
- vars SV SV' : StringValue .
- vars BV BV' : BoolValue .
- vars IV IV' : IntValue .
- vars BArr : BoolArray .
- vars IArr : IntArray .
- vars SArr : StringArray .
- vars FArr : FloatArray .
- vars N N' : Nat .
- vars Nz Nz' : NzNat .
- vars I I' : Int .
- vars Arr : ArrayValue .
+  op length : FloatArray -> Nat .
+  eq length(mtFloatArray) = 0 .
+  eq length(FV) = 1 .
+  eq length(FV # FArr) = s(length(FArr)) .
 
- op updateArray : ArrayValue Nat PrimitiveValue -> ArrayValue .
- eq updateArray(array(FArr),N,FV) = array(updateFloatArray(FArr,N,FV)) .
- eq updateArray(array(FArr),N,val(I)) = array(updateFloatArray(FArr,N,val(float(I)))) . --- [print "\n\n\nupdateArray(array(" FArr ")," N ",val(" I "))\n\n\n" ] .
- *** eq updateArray(array(FArr),N,FV) = array(updateStringArray(FArr,N,FV)) .
- *** eq updateArray(array(FArr),N,FV) = array(updateBoolArray(FArr,N,FV)) .
- *** eq updateArray(array(FArr),N,FV) = array(updateIntArray(FArr,N,FV)) .
+  op length : StringArray -> Nat .
+  eq length(mtStringArray) = 0 .
+  eq length(SV) = 1 .
+  eq length(SV # SArr) = s(length(SArr)) .
+  *** sorts   BoolArrayValue IntArrayValue FloatArrayValue StringArrayValue .
+  *** subsort BoolArrayValue IntArrayValue FloatArrayValue StringArrayValue < ArrayValue .
 
- op updateFloatArray : FloatArray Nat FloatValue -> FloatArray .
- eq updateFloatArray(FV,0, FV') = FV' .
- eq updateFloatArray(FV # FArr, s N, FV') = FV # updateFloatArray(FArr, N, FV') .
- eq updateFloatArray(FV # FArr,   0, FV') = FV' # FArr .
+  *** op val : Array       -> ArrayValue       .
+  *** op val : IntArray    -> IntArrayValue    .
+  *** op val : BoolArray   -> BoolArrayValue   .
+  *** op val : FloatArray  -> FloatArrayValue  .
+  *** op val : StringArray -> StringArrayValue .
 
- op nth : ArrayValue Int -> PrimitiveValue .
- eq nth(Arr,I) = nth'(Arr,abs(I)) .
- op nth' : ArrayValue Nat -> PrimitiveValue .
- eq nth'(array(mtFloatArray),N) = unknownFloat .
- eq nth'(array(FV),0) = FV .
- eq nth'(array(FV),s N) = unknownFloat .
- eq nth'(array(FV # FArr),0) = FV .
- eq nth'(array(FV # FArr),s N) = nth'(array(FArr),N) .
- eq nth'(array(mtBoolArray),N) = unknownBool .
- eq nth'(array(BV),0) = BV .
- eq nth'(array(BV),s N) = unknownBool .
- eq nth'(array(BV # BArr),0) = BV .
- eq nth'(array(BV # BArr),s N) = nth'(array(BArr),N) .
- eq nth'(array(mtStringArray),N) = unknownString .
- eq nth'(array(SV),0) = SV .
- eq nth'(array(SV),s N) = unknownString .
- eq nth'(array(SV # SArr),0) = SV .
- eq nth'(array(SV # SArr),s N) = nth'(array(SArr),N) .
- eq nth'(array(mtIntArray),N) = unknownInt .
- eq nth'(array(IV),0) = IV .
- eq nth'(array(IV),s N) = unknownInt .
- eq nth'(array(IV # IArr),0) = IV .
- eq nth'(array(IV # IArr),s N) = nth'(array(IArr),N) .
+  *** sorts Array IntArray BoolArray FloatArray StringArray .
+  *** subsort IntArray BoolArray FloatArray StringArray < Array .
+  *** op array : List{PrimitiveValue} NzNat -> Array .
+  *** op array : List{IntValue} NzNat -> IntArray .
+
+  op unknownIntArray : Nat -> ArrayValue .
+  eq unknownIntArray(N) = array(unknownIntArrayHelper(N)).
+     op unknownIntArrayHelper : Nat -> IntArray .
+     eq unknownIntArrayHelper(0) = mtIntArray .
+     eq unknownIntArrayHelper(1) = unknownInt .
+     eq unknownIntArrayHelper(s N) = unknownInt # unknownIntArrayHelper(N) .
+  op unknownBoolArray : Nat -> ArrayValue .
+  eq unknownBoolArray(N) = array(unknownBoolArrayHelper(N)) .
+     op unknownBoolArrayHelper : Nat -> BoolArray .
+     eq unknownBoolArrayHelper(0) = mtBoolArray .
+     eq unknownBoolArrayHelper(1) = unknownBool .
+     eq unknownBoolArrayHelper(s N) = unknownBool # unknownBoolArrayHelper(N) .
+ ---  op unknownRealArray' : Nat -> FloatArray .
+ ---  eq unknownRealArray'(s Nz) = unknownFloat # unknownRealArray'(Nz) .
+  op unknownRealArray : Nat -> ArrayValue .
+  eq unknownRealArray(N) = unknownFloatArray(N) .
+
+  --- eq unknownRealArray(N:NzNat) = unknownFloat .
+  op unknownFloatArray : Nat -> ArrayValue .
+  eq unknownFloatArray(N) = array(unknownFloatArrayHelper(N)) .
+     op unknownFloatArrayHelper : Nat -> FloatArray .
+     eq unknownFloatArrayHelper(0) = mtFloatArray .
+     eq unknownFloatArrayHelper(1) = unknownFloat .
+     eq unknownFloatArrayHelper(s N) = unknownFloat # unknownFloatArrayHelper(N) .
+  --- eq unknownFloatArray(N:NzNat) = unknownFloat .
+  op unknownStringArray : Nat -> ArrayValue .
+  eq unknownStringArray(N) = array(unknownStringArrayHelper(N)) .
+     op unknownStringArrayHelper : Nat -> StringArray .
+     eq unknownStringArrayHelper(0) = mtStringArray .
+     eq unknownStringArrayHelper(1) = unknownString .
+     eq unknownStringArrayHelper(s N) = unknownString # unknownStringArrayHelper(N) .
+  --- eq unknownStringArray(N:NzNat) = unknownString .
+
+  op createIntArray : Nat IntArray -> ArrayValue .
+  eq createIntArray(0,IArr) = array(mtIntArray) .
+  eq createIntArray(N,mtIntArray) = unknownIntArray(N) .
+  eq createIntArray(N,IArr) = if length(IArr) == N
+                                then array(createIntArrayHelper(N,IArr))
+                                else array(createIntArrayHelperWithFill(N,IArr))
+                              fi .
+    op createIntArrayHelper : Nat IntArray -> IntArray .
+    eq createIntArrayHelper(0,IArr) = mtIntArray .
+    eq createIntArrayHelper(1,IV) = IV .
+    eq createIntArrayHelper(1,IV # mtIntArray) = IV .
+    eq createIntArrayHelper(s N,IV # IArr) = IV # createIntArrayHelper(N,IArr) .
+    op createIntArrayHelperWithFill : Nat IntArray -> IntArray .
+    eq createIntArrayHelperWithFill(0,IArr) = mtIntArray .
+    eq createIntArrayHelperWithFill(1,IV) = IV .
+    eq createIntArrayHelperWithFill(1,mtIntArray) = unknownInt .
+    eq createIntArrayHelperWithFill(1,IV # mtIntArray) = IV .
+    eq createIntArrayHelperWithFill(1,IV # IArr) = IV .
+    eq createIntArrayHelperWithFill(s N,mtIntArray) = unknownInt # createIntArrayHelperWithFill(N,mtIntArray) .
+    eq createIntArrayHelperWithFill(s N,IV) = IV # createIntArrayHelperWithFill(N,mtIntArray).
+    eq createIntArrayHelperWithFill(s N,IV # IArr) = IV # createIntArrayHelperWithFill(N,IArr).
+
+
+  vars FV FV'     : FloatValue .
+  vars SV SV'     : StringValue .
+  vars BV BV'     : BoolValue .
+  vars IV IV'     : IntValue .
+  vars BArr BArr' : BoolArray .
+  vars IArr IArr' : IntArray .
+  vars SArr SArr' : StringArray .
+  vars FArr FArr' : FloatArray .
+  vars N N'       : Nat .
+  vars Nz Nz'     : NzNat .
+  vars I I'       : Int .
+  vars Arr        : ArrayValue .
+
+  op updateArray : ArrayValue Nat PrimitiveValue -> ArrayValue .
+  eq updateArray(array(FArr),N,FV) = array(updateFloatArray(FArr,N,FV)) .
+  eq updateArray(array(FArr),N,val(I)) = array(updateFloatArray(FArr,N,val(float(I)))) . --- [print "\n\n\nupdateArray(array(" FArr ")," N ",val(" I "))\n\n\n" ] .
+
+  --- eq updateArray(array(IArr),N,IV) = array(updateIntArray(IArr,N,IV)) .
+  --- eq updateArray(array(IArr),N,val(I)) = array(updateIntArray(IArr,N,val(I))) .
+
+  --- eq updateArray(array(SArr),N,SV) = array(updateStringArray(SArr,N,SV)) .
+  --- eq updateArray(array(SArr),N,val(I)) = array(updateStringArray(SArr,N,val(I))) .
+
+  --- eq updateArray(array(BArr,N,BV) = array(updateBoolArray(BArr,N,BV)) .
+  --- eq updateArray(array(BArr),N,val(I)) = array(updateBoolArray(BArr,N,val(I))) .
+
+  *** eq updateArray(array(FArr),N,FV) = array(updateStringArray(FArr,N,FV)) .
+  *** eq updateArray(array(FArr),N,FV) = array(updateBoolArray(FArr,N,FV)) .
+  *** eq updateArray(array(FArr),N,FV) = array(updateIntArray(FArr,N,FV)) .
+
+  op updateFloatArray : FloatArray Nat FloatValue -> FloatArray .
+  eq updateFloatArray(FV,0, FV') = FV' .
+  eq updateFloatArray(FV # FArr, s N, FV') = FV # updateFloatArray(FArr, N, FV') .
+  eq updateFloatArray(FV # FArr,   0, FV') = FV' # FArr .
+
+  --- op updateIntArray : IntArray Nat IntValue -> IntArray .
+  --- eq updateIntArray(IV,0, IV') = IV' .
+  --- eq updateIntArray(IV # IArr, s N, IV') = IV # updateIntArray(IArr, N, IV') .
+  --- eq updateIntArray(IV # IArr,   0, IV') = IV' # IArr .
+
+  --- op updateStringArray : StringArray Nat StringValue -> StringArray .
+  --- eq updateStringArray(SV,0, SV') = SV' .
+  --- eq updateStringArray(SV # SArr, s N, SV') = SV # updateStringArray(SArr, N, SV') .
+  --- eq updateStringArray(SV # SArr,   0, SV') = SV' # SArr .
+
+  --- op updateBoolArray : BoolArray Nat BoolValue -> BoolArray .
+  --- eq updateBoolArray(BV,0, BV') = BV' .
+  --- eq updateBoolArray(BV # BArr, s N, BV') = BV # updateBoolArray(BArr, N, BV') .
+  --- eq updateBoolArray(BV # BArr,   0, BV') = BV' # BArr .
+
+
+  op nth : ArrayValue Int -> PrimitiveValue .
+  eq nth(Arr,I) = nth'(Arr,abs(I)) .
+  op nth' : ArrayValue Nat -> PrimitiveValue .
+  eq nth'(array(mtFloatArray),N) = unknownFloat .
+  eq nth'(array(FV),0) = FV .
+  eq nth'(array(FV),s N) = unknownFloat .
+  eq nth'(array(FV # FArr),0) = FV .
+  eq nth'(array(FV # FArr),s N) = nth'(array(FArr),N) .
+  eq nth'(array(mtBoolArray),N) = unknownBool .
+  eq nth'(array(BV),0) = BV .
+  eq nth'(array(BV),s N) = unknownBool .
+  eq nth'(array(BV # BArr),0) = BV .
+  eq nth'(array(BV # BArr),s N) = nth'(array(BArr),N) .
+  eq nth'(array(mtStringArray),N) = unknownString .
+  eq nth'(array(SV),0) = SV .
+  eq nth'(array(SV),s N) = unknownString .
+  eq nth'(array(SV # SArr),0) = SV .
+  eq nth'(array(SV # SArr),s N) = nth'(array(SArr),N) .
+  eq nth'(array(mtIntArray),N) = unknownInt .
+  eq nth'(array(IV),0) = IV .
+  eq nth'(array(IV),s N) = unknownInt .
+  eq nth'(array(IV # IArr),0) = IV .
+  eq nth'(array(IV # IArr),s N) = nth'(array(IArr),N) .
 
 endfm
 

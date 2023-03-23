@@ -255,6 +255,97 @@ begin tests
       )
     end
 
+    assert "Create len 0 empty IntArray" from
+      testValue(
+        createIntArray(0, mtIntArray)
+      )
+    reaches
+      testValue(
+        array(mtIntArray)
+      )
+    end
+
+    assert "Create len 0 IntArray" from
+      testValue(
+        createIntArray(0, val(1) # val(2) # val(3))
+      )
+    reaches
+      testValue(
+        array(mtIntArray)
+      )
+    end
+
+    assert "Create len 3 empty IntArray" from
+      testValue(
+        createIntArray(3, mtIntArray)
+      )
+    reaches
+      testValue(
+        array(unknownInt # unknownInt # unknownInt)
+      )
+    end
+
+    assert "Create len 3 IntArray" from
+      testValue(
+        createIntArray(3, val(1) # val(2) # val(3))
+      )
+    reaches
+      testValue(
+        array(val(1) # val(2) # val(3))
+      )
+    end
+
+    assert "Create len 3 IntArray with 2 values" from
+      testValue(
+        createIntArray(3, val(1) # val(2))
+      )
+    reaches
+      testValue(
+        array(val(1) # val(2) # unknownInt)
+      )
+    end
+
+    assert "Create len 3 IntArray with 4 values" from
+      testValue(
+        createIntArray(3, val(1) # val(2) # val(3) # val(4))
+      )
+    reaches
+      testValue(
+        array(val(1) # val(2) # val(3))
+      )
+    end
+
+    assert "length of empty IntArray" from
+      testNat(
+        length(mtIntArray)
+      )
+    reaches
+      testNat(
+        0
+      )
+    end
+
+    assert "length of IntArray" from
+      testNat(
+        length(val(1) # val(2) # val(3))
+      )
+    reaches
+      testNat(
+        3
+      )
+    end
+
+    assert "length of half initialised IntArray" from
+      testNat(
+        length(val(1) # val(2) # val(3) # unknownInt # unknownInt)
+      )
+    reaches
+      testNat(
+        5
+      )
+    end
+
+
 end tests
 .
 
