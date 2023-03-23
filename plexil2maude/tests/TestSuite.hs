@@ -123,9 +123,9 @@ testsLegacy =
                        <Type>Real</Type>
                        <MaxSize>3</MaxSize>
                        <InitialValue>
-                         <RealValue>0.0</RealValue>
-                         <RealValue>7.0</RealValue>
-                         <RealValue>13.0</RealValue>
+                         <RealValue>0</RealValue>
+                         <RealValue>7</RealValue>
+                         <RealValue>13</RealValue>
                        </InitialValue>
                      </DeclareArray>|],
                   [r| 'bar:createArray(3,val(0.0)#val(7.0)#val(13.0)) |])

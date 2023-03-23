@@ -10,7 +10,7 @@ import Control.Monad.Except
 import Data.Char
 import Data.Either
 import Data.Maybe
-import Data.List (intersperse)
+import Data.List (intersperse, isInfixOf)
 import qualified Data.Map as M
 import Data.Text (Text) --  hiding (map)
 import Debug.Trace
@@ -879,7 +879,7 @@ parseSimpleValue cursor = parseBooleanValue
     where
         parseIntegerValue = buildValue <$> parseTag "IntegerValue" cursor
         parseBooleanValue = buildBoolValue <$> parseTag "BooleanValue" cursor
-        parseRealValue = buildValue <$> parseTag "RealValue" cursor
+        parseRealValue = buildRealValue <$> parseTag "RealValue" cursor
         parseStringValue = buildValue' <$> parseTag' "StringValue" cursor
 
         parseTag tag cursor = getUniqueTextContent (element tag) cursor
@@ -888,6 +888,11 @@ parseSimpleValue cursor = parseBooleanValue
 
         buildValue value = text "val" <> parens (
                              text $ T.unpack value
+                           )
+        buildRealValue value = text "val" <> parens (
+                             text $ T.unpack $ if "." `T.isInfixOf` value
+                                                  then value
+                                                  else T.append value (T.pack ".0")
                            )
         buildValue' value = text "val" <> parens (
                              doubleQuotes $ text $ T.unpack value
