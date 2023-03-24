@@ -339,6 +339,10 @@ testState = testGroup "State"
           State "st" [] [ Value { unValue = "1" }, Value { unValue = "2" }, Value { unValue = "3" }] PXIntArray
             `testPrettiesAs`
               "stateLookup('st,nilarg,array(val(1) # val(2) # val(3)))"
+    ,
+          State "st" [] [ Value { unValue = "1" }] PXInt
+            `testPrettiesAs`
+              "stateLookup('st,nilarg,val(1))"
     ]
   ]
   where

@@ -8,6 +8,8 @@ import PLEXILScript
 import Data.List (intersperse)
 import Data.OneOfN (OneOf3(..), OneOf5(..))
 import Prelude hiding ((<>))
+import Debug.Trace
+import Data.Typeable(typeOf)
 import Text.PrettyPrint
 import Data.Char (toLower)
 
@@ -62,12 +64,15 @@ instance Pretty State where
             hcat $ punctuate comma
               [text "'" <> text stName
               ,text "nilarg"
-              , case stType of PXBoolArray   -> text "array" <> parens (hcat $ punctuate (text " # ") $ [map unValue $ head stValue])
-                               PXIntArray    -> text "array" <> parens (hcat $ punctuate (text " # ") $ [map unValue $ head stValue])
-                               PXRealArray   -> text "array" <> parens (hcat $ punctuate (text " # ") $ [map unValue $ head stValue])
-                               PXStringArray -> text "array" <> parens (hcat $ punctuate (text " # ") $ [map unValue $ head stValue])
-                               _            -> text "val" <> (parens $ text $ unValue $ head stValue)]
+               , case stType of PXBoolArray   -> text "array" <> parens (hcat $ punctuate (text " # ") $ map wrapVal $ map text $ (map unValue stValue))
+                                PXIntArray    -> text "array" <> parens (hcat $ punctuate (text " # ") $ map wrapVal $ map text $ (map unValue stValue))
+                                PXRealArray   -> text "array" <> parens (hcat $ punctuate (text " # ") $ map wrapVal $ map text $ (map unValue stValue))
+                                PXStringArray -> text "array" <> parens (hcat $ punctuate (text " # ") $ map wrapVal $ map text $ (map unValue stValue))
+                                _             -> text "val" <> (parens $ text $ unValue $ head stValue)]
           )
+
+wrapVal :: Doc -> Doc -- wraps document in "val(...)"
+wrapVal doc = text "val" <> parens doc
 
 instance Pretty Command where
   pretty (Command
