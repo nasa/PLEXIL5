@@ -103,7 +103,7 @@ testParseArray =
             </InitialValue>
           </DeclareArray>
         |],
-        "'a2:createArray(10,val(\"zero\")#val(\"one\")#val(\"two\"))"),
+        "('a2:createArray(10,val(\"zero\")#val(\"one\")#val(\"two\")))"),
         ("ArrayInteger",
         [r|
           <DeclareArray ColNo="2" LineNo="3">
@@ -126,7 +126,7 @@ testParseArray =
             </InitialValue>
           </DeclareArray>
         |],
-        "'a1:createArray(10,val(0)#val(1)#val(2)#val(3)#val(4)#val(5)#val(6)#val(7)#val(8)#val(9))"),
+        "('a1:createArray(10,val(0)#val(1)#val(2)#val(3)#val(4)#val(5)#val(6)#val(7)#val(8)#val(9)))"),
         ("ArrayFloat",
         [r|
           <DeclareArray ColNo="2" LineNo="6">
@@ -141,7 +141,7 @@ testParseArray =
             </InitialValue>
           </DeclareArray>
         |],
-        "'a4:createArray(10,val(12.3)#val(3456.67856))"),
+        "('a4:createArray(10,val(12.3)#val(3456.67856)))"),
         ("ArrayBoolean",
         [r|
           <DeclareArray ColNo="2" LineNo="5">
@@ -156,7 +156,7 @@ testParseArray =
             </InitialValue>
           </DeclareArray>
         |],
-        "'a3:createArray(500,val(true)#val(false))"),
+        "('a3:createArray(500,val(true)#val(false)))"),
         ("ArrayBooleanWithNumbers",
         [r|
           <DeclareArray ColNo="2" LineNo="5">
@@ -171,7 +171,7 @@ testParseArray =
             </InitialValue>
           </DeclareArray>
         |],
-        "'a3:createArray(500,val(true)#val(false))")
+        "('a3:createArray(500,val(true)#val(false)))")
         ]
 
 testHasArrayValue1Level :: TestTree

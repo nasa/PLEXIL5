@@ -115,7 +115,7 @@ testsLegacy =
                        <Type>Real</Type>
                        <MaxSize>3</MaxSize>
                      </DeclareArray>|],
-                  [r| 'acPosition:createArray(3,unknownArray(3)) |])
+                  [r| ('acPosition:createArray(3,unknownArray(3))) |])
                 ,("An icarous array declaration with explicit initialization",
                   [r|
                      <DeclareArray LineNo="4" ColNo="2">
@@ -128,7 +128,7 @@ testsLegacy =
                          <RealValue>13</RealValue>
                        </InitialValue>
                      </DeclareArray>|],
-                  [r| 'bar:createArray(3,val(0.0)#val(7.0)#val(13.0)) |])
+                  [r| ('bar:createArray(3,val(0.0)#val(7.0)#val(13.0))) |])
                   ,("An empty variable declaration",
                   [r|
                      <DeclareVariable ColNo="4" LineNo="3">
@@ -422,6 +422,73 @@ testsLegacy =
                       <StringValue>pprint</StringValue>
                     </Name>|],
                   "'pprint")
+                ]
+        ,testGroup "Parse a RealValue with no decimals" $
+            map (testify'' elementVisitor)
+                [("1",
+                  [r|
+                    <RealValue>1</RealValue>|],
+                  "const(val(1.0))")
+                ,("Realvalue in assignment",
+                  [r|<Assignment ColNo="16" LineNo="160">
+                      <ArrayElement>
+                        <ArrayVariable>velCmd</ArrayVariable>
+                        <Index>
+                          <IntegerValue>2</IntegerValue>
+                        </Index>
+                      </ArrayElement>
+                      <NumericRHS>
+                        <RealValue>0</RealValue>
+                      </NumericRHS>
+                    </Assignment>|],
+                  "(arrayVar('velCmd,const(val(2))):=const(val(0.0)))")
+                ,("RealValue 1000",
+                  [r|
+                    <RealValue>1000</RealValue>|],
+                  "const(val(1000.0))")
+                ,( "RealValue 1000.0",
+                  [r|
+                    <RealValue>1000.0</RealValue>|],
+                  "const(val(1000.0))")
+                ,("RealValue -100",
+                  [r|
+                    <RealValue>-100</RealValue>|],
+                  "const(val(-100.0))")
+                ,("RealValue -1e2",
+                  [r|
+                    <RealValue>-1e2</RealValue>|],
+                  "const(val(-100.0))")
+                ]
+          ,testGroup "Parse a real array with integervalues" $
+            map (testify'' elementVisitor)
+                [("Array with 3 elements",
+                  [r|
+                    <DeclareArray>
+                      <Name>a1</Name>
+                      <Type>Real</Type>
+                      <MaxSize>10</MaxSize>
+                      <InitialValue>
+                        <ArrayValue Type="Real">
+                          <IntegerValue>1</IntegerValue>
+                          <IntegerValue>2</IntegerValue>
+                          <IntegerValue>3</IntegerValue>
+                        </ArrayValue>
+                      </InitialValue>
+                    </DeclareArray>|],
+                  "('a1 : createArray(10, val(1.0) # val(2.0) # val(3.0)))")
+                ,("Array with 3 elements 2'",
+                  [r|
+                    <DeclareArray>
+                      <Name>a1</Name>
+                      <Type>Real</Type>
+                      <MaxSize>10</MaxSize>
+                      <InitialValue>
+                          <IntegerValue>1</IntegerValue>
+                          <IntegerValue>2</IntegerValue>
+                          <IntegerValue>3</IntegerValue>
+                      </InitialValue>
+                    </DeclareArray>|],
+                  "('a1 : createArray(10, val(1.0) # val(2.0) # val(3.0)))")
                 ]
         ]
 
