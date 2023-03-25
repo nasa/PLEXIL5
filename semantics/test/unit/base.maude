@@ -20,6 +20,7 @@ mod TEST-BASE is
   op testExternalInputs   : ExternalInputs   -> Cell .
   op testValue            : Value            -> Cell .
   op testNat              : Nat              -> Cell .
+  op testVariable         : Variable         -> Cell .
 
 
   --- Identifiers for test cases

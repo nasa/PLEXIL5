@@ -315,6 +315,46 @@ begin tests
       )
     end
 
+    assert "Create len 3 IntArray with 2 values and 1 unknown" from
+      testValue(
+        createArray(3, val(1) # val(2) # unknown)
+      )
+    reaches
+      testValue(
+        array(val(1) # val(2) # unknown)
+      )
+    end
+
+    assert "Create len 3 IntArray with 3 unknowns" from
+      testValue(
+        createArray(3, unknown # unknown # unknown)
+      )
+    reaches
+      testValue(
+        array(unknown # unknown # unknown)
+      )
+    end
+
+    assert "Create an arrayVariable with 3 unknowns in arrayvalue form" from
+      testVariable(
+        ('acPosition : createArray(3, array(unknown # unknown # unknown)))
+      )
+    reaches
+      testVariable(
+        ('acPosition : array(unknown # unknown # unknown))
+      )
+    end
+
+    assert "Create an arrayVariable with 3 unknowns in primitivearray form" from
+      testVariable(
+        ('acPosition : createArray(3, unknown # unknown # unknown))
+      )
+    reaches
+      testVariable(
+        ('acPosition : array(unknown # unknown # unknown))
+      )
+    end
+
     --- assert "length of empty IntArray" from
     ---   testNat(
     ---     length(mtPrimitiveArray)
