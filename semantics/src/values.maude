@@ -34,7 +34,7 @@ fmod VALUE is
   op mtPrimitiveArray : -> PrimitiveArray [ctor] .
   op _#_ : PrimitiveArray PrimitiveArray -> PrimitiveArray [assoc] .
 
-  op array : PrimitiveArray -> ArrayValue .
+  op array : PrimitiveArray     -> ArrayValue .
 
   op length : ArrayValue -> Nat .
   eq length(array(Arr)) = length(Arr) .
@@ -98,6 +98,10 @@ fmod VALUE is
   vars Nz Nz'     : NzNat .
   vars I I'       : Int .
   vars Arr        : ArrayValue .
+
+  op assign : PrimitiveArray PrimitiveArray -> ArrayValue .
+  eq assign(mtPrimitiveArray, PArr) = array(mtPrimitiveArray) .
+  eq assign(PArr, PArr') = array(createArrayHelperWithFill(length(PArr),PArr')) .
 
   op updateArray : ArrayValue Nat PrimitiveValue -> ArrayValue .
   eq updateArray(array(PArr),N,PV) = array(updatePrimitiveArray(PArr,N,PV)) .
