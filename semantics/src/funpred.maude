@@ -116,6 +116,16 @@ mod FUNPRED is
   eq childrenWaitingFinished(PS, Q)
    = waitingOrFinished(childrenProcesses(Q,PS)) .
 
+  --- *** All nodes finished
+  --- op allNodesFinished : Configuration -> Bool .
+  --- eq allNodesFinished( < Q : C | status: inactive, Ats > PS ) = false .
+  --- eq allNodesFinished( < Q : C | status: waiting, Ats > PS ) = false .
+  --- eq allNodesFinished( < Q : C | status: executing, Ats > PS ) = false .
+  --- eq allNodesFinished( < Q : C | status: finishing, Ats > PS ) = false .
+  --- eq allNodesFinished( < Q : C | status: iterationEnded, Ats > PS ) = false .
+  --- eq allNodesFinished( < Q : C | status: failing, Ats > PS ) = false .
+  --- eq allNodesFinished( PS ) = true [owise] .
+
   *** is Root ?
   op root : Qualified -> Expression .
   eq root(Q)

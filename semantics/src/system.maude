@@ -118,6 +118,7 @@ mod CONFIG is
   eq getAttrs(< OId : CId | AtS >) = AtS .
 
   vars AS AS'     : ActionSet .
+  vars Q          : NeQualified .
   vars C          : CellId .
   vars Conf Conf' : Config .
   vars CS CS'     : Configuration .
@@ -125,6 +126,7 @@ mod CONFIG is
   vars GEN GEN'   : ExternalInputGenerator .
   vars TL TL'     : TraceList .
   vars OId        : Oid .
+  vars PS         : Configuration .
   vars CId        : Cid .
   vars AtS        : AttributeSet .
 
@@ -134,14 +136,32 @@ mod SEQUENCE-GENERATOR is
   pr CONFIG .
   pr EXTERNAL-INPUT-LIST .
 
+  vars Q          : NeQualified .
+  vars CId        : Cid .
+  vars PS         : Configuration .
+  vars Ats        : AttributeSet .
+
   sort GeneratorStatus .
   ops uninitialized firstIteration started cleaning : -> GeneratorStatus .
 
   op sequenceGenerator : EInputsList -> ExternalInputGenerator .
   eq sequenceGenerator(EIL) = sequenceGenerator(EIL,uninitialized) .
 
+
   op sequenceGenerator : EInputsList GeneratorStatus -> ExternalInputGenerator [ctor] .
   eq generate(sequenceGenerator(EInput # EIL, started),Conf) = EInput .
+ ceq generate(sequenceGenerator(nilEInputsList, started),Conf) = noExternalInputs
+  if not allNodesFinished(getNodes(Conf))
+  .
+      *** All nodes finished
+    op allNodesFinished : Configuration -> Bool .
+    eq allNodesFinished( < Q : CId | status: inactive, Ats > PS ) = false .
+    eq allNodesFinished( < Q : CId | status: waiting, Ats > PS ) = false .
+    eq allNodesFinished( < Q : CId | status: executing, Ats > PS ) = false .
+    eq allNodesFinished( < Q : CId | status: finishing, Ats > PS ) = false .
+    eq allNodesFinished( < Q : CId | status: iterationEnded, Ats > PS ) = false .
+    eq allNodesFinished( < Q : CId | status: failing, Ats > PS ) = false .
+    eq allNodesFinished( PS ) = true [owise] .
   eq update(sequenceGenerator(EIL,uninitialized),Conf,EI:ExternalInputs) = sequenceGenerator(EIL,started) .
   eq update(sequenceGenerator(EInput # EIL,started),Conf,EI:ExternalInputs) = sequenceGenerator(EIL,started) .
   eq update(sequenceGenerator(nilEInputsList,GS:GeneratorStatus),Conf,EI:ExternalInputs) = noEnvGen .
