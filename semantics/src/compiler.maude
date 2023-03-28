@@ -135,6 +135,7 @@ mod COMPILER is
   eq sanitizeIds(noChildFailed                      , NQ, Cfg) = noChildFailed(NQ) .
   eq sanitizeIds(isFinished?(sibling(I))            , NQ, Cfg) = isFinished?(getFullyQualifiedNodeId(I,NQ,Cfg)) .
   eq sanitizeIds(hasSucceeded?(sibling(I))          , NQ, Cfg) = hasSucceeded?(getFullyQualifiedNodeId(I,NQ,Cfg)) .
+  eq sanitizeIds(hasSucceeded?(I . Q)               , NQ, Cfg) = hasSucceeded?(getFullyQualifiedNodeId(I . Q,NQ,Cfg)) .
   eq sanitizeIds(hasPostconditionFailed?(sibling(I)), NQ, Cfg) = hasPostconditionFailed?(getFullyQualifiedNodeId(I,NQ,Cfg)) .
   eq sanitizeIds(hasSkipped?(sibling(I))            , NQ, Cfg) = hasSkipped?(getFullyQualifiedNodeId(I,NQ,Cfg)) .
   eq sanitizeIds(isStatus?(I . Q,Status)            , NQ, Cfg) = isStatus?(getFullyQualifiedNodeId(I, Q . NQ, Cfg), Status) .
@@ -160,10 +161,13 @@ mod COMPILER is
   op unresolvedVariable : Identifier Qualified     -> Identifier .
   op ambiguity          : Qualified  Configuration -> Identifier .
 
+  op getFullyQualifiedNodeId : Qualified Qualified Configuration -> Qualified .
+  eq getFullyQualifiedNodeId(Q . Q', Q', Cfg) = Q . Q' .
+
   op  getFullyQualifiedNodeId : Identifier Qualified Configuration -> Qualified .
   ceq getFullyQualifiedNodeId(I, Q, Cfg) = ambiguity(Q',Cfg)
     if < Q' : Cls | AtS > < Q' : Cls' | AtS' > Cfg' := Cfg  . *** NOTE: This detects ambiguities
-  eq  getFullyQualifiedNodeId(I, Q,                                         Cfg) = getFullyQualifiedNodeId'(I,Q,Cfg,Q) [owise] .
+  eq  getFullyQualifiedNodeId(I, Q, Cfg) = getFullyQualifiedNodeId'(I,Q,Cfg,Q) [owise] .
 
     op getFullyQualifiedNodeId' : Identifier Qualified Configuration Qualified -> Qualified .
     eq getFullyQualifiedNodeId'(I,   nilq, < I      : Cls | AtS > Cfg, Q') = I .
