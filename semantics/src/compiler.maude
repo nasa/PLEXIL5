@@ -161,9 +161,6 @@ mod COMPILER is
   op unresolvedVariable : Identifier Qualified     -> Identifier .
   op ambiguity          : Qualified  Configuration -> Identifier .
 
-  op getFullyQualifiedNodeId : Qualified Qualified Configuration -> Qualified .
-  eq getFullyQualifiedNodeId(Q . Q', Q', Cfg) = Q . Q' .
-
   op  getFullyQualifiedNodeId : Identifier Qualified Configuration -> Qualified .
   ceq getFullyQualifiedNodeId(I, Q, Cfg) = ambiguity(Q',Cfg)
     if < Q' : Cls | AtS > < Q' : Cls' | AtS' > Cfg' := Cfg  . *** NOTE: This detects ambiguities
