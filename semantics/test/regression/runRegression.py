@@ -9,10 +9,13 @@ def runRegression():
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--compile', action='store_true', help="compile plans and scripts")
     parser.add_argument('-t', '--test', nargs='?', const='.', help="test to be executed (and compiled if chosen)")
-    parser.add_argument('-p', '--path', nargs='?', const = '/dev/null', help="path to redirect maude standard output")
+    parser.add_argument('-r', '--redirect', nargs='?', const = '/dev/null', help="path to redirect maude standard output")
+    parser.add_argument('-np', '--noparse', action='store_false', help="use this flag if you dont want to parse the tests again")
     args = parser.parse_args()
-    if args.path is None:
-        args.path = '/dev/null'
+    if args.redirect is None:
+        args.redirect = '/dev/null'
+    if args.noparse is None:
+        args.noparse = True
 
 
     os.chdir(os.path.dirname(__file__))
@@ -38,7 +41,8 @@ def runRegression():
 
     check_dir_exists(parsed_tests_path)
 
-    parse_plans_and_scripts(plans_root=plans_path, scripts_root=scripts_path, compiled_plans=compiled_plans, compiled_scripts=compiled_scripts, parsed_tests_root=parsed_tests_path, args=args)
+    if args.noparse is True:
+        parse_plans_and_scripts(plans_root=plans_path, scripts_root=scripts_path, compiled_plans=compiled_plans, compiled_scripts=compiled_scripts, parsed_tests_root=parsed_tests_path, args=args)
 
     # Get the list of parsed plans and scripts
     maude_plans = os.listdir(parsed_tests_path + 'plans/')
@@ -138,7 +142,7 @@ q
 '''
             )
             #Run the maude plan with the corresponding script (they have the same name) and plexiltest
-            os.system('maude -no-ansi-color -no-wrap -no-banner -no-advise -print-to-stderr ' + 'semantics/test/regression/' + 'run.maude ' + parsed_tests_root + 'plans/' + maude_plan + ' ' + parsed_tests_root + 'plans/' + maude_plan + ' > ' + args.path + ' 2> semantics/test/regression/output.maude')
+            os.system('maude -no-ansi-color -no-wrap -no-banner -no-advise -print-to-stderr ' + 'semantics/test/regression/' + 'run.maude ' + parsed_tests_root + 'plans/' + maude_plan + ' ' + parsed_tests_root + 'plans/' + maude_plan + ' > ' + args.redirect + ' 2> semantics/test/regression/output.maude')
             plan_script = get_script(maude_plan[:-6], compiled_scripts)
             os.system('plexiltest -p '+ plans_root + maude_plan[:-6] + '.plx' + ' -s ' + scripts_root + plan_script + ' -d semantics/benchmark/Debug.AcceptanceTest.cfg' + ' > semantics/test/regression/output.plexil 2>&1')
             print('\n\n' + '--------------------------------' + maude_plan + '--------------------------------' + '\n')
