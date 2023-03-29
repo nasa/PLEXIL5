@@ -104,7 +104,14 @@ fmod VALUE is
   eq assign(PArr, PArr') = array(createArrayHelperWithFill(length(PArr),PArr')) .
 
   op updateArray : ArrayValue Nat PrimitiveValue -> ArrayValue .
-  eq updateArray(array(PArr),N,PV) = array(updatePrimitiveArray(PArr,N,PV)) .
+  eq updateArray(array(PArr),N,FV) = array(updatePrimitiveArray(PArr,N,FV)) .
+  eq updateArray(array(PArr),N,val(I)) = array(updatePrimitiveArray(PArr,N,val(float(I)))) .
+  eq updateArray(array(PArr),N,PV) = array(updatePrimitiveArray(PArr,N,PV)) [owise] .
+
+  op updatePrimitiveArray : PrimitiveArray Nat FloatValue -> PrimitiveArray .
+  eq updatePrimitiveArray(FV,0, FV') = FV' .
+  eq updatePrimitiveArray(FV # PArr, s N, FV') = FV  # updatePrimitiveArray(PArr, N, FV') .
+  eq updatePrimitiveArray(FV # PArr,   0, FV') = FV' # PArr .
 
   op updatePrimitiveArray : PrimitiveArray Nat PrimitiveValue -> PrimitiveArray .
   eq updatePrimitiveArray(PV,0, PV') = PV' .
