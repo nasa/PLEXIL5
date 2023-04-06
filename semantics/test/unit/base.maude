@@ -18,9 +18,11 @@ mod TEST-BASE is
   op testQualifiedId      : Qualified        -> Cell .
 
   op testExternalInputs   : ExternalInputs   -> Cell .
+  op testEInputsList      : EInputsList      -> Cell .
   op testValue            : Value            -> Cell .
   op testNat              : Nat              -> Cell .
   op testVariable         : Variable         -> Cell .
+  op testGenerator        : ExternalInputGenerator -> Cell .
 
 
   --- Identifiers for test cases

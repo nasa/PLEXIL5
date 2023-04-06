@@ -28,6 +28,7 @@ in syncred.maude
 in atomic.maude
 in interface.maude
 in reductions.maude
+in generators.maude
 
 mod PLEXILITE is
   pr PLEXIL .
@@ -35,6 +36,7 @@ mod PLEXILITE is
   pr RUNTIME .
   pr INTERFACE .
   pr REDUCTIONS .
+  pr BASIC-GENERATORS .
 endm
 
 in model-checker.maude

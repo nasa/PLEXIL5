@@ -34,15 +34,6 @@ mod INTERFACE is
       updateInterfaceHistory(Cfg,EInput)
   .
 
-  op interface-history : -> CellId .
-  op `[_:_`] : CellId EInputsList -> Cell [format (n d d ++i --i d)] .
-
-  op updateGenerator : Config ExternalInputs -> Config .
-  eq updateGenerator(
-      Cfg [ generator : GEN ],
-      EInput )
-    = Cfg [ generator : update( GEN, [ generator : GEN ] Cfg, EInput ) ] .
-
   op updateInterfaceHistory : Config ExternalInputs -> Config .
   eq updateInterfaceHistory(
       [ interface-history : EIns ]

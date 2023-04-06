@@ -4,31 +4,30 @@ mod TEST--INTERFACE is
 
   op interface--tests : -> TestResults .
 
-  op myGenerator : -> ExternalInputGenerator .
-
   eq interface--tests =
     begin tests
 
-      assert "updateInterface calls update on the generator" from
-        updateGenerator(
+      assert "updateGenerator calls update on the generator" from
+        (updateGenerator(
           [ environment : mtenvironment ]
           [ interface : none ]
           [ memory : none ]
-          [ generator : myGenerator ]
+          [ generator : noEnvGen ]
           , noExternalInputs
         )
+        )
       reaches
-          [ environment : mtenvironment ]
+          ([ environment : mtenvironment ]
           [ interface : none ]
           [ memory : none ]
           [ generator : update(
-                          myGenerator,
+                          noEnvGen,
                           [ environment : mtenvironment ]
                           [ interface : none ]
                           [ memory : none ]
-                          [ generator : myGenerator ],
+                          [ generator : noEnvGen ],
                           noExternalInputs
-                        ) ]
+                        ) ])
       end
 
     end tests

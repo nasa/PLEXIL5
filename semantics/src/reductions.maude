@@ -52,10 +52,10 @@ mod REDUCTIONS is
   op run : GlobalConfig -> GlobalConfig .
   eq [run] : run(stop | Cfg) = start | Cfg .
 
-  vars EG EG' : ExternalInputGenerator .
+  vars EG EG' GEN : ExternalInputGenerator .
   vars Act : Operation .
   vars E : Environment .
-  vars ExtInput EIn : ExternalInputs .
+  vars ExtInput EIn EInput : ExternalInputs .
   vars Nodes Nodes' : Configuration .
   vars EIns EIns' : EInputsList .
 
@@ -69,17 +69,23 @@ mod REDUCTIONS is
     then
       stop  | [ generator : EG ] Cfg
     else
-      macroND(generate(EG,Cfg)) | cleanTrace([ generator : EG ] Cfg)
+      macroND(EIns) | cleanTrace([ generator : EG ] Cfg)
     fi
-    if EIns := generate(EG,Cfg)
+    if EIns := generate(EG, [ generator : EG ] Cfg)
   .
 
   op macroND : EInputsList -> Operation .
   rl [MACRO-nd-choose-external-input] :
     macroND(EIns # EIn # EIns') | Cfg
     =>
-    macro-log | updateInterface(updateGenerator(Cfg,EIn),EIn)
+    macro-log | updateGenerator(updateInterface(Cfg,EIn),EIn)
   .
+
+  op updateGenerator : Config ExternalInputs ~> Config .
+  eq updateGenerator(
+      Cfg [ generator : GEN ],
+      EInput )
+    = Cfg [ generator : update( GEN, [ generator : GEN ] Cfg, EInput ) ] .
 
   op macro-log : -> Operation .
   eq [MACRO-relation-log] : macro-log = micro [print "MACRO"] .

@@ -1,0 +1,269 @@
+mod SEQUENCE-GENERATOR is
+  pr CONFIG .
+  pr EXTERNAL-INPUT-LIST .
+  pr REDUCTIONS .
+
+  vars Q          : NeQualified .
+  vars CId        : Cid .
+  vars PS         : Configuration .
+  vars Ats        : AttributeSet .
+
+  sort GeneratorStatus .
+  ops uninitialized firstIteration started cleaning : -> GeneratorStatus .
+
+  op sequenceGenerator : EInputsList -> ExternalInputGenerator .
+  eq sequenceGenerator(EIL) = sequenceGenerator(EIL,uninitialized,mtsoup,mtsoup) .
+
+  op sequenceGenerator : EInputsList GeneratorStatus Config Config -> ExternalInputGenerator [ctor] .
+
+  eq [test4] : generate(sequenceGenerator(EInput # EIL, started, Conf, Conf'), Conf'') = EInput .
+---  ceq [test4-5] : generate(sequenceGenerator(EInput, started, Conf, Conf'), Conf'') = noExternalInputs
+---     if Conf''' := micro(updateGenerator(updateInterface(Conf'',EInput),EInput))
+---     /\ not allNodesFinished(getNodes(Conf''))
+---     /\ not equal?(Conf''', Conf'') .
+ ceq [test5] : generate(sequenceGenerator(nilEInputsList, started, Conf, Conf'), Conf'') = nilEInputsList
+    if allNodesFinished(getNodes(Conf''))
+    .
+ ceq [test51] : generate(sequenceGenerator(nilEInputsList, started, Conf, Conf'), Conf'') =
+      if BadConf :: Config
+      then
+        if equal?(BadConf, Conf'')
+        then nilEInputsList
+        else noExternalInputs
+        fi
+      else
+        generationError(generate(sequenceGenerator(nilEInputsList, started, Conf, Conf'), Conf''))
+     fi
+     if BadConf := micro(updateGenerator(updateInterface(Conf'',noExternalInputs),noExternalInputs))
+    [owise].
+
+  op generationError : EInputsList ~> EInputsList [ctor strat (0)] .
+
+ ceq [test5] : generate(sequenceGenerator(nilEInputsList, started, Conf, Conf'), Conf'') = generationError(generate(sequenceGenerator(nilEInputsList, started, Conf, Conf'), Conf''))
+    if BadConf := micro(updateGenerator(updateInterface(Conf'',noExternalInputs),noExternalInputs)) [owise print "ERROR: could not execute micro"] .
+  eq [test6] : generate(sequenceGenerator(nilEInputsList, started, Conf, Conf'), Conf'') = nilEInputsList [owise] .
+
+  eq [test1] : update(sequenceGenerator(EIL, uninitialized, Conf, Conf'), Conf'', EI) =
+    sequenceGenerator(EIL, started, Conf', removeInterfaceHistory(removeGenerator(Conf''))) .
+  eq [test2] : update(sequenceGenerator(nilEInputsList, started, Conf, Conf'), Conf'', EI) =
+    sequenceGenerator(nilEInputsList,started,Conf',removeInterfaceHistory(removeGenerator(Conf''))) .
+  eq [test3] : update(sequenceGenerator(EInput # EIL, started, Conf, Conf'), Conf'', EInput) =
+    sequenceGenerator(EIL,started,Conf',removeInterfaceHistory(removeGenerator(Conf''))) .
+
+  eq isConsumed?(sequenceGenerator(EInput # EIL,GS:GeneratorStatus,Conf,Conf'),Conf'') = false .
+  eq isConsumed?(sequenceGenerator(EIL,GS:GeneratorStatus,Conf,Conf'),Conf'') = true [owise] .
+
+  op equal? : Config Config -> Bool .
+  --- eq equal?(Conf,Conf') = removeInterfaceHistory(removeGenerator(Conf)) == removeInterfaceHistory(removeGenerator(Conf')) .
+  eq equal?(Conf,Conf') = getNodes(Conf) == getNodes(Conf') .
+
+    op removeInterfaceHistory : Config -> Config .
+    eq removeInterfaceHistory( Conf [ interface-history : EIns:EInputsList] ) =  Conf .
+    eq removeInterfaceHistory( Conf ) = Conf [owise] .
+
+    op removeGenerator : Config -> Config .
+    eq removeGenerator( Conf [ generator : GEN:ExternalInputGenerator] ) =  Conf .
+    eq removeGenerator( Conf ) = Conf [owise] .
+
+    op allNodesFinished : Configuration -> Bool .
+    eq allNodesFinished( < Q : CId | status: inactive, Ats > PS ) = false .
+    eq allNodesFinished( < Q : CId | status: waiting, Ats > PS ) = false .
+    eq allNodesFinished( < Q : CId | status: executing, Ats > PS ) = false .
+    eq allNodesFinished( < Q : CId | status: finishing, Ats > PS ) = false .
+    eq allNodesFinished( < Q : CId | status: iterationEnded, Ats > PS ) = false .
+    eq allNodesFinished( < Q : CId | status: failing, Ats > PS ) = false .
+    eq allNodesFinished( PS ) = true [owise] .
+
+  vars Conf Conf' Conf'' Conf''' Conf'''' : Config .
+  vars BadConf : [Config] .
+  vars EInput EInput' EInput'' EInput''' : ExternalInputs .
+  vars EIL   : EInputsList .
+  vars NeEIL : NeEInputsList .
+  vars EI    : ExternalInputs .
+  vars EL    : EnvironmentList .
+  vars GenStatus : GeneratorStatus .
+endm
+
+mod COMMAND-ACK-GENERATOR is
+  protecting SEQUENCE-GENERATOR .
+
+  *** Command Ack Generator
+  op commandAckGenerator : ExternalInputs Nat -> ExternalInputGenerator .
+  op commandAckGenerator : ExternalInputs Config Nat Nat GeneratorStatus -> ExternalInputGenerator .
+  eq commandAckGenerator(EInput,Ites) = commandAckGenerator(EInput,mtsoup,Ites,0,uninitialized) .
+
+  eq generate(commandAckGenerator(EInput,PrevConf,Ites,It,firstIteration),Conf) = EInput .
+  eq generate(commandAckGenerator(EInput,PrevConf,Ites,It,started),Conf) =
+      if isConsumed?(commandAckGenerator(EInput,PrevConf,Ites,It,started),Conf)
+      then nilEInputsList
+      else computeCommandAcks(Conf)
+      fi .
+
+  eq update(commandAckGenerator(EInput,PrevConf,Ites,0,uninitialized),Conf,EI:ExternalInputs)
+    = commandAckGenerator(EInput,Conf,Ites,0,firstIteration) .
+  eq update(commandAckGenerator(EInput,PrevConf,Ites,0,firstIteration),Conf,EI:ExternalInputs)
+    = commandAckGenerator(EInput,Conf,Ites,1,started) .
+  eq update(commandAckGenerator(EInput,PrevConf,Ites,It,started),Conf,EI:ExternalInputs)
+    = commandAckGenerator(EInput,Conf,Ites,s It,started) .
+
+  eq isConsumed?(commandAckGenerator(EInput,PrevConf,Ites,It,GenStatus),Conf) = Ites <= It .
+
+  *** Command Ack Generator Extended
+  op commandAckGeneratorEx : ExternalInputs ExternalInputs Nat -> ExternalInputGenerator .
+  op commandAckGeneratorEx : ExternalInputs ExternalInputs Nat Nat GeneratorStatus -> ExternalInputGenerator .
+  eq commandAckGeneratorEx(EInput,EInput',Ites) = commandAckGeneratorEx(EInput,EInput',Ites,0,uninitialized) .
+
+  var GEN : ExternalInputGenerator .
+  var EIL'' : EInputsList .
+
+  eq [command-ack-generator-generate-firstIteration] : generate(commandAckGeneratorEx(EInput,EInput',Ites,It,firstIteration),Conf) = EInput .
+  ceq [command-ack-generator-generate-cleaning] : generate(GEN,Conf) = EIL'
+    if commandAckGeneratorEx(EInput,EInput',Ites,It,cleaning) := GEN
+    /\ EInput'' := computeCommandAcks(Conf)
+    /\ EIL' := if isConsumed?(GEN,Conf)
+                then nilEInputsList
+                else EInput''
+                fi
+  .
+  ceq [command-ack-generator-generate-started] : generate(GEN,Conf) = EIL''
+    if commandAckGeneratorEx(EInput,EInput',Ites,It,started) := GEN
+    /\ EInput'' := computeCommandAcks(Conf)
+    /\ EIL := computeLookupCombinations(EInput')
+    /\ EIL' := add(EInput'',EIL,nilEInputsList)
+    /\ EIL'' := if isConsumed?(GEN,Conf)
+                then nilEInputsList
+                else EIL'
+                fi
+    [owise]
+    .
+
+  eq update(commandAckGeneratorEx(EInput,EInput',Ites,0,uninitialized),Conf,EI:ExternalInputs)
+    = commandAckGeneratorEx(EInput,EInput',Ites,0,firstIteration) .
+  eq update(commandAckGeneratorEx(EInput,EInput',Ites,0,firstIteration),Conf,EI:ExternalInputs)
+    = commandAckGeneratorEx(EInput,EInput',Ites,1,started) .
+  ceq update(GEN,Conf,EI:ExternalInputs) =
+      if Ites == s It
+      then commandAckGeneratorEx(EInput,noExternalInputs,s s s Ites, s It, cleaning)
+      else commandAckGeneratorEx(EInput,EInput',Ites,s It,started)
+      fi
+    if commandAckGeneratorEx(EInput,EInput',Ites,It,started) := GEN .
+  ceq update(GEN,Conf,EI:ExternalInputs) =
+      if Ites == s It
+      then noEnvGen
+      else commandAckGeneratorEx(EInput,EInput',Ites,s It,cleaning)
+      fi
+    if commandAckGeneratorEx(EInput,EInput',Ites,It,cleaning) := GEN [owise] .
+
+  eq isConsumed?(commandAckGeneratorEx(EInput,EInput',Ites,It,GenStatus),Conf) = Ites <= It .
+
+  *** Infinite Command Ack Generator Extended
+  op infiniteCommandAckGeneratorEx : ExternalInputs EInputsList -> ExternalInputGenerator .
+  op infiniteCommandAckGeneratorEx : ExternalInputs EInputsList GeneratorStatus -> ExternalInputGenerator .
+  eq infiniteCommandAckGeneratorEx(EInput,EILRef) = infiniteCommandAckGeneratorEx(EInput,EILRef,uninitialized) .
+
+  eq generate(infiniteCommandAckGeneratorEx(EInput,EILRef,uninitialized),Conf) = nilEInputsList .
+  eq generate(infiniteCommandAckGeneratorEx(EInput,EILRef,firstIteration),Conf) = EInput .
+  ceq generate(infiniteCommandAckGeneratorEx(EInput,EILRef,started),Conf)
+    = EIL'
+    if EInput'' := computeCommandAcks(Conf)
+    /\ EIL := undup(computeLookupCombinationsEx(EILRef))
+    /\ EIL' := add(EInput'',EIL,nilEInputsList)
+  .
+
+  eq update(infiniteCommandAckGeneratorEx(EInput,EILRef,uninitialized),Conf,EI:ExternalInputs)
+    = infiniteCommandAckGeneratorEx(EInput,EILRef,firstIteration) .
+  eq update(infiniteCommandAckGeneratorEx(EInput,EILRef,firstIteration),Conf,EI:ExternalInputs)
+    = infiniteCommandAckGeneratorEx(EInput,EILRef,started) .
+  eq update(infiniteCommandAckGeneratorEx(EInput,EILRef,started),Conf,EI:ExternalInputs)
+    = infiniteCommandAckGeneratorEx(EInput,EILRef,started) .
+
+  eq isConsumed?(infiniteCommandAckGeneratorEx(EInput,EILRef,GenStatus),Conf) = false .
+
+  *** Common functions
+  op computeCommandAcks : Config -> ExternalInputs .
+  eq computeCommandAcks( [ interface : < CmdId . Q : command-on-execution | arguments: Args, handle: nothing, AtS > CS ] Conf )
+      = commandAck(CmdId, Args, CommandSuccess) computeCommandAcks([ interface : CS ]) .
+  eq computeCommandAcks( Conf )
+      = noExternalInputs [owise] .
+
+  op computeLookupCombinations : ExternalInputs -> EInputsList .
+  eq computeLookupCombinations(ExIn) = computeLookupCombinations(ExIn,noExternalInputs) .
+
+  op computeLookupCombinations : ExternalInputs EInputsList -> EInputsList .
+  eq computeLookupCombinations(In ExIn,ExInLst)
+      = computeLookupCombinations(ExIn, combine(In,ExInLst,nilEInputsList)) .
+  eq computeLookupCombinations(noExternalInputs,ExInLst)
+      = ExInLst .
+
+  op computeLookupCombinationsEx : EInputsList -> EInputsList .
+  eq computeLookupCombinationsEx(EILRef) = computeLookupCombinationsEx(EILRef,noExternalInputs) .
+
+  op computeLookupCombinationsEx : EInputsList EInputsList -> EInputsList .
+  ceq computeLookupCombinationsEx(ExIn # EILRef,ExInLst)
+      = computeLookupCombinationsEx(EILRef, combineEx(EIL,ExInLst,nilEInputsList))
+    if EIL := computeLookupCombinations'(ExIn)
+  .
+  eq computeLookupCombinationsEx(nilEInputsList,ExInLst)
+      = ExInLst .
+
+  op computeLookupCombinations' : ExternalInputs -> EInputsList .
+  eq computeLookupCombinations'(In ExIn) = In # computeLookupCombinations'(ExIn) .
+  eq computeLookupCombinations'(noExternalInputs) = noExternalInputs .
+
+  op toEInputsList : ExternalInputs -> EInputsList .
+  eq toEInputsList(ExIn) = toEInputsList(ExIn,nilEInputsList) .
+
+  op toEInputsList : ExternalInputs EInputsList -> EInputsList .
+  eq toEInputsList(In ExIn,ExInLstAcc) = toEInputsList(ExIn,In # ExInLstAcc) .
+  eq toEInputsList(noExternalInputs,ExInLstAcc) = noExternalInputs # ExInLstAcc .
+
+  op combine : ExternalInputs EInputsList EInputsList -> EInputsList .
+  eq combine(EIns,ExIn # ExInLst, ExInLstAcc)
+      = combine(EIns,ExInLst,(EIns ExIn) # ExIn # ExInLstAcc) .
+  eq combine(EIns,nilEInputsList, ExInLstAcc)
+      = ExInLstAcc [owise] .
+
+  op combineEx : EInputsList EInputsList EInputsList -> EInputsList .
+  eq combineEx(ExIn # ExInLst,EILRef, ExInLstAcc)
+      = combineEx(ExInLst,EILRef,combine(ExIn,EILRef,ExInLstAcc)) .
+  eq combineEx(nilEInputsList,EILRef, ExInLstAcc)
+      = ExInLstAcc [owise] .
+
+  op undup : EInputsList -> EInputsList .
+  eq undup(EInLst:EInputsList # EIns # EInLst':EInputsList # EIns # EInLst'':EInputsList)
+   = undup(EInLst:EInputsList # EIns # EInLst':EInputsList # EInLst'':EInputsList) .
+  eq undup(EInLst:EInputsList # noExternalInputs # EInLst':EInputsList)
+   = undup(EInLst:EInputsList #                    EInLst':EInputsList) .
+  eq undup(EIL) = EIL [owise] .
+
+  op add : ExternalInputs EInputsList -> EInputsList .
+  eq add(EInput,ExInLst) = add(EInput,ExInLst,nilEInputsList) .
+
+    op add : ExternalInputs EInputsList EInputsList -> EInputsList .
+    eq add(EInput,ExIn # ExInLst, ExInLstAcc) = add(EInput,ExInLst,(EInput ExIn) # ExInLstAcc) .
+    eq add(EInput,nilEInputsList, ExInLstAcc) = ExInLstAcc .
+
+  vars Args  : Arguments .
+  vars AtS   : AttributeSet .
+  vars CS    : Configuration .
+  vars Q     : Qualified .
+  vars CmdId : Identifier .
+  vars Conf Conf' : Config .
+  vars EInput EInput' EInput'' EInput''' : ExternalInputs .
+  vars EIL : EInputsList .
+  vars It Ites : Nat .
+  vars PrevConf : Config .
+  vars EILChosen : ExternalInputs .
+  vars EIL' : EInputsList .
+  vars EILRef : EInputsList .
+  vars GenStatus : GeneratorStatus .
+  vars In : Input .
+  vars EIns : ExternalInputs .
+  vars ExIn : ExternalInputs .
+  vars ExInLst ExInLstAcc : EInputsList .
+endm
+
+mod BASIC-GENERATORS is
+  pr EMPTY-GENERATOR .
+  pr SEQUENCE-GENERATOR .
+endm
