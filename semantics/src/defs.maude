@@ -21,8 +21,4 @@ mod DEFS is
   protecting ACTION .
   protecting TRACE .
   protecting SYSTEM .
-
-  sort Debug .
-  subsort Debug < Expression .
-
 endm
