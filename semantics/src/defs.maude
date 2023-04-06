@@ -20,5 +20,6 @@ mod DEFS is
   protecting LOCALDECLS .
   protecting ACTION .
   protecting TRACE .
+  protecting GENERATORS--INTERFACE .
   protecting SYSTEM .
 endm

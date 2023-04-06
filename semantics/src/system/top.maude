@@ -1,53 +1,10 @@
-fmod CONFIG-BASE is
-  sorts CellId Cell Config .
-  subsort Cell < Config .
-  op mtsoup : -> Config .
-  op __ : Config Config -> Config [assoc comm id: mtsoup] .
-
-  *** Cell handles
-  op environment       : -> CellId .
-  op nodes             : -> CellId .
-  op memory            : -> CellId .
-  op microacts         : -> CellId .
-  op macroacts         : -> CellId .
-  op interface         : -> CellId .
-  op interface-history : -> CellId .
-  op trace             : -> CellId .
-  op generator         : -> CellId .
-
-endfm
-
-view Config from TRIV to CONFIG-BASE is
- sort Elt to Config .
-endv
-
-mod EMPTY-GENERATOR is
-  protecting GENERATOR{Config} * (sort Generator{Config} to ExternalInputGenerator) .
-
-  op noEnvGen : -> ExternalInputGenerator .
-  eq generate(noEnvGen,Conf) = nilEInputsList .
-  eq update(noEnvGen,Conf,EI:ExternalInputs) = noEnvGen .
-  eq isConsumed?(noEnvGen,Conf) = true .
-
-  vars Conf : Config .
-
-  op emptyEnvGen : Nat -> ExternalInputGenerator .
-  eq generate(emptyEnvGen(s N:Nat),Conf) = noExternalInputs .
-  eq generate(emptyEnvGen(0),Conf) = nilEInputsList .
-
-  eq update(emptyEnvGen(s N:Nat),Conf,EI:ExternalInputs) = emptyEnvGen(N:Nat) .
-
-  eq isConsumed?(emptyEnvGen(s N:Nat),Conf) = false .
-  eq isConsumed?(emptyEnvGen(0),Conf) = true [owise] .
-endm
-
 mod CONFIG is
   pr ACTION .
   pr ENVIRONMENTS .
-  pr CONFIG-BASE .
+  pr SYSTEM--INTERFACE--CONFIG-INTERFACE .
   pr NODE .
   pr TRACE .
-  pr EMPTY-GENERATOR .
+  pr GENERATORS--INTERFACE .
 
   op `[_:_`] : CellId ActionSet              -> Cell [format (n d d ++i --i d)] .
   op `[_:_`] : CellId EnvironmentList        -> Cell [format (n d d ++i --i d)] .
@@ -133,33 +90,16 @@ mod CONFIG is
   vars AtS        : AttributeSet .
 endm
 
-mod SYSTEM-STRUCTURE is
-  pr CONFIG .
-  pr ENVIRONMENTS .
-  pr ENVIRONMENT .
-  pr EXTERNAL-INPUT-LIST .
-  pr EMPTY-GENERATOR .
-  --- pr SEQUENCE-GENERATOR .
-  --- pr COMMAND-ACK-GENERATOR .
+mod SYSTEM is
+  protecting SYSTEM--INTERFACE .
+  protecting CONFIG .
 
-  sort GlobalConfig .
-
-  sort Operation .
-  ops start stop quiescence micro macro : -> Operation .
-  op _|_ : Operation Config -> GlobalConfig .
-
-  *** Observers
   op getConfig : GlobalConfig -> Config .
   eq getConfig(Op | Conf) = Conf .
 
   op getOperation : GlobalConfig -> Operation .
   eq getOperation(Op | Conf) = Op .
 
-  vars Conf  : Config .
-  vars EL    : EnvironmentList .
-  vars Op    : Operation .
-endm
-
-mod SYSTEM is
-  protecting SYSTEM-STRUCTURE .
+  vars Conf : Config .
+  vars Op   : Operation .
 endm

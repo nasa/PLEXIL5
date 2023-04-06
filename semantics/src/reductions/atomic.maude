@@ -1,0 +1,556 @@
+----                                                               Atomic rules
+----                                      authors: Camilo Rocha and Marco Feliú
+
+mod ATOMIC is
+  pr FUNPRED .
+  pr CONVERSION .
+
+  vars AS AS'    : ActionSet .
+  var  a         : Ack .
+  var FinishAS   : ActionSet .
+  vars AtS AtS'  : AttributeSet .
+  var C          : NodeType .
+  vars PS PS'    : Configuration .
+  vars Nds Nds'  : Configuration .
+  vars MEM       : Configuration .
+  vars Conf CONF : Config .
+  var GAMMA      : Environment .
+  var SkC        : Expression .
+  var StC        : Expression .
+  var PC         : Expression .
+  var PostC      : Expression .
+  var EC         : Expression .
+  var EndC       : Expression .
+  var ExitC      : Expression .
+  var IC         : Expression .
+  var InvC       : Expression .
+  var Out        : Outcome .
+  var RepC       : Expression .
+  var FTyp       : FailureType .
+  var N          : Nat .
+  vars A A' A''  : Qualified .
+  var  S         : Status .
+  var TS         : TransitionSet .
+  vars TL TL'    : TraceList .
+  var NTy        : NodeType .
+
+  *** Inactive
+  op inactive : Config ~> Config .
+ ceq inactive( [ nodes : < A : C | status: inactive, active: true, AtS > PS ]
+               [ environment : GAMMA ]
+               [ memory : MEM ]
+               [ microacts : AS ]
+               CONF
+     )
+   = inactive( [ nodes : Nds' ] [ environment : GAMMA ] [ memory : MEM ] CONF
+       if parentFinished?(Nds, A)
+       then [ microacts : FinishAS,logTransition(A,inactive,finished,1),AS ]
+       else
+         if parentExecuting?(Nds, A)
+         then
+           if ancestorInvariantFalse?(GAMMA, Nds MEM, A)
+           then [ microacts : FinishAS,logTransition(A,inactive,finished,2),AS ]
+           else
+             if ancestorExitTrue?(GAMMA, Nds MEM, A)
+             then [ microacts : FinishAS,logTransition(A,inactive,finished,3),AS ]
+             else
+               if ancestorEndTrue?(GAMMA,Nds MEM,A)
+               then [ microacts : FinishAS,logTransition(A,inactive,finished,4),AS ]
+               else [ microacts : setStatus(A, waiting),logTransition(A,inactive,waiting,5),AS ]
+               fi
+             fi
+           fi
+         else [ microacts : AS ]
+         fi
+       fi
+     )
+  if Nds  := < A : C | status: inactive, active: true, AtS > PS
+  /\ Nds' := < A : C | status: inactive, active: false, AtS > PS
+  /\ FinishAS := setStatus(A, finished),setOutcome(A,skipped) .
+  eq inactive(CONF)
+   = CONF [owise] .
+
+  *** TODO: Manage race conditions for assignments at the `micro` level
+  *** TODO: Change setMem implementation
+  op waiting : Config ~> Config .
+ ceq waiting( [ nodes : < A : C | status: waiting,
+                                  active: true,
+                                  suspended: false,
+                                  skip: SkC,
+                                  startc: StC,
+                                  pre: PC,
+                                  exitc: EC,
+                                  AtS > PS ]
+              [ memory : MEM ]
+              [ environment : GAMMA ]
+              [ microacts : AS  ]
+              [ macroacts : AS' ]
+              CONF
+     )
+   = waiting(
+       CONF
+       [ nodes : Nds' ]
+       [ environment : GAMMA ]
+       [ memory : MEM ]
+       if ancestorExitTrue?(GAMMA, Nds MEM, A)
+       then [ microacts : AS,FinishAS,logTransition(A,waiting,finished,1) ]
+            [ macroacts : AS' ]
+       else
+         if eval(GAMMA, Nds MEM, EC) == const(val(true))
+         then [ microacts : AS,FinishAS,logTransition(A,waiting,finished,2) ]
+              [ macroacts : AS' ]
+         else
+           if ancestorInvariantFalse?(GAMMA, Nds MEM, A)
+           then [ microacts : AS,FinishAS,logTransition(A,waiting,finished,3) ]
+                [ macroacts : AS' ]
+           else
+             if ancestorEndTrue?(GAMMA, Nds MEM, A)
+             then [ microacts : AS,FinishAS,logTransition(A,waiting,finished,4) ]
+                  [ macroacts : AS' ]
+             else
+               if isTrue(eval(GAMMA, Nds MEM, SkC))
+               then [ microacts : AS,FinishAS,logTransition(A,waiting,finished,5) ]
+                    [ macroacts : AS' ]
+               else
+                 if isTrue(eval(GAMMA,Nds MEM,StC))
+                 then
+                   if not isTrue(eval(GAMMA,Nds MEM,PC))
+                   then [ microacts : AS,setStatus(A, iterationEnded),setOutcome(A, failure(preconditionFailed)),logTransition(A,waiting,iterationEnded,6) ]
+                        [ macroacts : AS' ]
+                   else
+                     if C == assignment
+                     then [ macroacts : setMem(assignmentVariable(A, Nds), expToVal(eval(GAMMA,MEM,assignmentExpression(A,Nds))),if isArrayAssignment(A,Nds) then just(expToVal(eval(GAMMA,MEM,assignmentIndexExpression(A,Nds)))) else nothing fi), AS' ]
+                          [ microacts : suspend(A),setStatus(A,executing),logTransition(A,waiting,executing,7),AS ]
+                     else if C == command
+                     then [ macroacts : runCommand(A, evalpar(GAMMA, MEM, getCommandArguments(A, Nds'))/ getCommandId(A, Nds') / invoked ), AS' ]
+                          [ microacts : suspend(A),setStatus(A,executing),logTransition(A,waiting,executing,7),AS ]
+
+                     else [ macroacts : AS' ]
+                          [ microacts : setStatus(A,executing),logTransition(A,waiting,executing,7),AS ]
+                     fi
+                     fi
+                   fi
+                 else [ macroacts : AS' ]
+                      [ microacts : logTransition(A,waiting,waiting,8),AS ]
+                 fi
+               fi
+             fi
+           fi
+         fi
+       fi
+     )
+  if Nds  := < A : C | status: waiting, active: true,  suspended: false, skip: SkC, startc: StC, pre: PC, exitc: EC, AtS > PS
+  /\ Nds' := < A : C | status: waiting, active: false, suspended: false, skip: SkC, startc: StC, pre: PC, exitc: EC, AtS > PS
+  /\ FinishAS := setStatus(A, finished),setOutcome(A,skipped)
+  .
+  eq waiting([ nodes : < A : C | status: waiting, active: true, suspended: true, AtS > PS ] CONF)
+   = [ nodes : < A : C | status: waiting, active: false, suspended: true, AtS > PS ] CONF .
+  eq waiting(CONF)
+   = CONF [owise] .
+
+  op executing : Config ~> Config .
+  eq executing(CONF)
+   = execlibrary(execlist(execcommand(execassignment(execempty(execupdate(CONF)))))) .
+
+  op execempty : Config ~> Config .
+ ceq execempty( [ nodes : < A : empty | status: executing, active: true, inv: InvC, post: PostC, endc: EndC, exitc: ExitC, AtS > PS ]
+                [ environment : GAMMA ] [ memory : MEM ] [ microacts : AS ] CONF )
+   = execempty( [ nodes : Nds' ] [ environment : GAMMA ] [ memory : MEM ] CONF
+       if ancestorExitTrue?(GAMMA, Nds MEM, A)
+       then [ microacts : setOutcome(A, interrupted(parentExited)),setStatus(A, finished),logTransition(A,executing,finished,1),AS ]
+       else
+         if isTrue(eval(GAMMA, Nds MEM, ExitC))
+         then [ microacts : setOutcome(A, interrupted(exited)),setStatus(A, iterationEnded),logTransition(A,executing,iterationEnded,2),AS ]
+         else
+           if ancestorInvariantFalse?(GAMMA, Nds MEM, A)
+           then [ microacts : setOutcome(A, failure(parentFailed)),setStatus(A, finished),logTransition(A,executing,finished,3),AS ]
+           else
+             if isFalse(eval(GAMMA, Nds MEM, InvC))
+             then [ microacts : setOutcome(A, failure(invariantFailed)),setStatus(A, iterationEnded),logTransition(A,executing,iterationEnded,4),AS ]
+             else
+               if isTrue(eval(GAMMA, Nds MEM, EndC))
+               then
+                 if isTrue(eval(GAMMA, Nds MEM, PostC))
+                 then [ microacts : setOutcome(A, success),setStatus(A, iterationEnded),logTransition(A,executing,iterationEnded,6),AS ]
+                 else [ microacts : setOutcome(A, failure(postconditionFailed)),setStatus(A, iterationEnded),logTransition(A,executing,iterationEnded,5),AS ]
+                 fi
+               else [ microacts : AS ]
+               fi
+             fi
+           fi
+         fi
+       fi
+     )
+  if Nds  := < A : empty | status: executing, active: true, inv: InvC, post: PostC, endc: EndC, exitc: ExitC, AtS > PS
+  /\ Nds' := < A : empty | status: executing, active: false, inv: InvC, post: PostC, endc: EndC, exitc: ExitC, AtS > PS .
+  eq execempty(CONF)
+   = CONF [owise] .
+
+  op execassignment : Config ~> Config .
+ ceq execassignment( [ nodes : < A : assignment | status: executing, active: true, inv: InvC, post: PostC, endc: EndC, exitc: ExitC, AtS > PS ]
+                     [ environment : GAMMA ] [ memory : MEM ] [ microacts : AS ] [ macroacts : AS' ] CONF)
+   = execassignment( [ nodes : Nds' ] [ environment : GAMMA ] [ memory : MEM ] CONF
+       if ancestorExitTrue?(GAMMA, Nds MEM, A)
+       then [ microacts : setOutcome(A, interrupted(parentExited)),setStatus(A, failing),logTransition(A,executing,failing,1),AS ]
+            [ macroacts : undoMem(assignmentVariable(A, Nds)),AS' ]
+       else
+         if isTrue(eval(GAMMA, Nds MEM, ExitC))
+         then [ microacts : setOutcome(A, interrupted(exited)),setStatus(A, failing),logTransition(A,executing,failing,2),AS ]
+              [ macroacts : undoMem(assignmentVariable(A, Nds)),AS' ]
+         else
+           if ancestorInvariantFalse?(GAMMA, Nds MEM, A)
+           then [ microacts : setOutcome(A, failure(parentFailed)),setStatus(A, failing),logTransition(A,executing,failing,3),AS ]
+                [ macroacts : undoMem(assignmentVariable(A, Nds)),AS' ]
+           else
+             if isFalse(eval(GAMMA, Nds MEM, InvC))
+             then [ microacts : setOutcome(A, failure(invariantFailed)),setStatus(A, failing),logTransition(A,executing,failing,4),AS ]
+                  [ macroacts : undoMem(assignmentVariable(A, Nds)),AS' ]
+           else
+               if isTrue(eval(GAMMA, Nds MEM, EndC))
+               then
+                 if isTrue(eval(GAMMA, Nds MEM, PostC))
+                 then [ microacts : setOutcome(A, success),setStatus(A, iterationEnded),logTransition(A,executing,iterationEnded,6),AS ]
+                      [ macroacts : AS' ]
+                 else [ microacts : setOutcome(A, failure(postconditionFailed)),setStatus(A, iterationEnded),logTransition(A,executing,iterationEnded,5),AS ]
+                      [ macroacts : AS' ]
+                 fi
+               else [ microacts : AS ] [ macroacts : AS' ]
+               fi
+             fi
+           fi
+         fi
+       fi
+     )
+  if Nds  := < A : assignment | status: executing, active: true, inv: InvC, post: PostC, endc: EndC, exitc: ExitC, AtS > PS
+  /\ Nds' := < A : assignment | status: executing, active: false, inv: InvC, post: PostC, endc: EndC, exitc: ExitC, AtS > PS .
+  eq execassignment(CONF)
+   = CONF [owise] .
+
+  op execupdate : Config ~> Config .
+ ceq execupdate ( [ nodes : < A : update | status: executing, active: true, inv: InvC, post: PostC, endc: EndC, exitc: ExitC, AtS > PS ]
+                     [ environment : GAMMA ] [ memory : MEM ] [ microacts : AS ] [ macroacts : AS' ] CONF)
+   = execupdate ( [ nodes : Nds' ] [ environment : GAMMA ] [ memory : MEM ]
+      if ancestorExitTrue?(GAMMA, Nds MEM, A)
+        then [ microacts : setOutcome(A, interrupted(parentExited)),setStatus(A, failing),logTransition(A,executing,failing,1),AS ]
+             [ macroacts : AS' ]
+        else
+            if isTrue(eval(GAMMA, Nds MEM, ExitC))
+              then [ microacts : setOutcome(A, interrupted(exited)),setStatus(A, failing),logTransition(A,executing,failing,2),AS ]
+                   [ macroacts : AS' ]
+              else
+                  if ancestorInvariantFalse?(GAMMA, Nds MEM, A)
+                    then [ microacts : setOutcome(A, failure(parentFailed)),setStatus(A, failing),logTransition(A,executing,failing,3),AS ]
+                        [ macroacts : AS' ]
+                    else
+                        if isFalse(eval(GAMMA, Nds MEM, InvC))
+                          then [ microacts : setOutcome(A, failure(invariantFailed)),setStatus(A, failing),logTransition(A,executing,failing,4),AS ]
+                               [ macroacts : AS' ]
+                          else
+                              if isTrue(eval(GAMMA, Nds MEM, EndC))
+                                then
+                                    if isTrue(eval(GAMMA, Nds MEM, PostC))
+                                      then [ microacts : setOutcome(A, success),setStatus(A, iterationEnded),logTransition(A,executing,iterationEnded,6),AS ]
+                                           [ macroacts : AS' ]
+                                      else [ microacts : setOutcome(A, failure(postconditionFailed)),setStatus(A, iterationEnded),logTransition(A,executing,iterationEnded,5),AS ]
+                                           [ macroacts : AS' ]
+                                    fi
+                                else [ microacts : AS ] [ macroacts : AS' ]
+                              fi
+                        fi
+                  fi
+            fi
+      fi
+    )
+  if Nds  := < A : update | status: executing, active: true, inv: InvC, post: PostC, endc: EndC, exitc: ExitC, AtS > PS
+    /\ Nds' := < A : update | status: executing, active: false, inv: InvC, post: PostC, endc: EndC, exitc: ExitC, AtS > PS .
+  eq execupdate(CONF)
+   = CONF [owise] .
+
+  op execcommand : Config ~> Config .
+ ceq execcommand( [ nodes : < A : command | status: executing, active: true, inv: InvC, endc: EndC, exitc: ExitC, AtS > PS ]
+                  [ environment : GAMMA ] [ memory : MEM ] [ microacts : AS ] [ interface : IFACE ] CONF)
+   = execcommand( [ nodes : Nds' ] [ environment : GAMMA ] [ memory : MEM ] [ interface : IFACE ] CONF
+       if ancestorExitTrue?(GAMMA, Nds MEM, A)
+       then [ microacts : setOutcome(A, interrupted(parentExited)),setStatus(A, failing),logTransition(A,executing,failing,1),AS ]
+       else
+         if isTrue(eval(GAMMA, Nds MEM, ExitC))
+         then [ microacts : setOutcome(A, interrupted(exited)),setStatus(A, failing),logTransition(A,executing,failing,2),AS ]
+         else
+           if ancestorInvariantFalse?(GAMMA, Nds MEM, A)
+           then [ microacts : setOutcome(A, failure(parentFailed)),setStatus(A, failing),logTransition(A,executing,failing,3),AS ]
+           else
+             if isFalse(eval(GAMMA, Nds MEM, InvC))
+             then [ microacts : setOutcome(A, failure(invariantFailed)),setStatus(A, failing),logTransition(A,executing,failing,4),AS ]
+             else
+               if isTrue(eval(GAMMA, Nds MEM IFACE, EndC))
+               then [ microacts : setStatus(A, finishing),logTransition(A,executing,finishing,5),AS ]
+               else [ microacts : AS ]
+               fi
+             fi
+           fi
+         fi
+       fi
+     )
+  if Nds  := < A : command | status: executing, active: true, inv: InvC, endc: EndC, exitc: ExitC, AtS > PS
+  /\ Nds' := < A : command | status: executing, active: false, inv: InvC, endc: EndC, exitc: ExitC, AtS > PS .
+  eq execcommand(CONF)
+   = CONF [owise] .
+
+  op execlist : Config ~> Config .
+  eq execlist(Conf) = execListAndLibrary(list,Conf) .
+
+  op execlibrary : Config ~> Config .
+  eq execlibrary(Conf) = execListAndLibrary(library,Conf) .
+
+  op execListAndLibrary : NodeType Config ~> Config .
+
+ ceq execListAndLibrary(C, [ nodes : < A : C | status: executing, active: true, inv: InvC, endc: EndC, exitc: ExitC, AtS > PS ]
+               [ environment : GAMMA ] [ microacts : AS ] [ memory : MEM ] CONF)
+   = execListAndLibrary(C, [ nodes : Nds' ] [ environment : GAMMA ] [ memory : MEM ] CONF
+       if ancestorExitTrue?(GAMMA, Nds MEM, A)
+       then [ microacts : setOutcome(A, interrupted(parentExited)),setStatus(A, failing),logTransition(A,executing,failing,1),AS ]
+       else
+         if isTrue(eval(GAMMA, Nds MEM, ExitC))
+         then [ microacts : setOutcome(A, interrupted(exited)),setStatus(A, failing),logTransition(A,executing,failing,2),AS ]
+         else
+           if ancestorInvariantFalse?(GAMMA, Nds MEM, A)
+           then [ microacts : setOutcome(A, failure(parentFailed)),setStatus(A, failing),logTransition(A,executing,failing,3),AS ]
+           else
+             if isFalse(eval(GAMMA, Nds MEM, InvC))
+             then [ microacts : setOutcome(A, failure(invariantFailed)),setStatus(A, failing),logTransition(A,executing,failing,4),AS ]
+             else
+               if isTrue(eval(GAMMA, Nds MEM, EndC))
+               then [ microacts : setStatus(A, finishing),logTransition(A,executing,finishing,5),AS ]
+               else [ microacts : AS ]
+               fi
+             fi
+           fi
+         fi
+       fi
+     )
+  if Nds  := < A : C | status: executing, active: true, inv: InvC, endc: EndC, exitc: ExitC, AtS > PS
+  /\ Nds' := < A : C | status: executing, active: false, inv: InvC, endc: EndC, exitc: ExitC, AtS > PS .
+  eq execListAndLibrary(C,CONF)
+   = CONF [owise] .
+
+  *** Finishing
+  op finishing : Config ~> Config .
+  eq finishing(CONF)
+   = finishinglist(finishingcommand(CONF)) .
+
+  var IFACE : Configuration .
+
+  op finishingcommand : Config ~> Config .
+ ceq finishingcommand( [ nodes : < A : command | status: finishing, active: true, inv: InvC, post: PostC, exitc: ExitC, AtS > PS ]
+                       [ environment : GAMMA ] [ interface : IFACE ] [ memory : MEM ] [ microacts : AS ] CONF)
+   = finishingcommand( [ nodes : Nds' ] [ environment : GAMMA ] [ interface : IFACE ] [ memory : MEM ]   CONF
+       if ancestorExitTrue?(GAMMA, Nds MEM, A)
+       then [ microacts : setOutcome(A, interrupted(parentExited)),setStatus(A, failing),logTransition(A,finishing,failing,1),AS ]
+       else
+         if isTrue(eval(GAMMA, Nds MEM, ExitC))
+         then [ microacts : setOutcome(A, interrupted(exited)),setStatus(A, failing),logTransition(A,finishing,failing,2),AS ]
+         else
+           if ancestorInvariantFalse?(GAMMA, Nds MEM, A)
+           then [ microacts : setOutcome(A, failure(parentFailed)),setStatus(A, failing),logTransition(A,finishing,failing,3),AS ]
+           else
+             if isFalse(eval(GAMMA, Nds MEM, InvC))
+             then [ microacts : setOutcome(A, failure(invariantFailed)),setStatus(A, failing),logTransition(A,finishing,failing,4),AS ]
+             else
+               if isCommandHandleKnown(A,IFACE)
+               then
+                 if not isTrue(eval(GAMMA, Nds MEM, PostC))
+                 then [ microacts : setOutcome(A, failure(postconditionFailed)),setStatus(A, iterationEnded),logTransition(A,finishing,iterationEnded,5),AS ]
+                 else [ microacts : setOutcome(A, success),setStatus(A, iterationEnded),logTransition(A,finishing,iterationEnded,6),AS ]
+                 fi
+               else [ microacts : AS ]
+               fi
+             fi
+           fi
+         fi
+       fi
+     )
+  if Nds  := < A : command | status: finishing, active: true, inv: InvC, post: PostC, exitc: ExitC, AtS > PS
+  /\ Nds' := < A : command | status: finishing, active: false, inv: InvC, post: PostC, exitc: ExitC, AtS > PS .
+  eq finishingcommand(CONF)
+   = CONF [owise] .
+
+  op finishinglist : Config ~> Config .
+ ceq finishinglist( [ nodes : < A : list | status: finishing, active: true, inv: InvC, post: PostC, exitc: ExitC, AtS > PS ]
+                    [ memory : MEM ]
+                    [ environment : GAMMA ] [ microacts : AS ] CONF)
+   = finishinglist( [ nodes : Nds' ] [ memory : MEM ] [ environment : GAMMA ] CONF
+       if ancestorExitTrue?(GAMMA, Nds MEM, A)
+       then [ microacts : setOutcome(A, interrupted(parentExited)),setStatus(A, failing),logTransition(A,finishing,failing,1),AS ]
+       else
+         if isTrue(eval(GAMMA, Nds MEM, ExitC))
+         then [ microacts : setOutcome(A, interrupted(exited)),setStatus(A, failing),logTransition(A,finishing,failing,2),AS ]
+         else
+           if ancestorInvariantFalse?(GAMMA, Nds MEM, A)
+           then [ microacts : setOutcome(A, failure(parentFailed)),setStatus(A, failing),logTransition(A,finishing,failing,3),AS ]
+           else
+             if isFalse(eval(GAMMA, Nds MEM, InvC))
+             then [ microacts : setOutcome(A, failure(invariantFailed)),setStatus(A, failing),logTransition(A,finishing,failing,4),AS ]
+             else
+               if childrenWaitingFinished(Nds, A)
+               then
+                 if not isTrue(eval(GAMMA, Nds MEM, PostC))
+                 then [ microacts : setOutcome(A, failure(postconditionFailed)),setStatus(A, iterationEnded),logTransition(A,finishing,iterationEnded,5),AS ]
+                 else [ microacts : setOutcome(A, success),setStatus(A, iterationEnded),logTransition(A,finishing,iterationEnded,6),AS ]
+                 fi
+               else [ microacts : AS ]
+               fi
+             fi
+           fi
+         fi
+       fi
+     )
+  if Nds  := < A : list | status: finishing, active: true,  inv: InvC, post: PostC, exitc: ExitC, AtS > PS
+  /\ Nds' := < A : list | status: finishing, active: false, inv: InvC, post: PostC, exitc: ExitC, AtS > PS .
+  eq finishinglist(CONF)
+   = CONF [owise] .
+
+  op failing : Config ~> Config .
+  eq failing(CONF)
+   = failingupdate(failinglist(failingcommand(failingassignment(CONF)))) .
+
+  op getFailureType : Outcome -> FailureType .
+  eq getFailureType(failure(FTyp)) = FTyp .
+  eq getFailureType(interrupted(FTyp)) = FTyp .
+
+  op failingassignment : Config ~> Config .
+ ceq failingassignment( [ nodes : < A : assignment | status: failing, active: true, outcome: Out, AtS > PS ]
+                        [ microacts : AS ] CONF)
+   = failingassignment( [ nodes : Nds' ] CONF
+     if FTyp == parentExited
+     then [ microacts : setStatus(A, finished),logTransition(A,failing,finished,1),AS]
+     else
+       if FTyp == parentFailed
+       then [ microacts : setStatus(A, finished),logTransition(A,failing,finished,2),AS]
+       else [ microacts : setStatus(A, iterationEnded),logTransition(A,failing,iterationEnded,3),AS]
+       fi
+     fi
+     )
+  if Nds  := < A : assignment | status: failing, active: true, outcome: Out, AtS > PS
+  /\ Nds' := < A : assignment | status: failing, active: false, outcome: Out, AtS > PS
+  /\ FTyp := getFailureType(Out) .
+  eq failingassignment(CONF)
+   = CONF
+  [owise]
+  .
+
+  op failingcommand : Config ~> Config .
+ ceq failingcommand( [ nodes : < A : command | status: failing, active: true, outcome: Out, AtS > PS ]
+                     [ microacts : AS ] [ interface : IFACE ] CONF)
+   = failingcommand( [ nodes : Nds' ] [ interface : IFACE ] CONF
+     if hasAborted(IFACE, Nds, A)
+     then
+       if FTyp == parentExited
+       then [ microacts : setStatus(A, finished),logTransition(A,failing,finished,1),AS]
+       else
+         if FTyp == parentFailed
+         then [ microacts : setStatus(A, finished),logTransition(A,failing,finished,2),AS]
+         else [ microacts : setStatus(A, iterationEnded),logTransition(A,failing,iterationEnded,3),AS]
+         fi
+       fi
+     else [ microacts : AS ]
+     fi
+     )
+  if Nds  := < A : command | status: failing, active: true, outcome: Out, AtS > PS
+  /\ Nds' := < A : command | status: failing, active: false, outcome: Out, AtS > PS
+  /\ FTyp := getFailureType(Out) .
+  eq failingcommand(CONF)
+   = CONF [owise] .
+
+  op failingupdate : Config ~> Config .
+ ceq failingupdate( [ nodes : < A : update | status: failing, active: true, outcome: Out, ack: a, AtS > PS ]
+                    [ environment : GAMMA ] [ microacts : AS ] [ memory : MEM ] CONF )
+   = failingupdate( [ nodes : Nds' ] [ environment : GAMMA ] [ memory : MEM ] CONF
+      if isTrue(eval(GAMMA,Nds MEM,hasRcvAck?(A)))
+        then
+           if FTyp == parentExited
+             then [ microacts : setStatus(A, finished),logTransition(A,failing,finished,1),AS]
+             else
+                 if FTyp == parentFailed
+                   then [ microacts : setStatus(A, finished),logTransition(A,failing,finished,2),AS]
+                   else [ microacts : setStatus(A, iterationEnded),logTransition(A,failing,iterationEnded,3),AS]
+                 fi
+           fi
+        else [ microacts : mtactions ]
+      fi
+      )
+  if Nds  := < A : update | status: failing, active: true, outcome: Out, ack: a, AtS > PS
+  /\ Nds' := < A : update | status: failing, active: false, outcome: Out, ack: a, AtS > PS
+  /\ FTyp := getFailureType(Out) .
+  eq failingupdate(CONF)
+   = CONF [owise] .
+
+  op failinglist : Config ~> Config .
+ ceq failinglist( [ nodes : < A : list | status: failing, active: true, outcome: Out, AtS > PS ]
+                  [ microacts : AS ] CONF)
+   = failinglist( [ nodes : Nds' ] CONF
+     if childrenWaitingFinished(Nds, A)
+     then
+       if FTyp == parentExited
+       then [ microacts : setStatus(A, finished),logTransition(A,failing,finished,1),AS]
+       else
+         if FTyp == parentFailed
+         then [ microacts : setStatus(A, finished),logTransition(A,failing,finished,2),AS]
+         else [ microacts : setStatus(A, iterationEnded),logTransition(A,failing,iterationEnded,3),AS]
+         fi
+       fi
+     else [ microacts : AS ]
+     fi
+     )
+  if Nds  := < A : list | status: failing, active: true, outcome: Out, AtS > PS
+  /\ Nds' := < A : list | status: failing, active: false, outcome: Out, AtS > PS
+  /\ FTyp := getFailureType(Out) .
+  eq failinglist(CONF)
+   = CONF [owise] .
+
+  *** Iteration ended
+  op iterended : Config ~> Config .
+ ceq iterended( [ nodes : < A : C | status: iterationEnded, active: true, repeatc: RepC, AtS > PS ]
+                [ environment : GAMMA ] [ memory : MEM ] [ microacts : AS ] CONF )
+   = iterended( [ nodes : Nds' ] [ environment : GAMMA ] [ memory : MEM ] CONF
+       if ancestorExitTrue?(GAMMA, Nds MEM, A)
+       then [ microacts : setOutcome(A, interrupted(parentExited)), setStatus(A, finished),logTransition(A,iterationEnded,finished,1),AS ]
+       else
+         if ancestorInvariantFalse?(GAMMA, Nds MEM, A)
+         then [ microacts : setOutcome(A, failure(parentFailed)),setStatus(A, finished),logTransition(A,iterationEnded,finished,2),AS ]
+         else
+           if ancestorEndTrue?(GAMMA, Nds MEM, A)
+           then [ microacts : setStatus(A, finished),logTransition(A,iterationEnded,finished,3),AS ]
+           else
+             if isFalse(eval(GAMMA, Nds MEM, RepC))
+             then [ microacts : setStatus(A, finished),logTransition(A,iterationEnded,finished,4),AS ]
+             else
+               if isTrue(eval(GAMMA, Nds MEM, RepC))
+               then [ microacts : setStatus(A, waiting),resetNode(A),logTransition(A,iterationEnded,waiting,5),AS ]
+               else [ microacts : AS ]
+               fi
+             fi
+           fi
+         fi
+       fi
+     )
+  if Nds  := < A : C | status: iterationEnded, active: true, repeatc: RepC, AtS > PS
+  /\ Nds' := < A : C | status: iterationEnded, active: false, repeatc: RepC, AtS > PS .
+  eq iterended(CONF)
+   = CONF [owise] .
+
+  op finished : Config ~> Config .
+ ceq finished( [ nodes : < A : C | status: finished, active: true, AtS > PS ]
+               [ microacts : AS ] CONF )
+   = finished( [ nodes : Nds' ] CONF
+       if parentWaiting?(Nds, A)
+       then [ microacts : setStatus(A, inactive),resetNode(A),logTransition(A,finished,inactive,1),AS ]
+       else [ microacts : AS ]
+       fi
+     )
+  if Nds  := < A : C | status: finished, active: true, AtS > PS
+  /\ Nds' := < A : C | status: finished, active: false, AtS > PS .
+  eq finished(CONF)
+   = CONF [owise] .
+endm
+
+eof

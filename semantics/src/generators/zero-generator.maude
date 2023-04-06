@@ -1,0 +1,11 @@
+fmod GENERATORS--ZERO-GENERATOR is
+  pr GENERATORS--BASE-GENERATOR .
+
+  op noEnvGen : -> ExternalInputGenerator .
+
+    eq generate(noEnvGen,Conf:Config) = nilEInputsList .
+
+    eq update(noEnvGen,Conf:Config,EI:ExternalInputs) = noEnvGen .
+
+    eq isConsumed?(noEnvGen,Conf:Config) = true .
+endfm
