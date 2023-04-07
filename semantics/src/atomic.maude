@@ -1,7 +1,7 @@
 ----                                                               Atomic rules
 ----                                      authors: Camilo Rocha and Marco Feliú
 
-mod ATOMIC is
+fmod ATOMIC is
   pr FUNPRED .
   pr CONVERSION .
 
@@ -551,6 +551,5 @@ mod ATOMIC is
   /\ Nds' := < A : C | status: finished, active: false, AtS > PS .
   eq finished(CONF)
    = CONF [owise] .
-endm
 
-eof
+endfm

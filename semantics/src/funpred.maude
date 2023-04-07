@@ -1,7 +1,7 @@
 ----                                       Predicates and auxiliary definitions
 ----                                                       author: Camilo Rocha
 
-mod FUNPRED is
+fmod FUNPRED is
   protecting EVAL .
   protecting ACTION .
 
@@ -290,4 +290,4 @@ mod FUNPRED is
  eq parametersToExpressionSet(nilpar, Es) = Es .
  eq parametersToExpressionSet(E P, Es) = parametersToExpressionSet(P, Es ; E) .
 
-endm
+endfm

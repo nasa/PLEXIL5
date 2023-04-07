@@ -1,4 +1,4 @@
-mod INTERFACE is
+fmod INTERFACE is
   pr DEFS .
 
   vars Cfg             : Config .
@@ -117,4 +117,4 @@ mod INTERFACE is
   eq updateCommandInputs(Cmds, (commandAbort(CmdId, Args, V) EInput)) = updateCommandInputs(Cmds, EInput) .
   eq updateCommandInputs(Cmds, noExternalInputs) = Cmds .
 
-endm
+endfm

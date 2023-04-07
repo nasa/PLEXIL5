@@ -1,4 +1,4 @@
-mod CONFIG is
+fmod CONFIG is
   pr ACTION .
   pr ENVIRONMENTS .
   pr SYSTEM--INTERFACE--CONFIG-INTERFACE .
@@ -76,21 +76,28 @@ mod CONFIG is
   op getAttrs : Object -> AttributeSet .
   eq getAttrs(< OId : CId | AtS >) = AtS .
 
+  op updateGenerator : Config ExternalInputs ~> Config .
+  eq updateGenerator(
+      Conf [ generator : GEN ],
+      EInput )
+    = Conf [ generator : update( GEN, [ generator : GEN ] Conf, EInput ) ] .
+
   vars AS AS'     : ActionSet .
   vars Q          : NeQualified .
   vars C          : CellId .
   vars Conf Conf' : Config .
   vars CS CS'     : Configuration .
   vars EL EL'     : EnvironmentList .
+  vars EInput     : ExternalInputs .
   vars GEN GEN'   : ExternalInputGenerator .
   vars TL TL'     : TraceList .
   vars OId        : Oid .
   vars PS         : Configuration .
   vars CId        : Cid .
   vars AtS        : AttributeSet .
-endm
+endfm
 
-mod SYSTEM is
+fmod SYSTEM is
   protecting SYSTEM--INTERFACE .
   protecting CONFIG .
 
@@ -102,4 +109,4 @@ mod SYSTEM is
 
   vars Conf : Config .
   vars Op   : Operation .
-endm
+endfm

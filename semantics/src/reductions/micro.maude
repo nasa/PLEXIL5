@@ -1,0 +1,63 @@
+fmod MICRO is
+  protecting ATOMIC .
+  protecting SYNC-REDUCTION .
+
+  vars AS             : ActionSet .
+  vars AtS AtS'       : AttributeSet .
+  vars St St' St''    : Config .
+  vars Cfg Cfg' Cfg'' : Config .
+  vars Conf Conf'     : Config .
+  vars PArr PArr'     : PrimitiveArray .
+  vars PS PS'         : Configuration .
+  vars Nds Nds'       : Configuration .
+  vars Sigma          : Environment .
+  vars Gamma          : Environment .
+  vars CL             : EnvironmentList .
+  vars Q              : Qualified .
+  vars TL TL'         : TraceList .
+  vars V V' V''       : Value .
+  vars KConf : [Config] .
+
+
+  **************************************************
+  *** Syncrhonous closure of the atomic relation ***
+  *** under the maximal redices strategy         ***
+  **************************************************
+
+  op computeTransitions : Config ~> Config .
+  eq computeTransitions(St) = finished(iterended(finishing(failing(executing(waiting(inactive(activateRedexes(St)))))))) .
+
+  op executeTransitions : Config ~> Config .
+  eq executeTransitions(St) = logApplyActions(St) applyActions(St) .
+
+  op executeTransitionsNoLog : Config ~> Config .
+  eq executeTransitionsNoLog(St) = applyActions(St) .
+
+  op microWithLog : Config -> Config .
+  eq microWithLog(Conf) = executeTransitions(computeTransitions(Conf)) .
+
+  op microNoLog : Config -> Config .
+  eq microNoLog(Conf) = executeTransitionsNoLog(computeTransitions(Conf)) .
+
+  op micro : Config ~> Config .
+ ceq micro(Conf) = microWithLog(Conf)
+  if not hasMicroactions?(Conf)   *** TODO: this check shouldn't be done on production
+  /\ not hasMacroactions?(Conf) . *** IMPORTANT: this check here is MANDATORY!
+ ceq micro(Conf) = micro-blocked(Conf)
+  if hasMacroactions?(Conf) [owise] .
+  eq micro(KConf) = micro-blocked(KConf) [owise] .
+
+  op micro-blocked : Config -> [Config] [ctor] .
+
+  **************************************************
+  *** Utility functions                          ***
+  **************************************************
+
+  op hasMicroactions?          : Config -> Bool .
+  op hasMacroactions?          : Config -> Bool .
+  op hasAssignmentToExecuteOrRetract? : Config -> Bool .
+  op hasCommandToExecute?             : Config -> Bool .
+
+  eq hasMicroactions?(St) = getMicroacts(St) =/= mtactions .
+  eq hasMacroactions?(St) = getMacroacts(St) =/= mtactions .
+endfm

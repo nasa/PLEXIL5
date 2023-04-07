@@ -1,7 +1,7 @@
 ----                       Compilation of a PLEXIL plan into a set of Processes
 ----                                                       author: Camilo Rocha
 
-mod COMPILER is
+fmod COMPILER is
   protecting PLEXIL .
   protecting FUNPRED .
 
@@ -278,4 +278,4 @@ mod COMPILER is
   vars Status Status' : Status .
   --- vars U U'           : Update .
   vars V V'           : Value .
-endm
+endfm

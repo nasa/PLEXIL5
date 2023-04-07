@@ -1,6 +1,6 @@
 ----                                                   Evaluation specification
 ----                                                       author: Camilo Rocha
-mod EVAL is
+fmod EVAL is
  protecting EXTENDED-EXPRESSION .
  protecting DEFS .
 
@@ -294,4 +294,4 @@ vars AtS AtS' : AttributeSet .
  eq isUnknown(const(val(false))) = false .
  eq isUnknown(const(unknown)) = true .
 
-endm
+endfm

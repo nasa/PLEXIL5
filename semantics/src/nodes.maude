@@ -1,5 +1,17 @@
-mod NODE is
- inc CONFIGURATION * (op <_:_|_> to <_:_|_> [format (ni d d d d d d d)] ) .
+fmod PURE-CONFIGURATION is
+  sorts Attribute AttributeSet .
+  sorts Oid Cid Object Configuration .
+  subsorts Attribute < AttributeSet .
+  subsorts Object < Configuration .
+  op none : -> AttributeSet [ctor] .
+  op _`,_ : AttributeSet AttributeSet -> AttributeSet [assoc comm id: none ctor] .
+  op <_:_|_> : Oid Cid AttributeSet -> Object [format (ni d d d d d d d) obj ctor] .
+  op none : -> Configuration [ctor] .
+  op __ : Configuration Configuration -> Configuration [assoc comm config id: none ctor] .
+endfm
+
+fmod NODE is
+ pr PURE-CONFIGURATION .
  pr QUALIFIED .
  pr STATUS .
  pr OUTCOME .
@@ -157,4 +169,4 @@ eq replaceAttribute(inv:     E, E') = inv:     E' .
  sort Nodes .
  op `[_`]          : Configuration -> Nodes .
 
-endm
+endfm

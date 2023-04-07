@@ -3,7 +3,7 @@
 ----                                                                Camilo Rocha
 
 mod REDUCTIONS is
-  protecting ATOMIC .
+  protecting MICRO .
   protecting SYNC-REDUCTION .
   protecting RUNTIME .
   protecting INTERFACE .
@@ -23,37 +23,6 @@ mod REDUCTIONS is
   vars TL TL'         : TraceList .
   vars V V' V''       : Value .
   vars KConf : [Config] .
-
-
-  **************************************************
-  *** Syncrhonous closure of the atomic relation ***
-  *** under the maximal redices strategy         ***
-  **************************************************
-
-  op computeTransitions : Config ~> Config .
-  eq computeTransitions(St) = finished(iterended(finishing(failing(executing(waiting(inactive(activateRedexes(St)))))))) .
-
-  op executeTransitions : Config ~> Config .
-  eq executeTransitions(St) = logApplyActions(St) applyActions(St) .
-
-  op executeTransitionsNoLog : Config ~> Config .
-  eq executeTransitionsNoLog(St) = applyActions(St) .
-
-  op microWithLog : Config -> Config .
-  eq microWithLog(Conf) = executeTransitions(computeTransitions(Conf)) .
-
-  op microNoLog : Config -> Config .
-  eq microNoLog(Conf) = executeTransitionsNoLog(computeTransitions(Conf)) .
-
-  op micro : Config ~> Config .
- ceq micro(Conf) = microWithLog(Conf)
-  if not hasMicroactions?(Conf)   *** TODO: this check shouldn't be done on production
-  /\ not hasMacroactions?(Conf) . *** IMPORTANT: this check here is MANDATORY!
- ceq micro(Conf) = micro-blocked(Conf)
-  if hasMacroactions?(Conf) [owise] .
-  eq micro(KConf) = micro-blocked(KConf) [owise] .
-
-  op micro-blocked : Config -> [Config] [ctor] .
 
   *** NOTE: This bootstraps the generator with one update
   eq [start] : start | [ generator : EG ] Cfg = macro | [ generator : update(EG,Cfg,noExternalInputs) ] Cfg .
@@ -89,12 +58,6 @@ mod REDUCTIONS is
     =>
     macro-log | updateGenerator(updateInterface(Cfg,EIn),EIn)
   .
-
-  op updateGenerator : Config ExternalInputs ~> Config .
-  eq updateGenerator(
-      Cfg [ generator : GEN ],
-      EInput )
-    = Cfg [ generator : update( GEN, [ generator : GEN ] Cfg, EInput ) ] .
 
   op macro-log : -> Operation .
   eq [MACRO-relation-log] : macro-log = micro [print "MACRO"] .
@@ -145,14 +108,6 @@ mod REDUCTIONS is
   **************************************************
   *** Utility functions                          ***
   **************************************************
-
-  op hasMicroactions?          : Config -> Bool .
-  op hasMacroactions?          : Config -> Bool .
-  op hasAssignmentToExecuteOrRetract? : Config -> Bool .
-  op hasCommandToExecute?             : Config -> Bool .
-
-  eq hasMicroactions?(St) = getMicroacts(St) =/= mtactions .
-  eq hasMacroactions?(St) = getMacroacts(St) =/= mtactions .
 
   eq hasAssignmentToExecuteOrRetract?(St) = hasAssignmentAction?(getMacroacts(St)) .
 

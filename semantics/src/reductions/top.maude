@@ -1,2 +1,3 @@
 sload atomic.maude
+sload micro.maude
 sload reductions.maude

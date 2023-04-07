@@ -1,4 +1,4 @@
-mod DEFS is
+fmod DEFS is
   protecting IDENTIFIER .
   protecting VALUE .
   protecting STATUS .
@@ -22,4 +22,4 @@ mod DEFS is
   protecting TRACE .
   protecting GENERATORS--INTERFACE .
   protecting SYSTEM .
-endm
+endfm

@@ -1,7 +1,8 @@
-mod SEQUENCE-GENERATOR is
+fmod SEQUENCE-GENERATOR is
   pr SYSTEM .
   pr EXTERNAL-INPUT-LIST .
-  pr REDUCTIONS .
+  pr MICRO .
+  pr INTERFACE .
 
   vars Q          : NeQualified .
   vars CId        : Cid .
@@ -82,9 +83,9 @@ mod SEQUENCE-GENERATOR is
   vars EI    : ExternalInputs .
   vars EL    : EnvironmentList .
   vars GenStatus : GeneratorStatus .
-endm
+endfm
 
-mod COMMAND-ACK-GENERATOR is
+fmod COMMAND-ACK-GENERATOR is
   protecting SEQUENCE-GENERATOR .
 
   *** Command Ack Generator
@@ -261,9 +262,9 @@ mod COMMAND-ACK-GENERATOR is
   vars EIns : ExternalInputs .
   vars ExIn : ExternalInputs .
   vars ExInLst ExInLstAcc : EInputsList .
-endm
+endfm
 
-mod BASIC-GENERATORS is
+fmod BASIC-GENERATORS is
   --- pr EMPTY-GENERATOR .
   pr SEQUENCE-GENERATOR .
-endm
+endfm

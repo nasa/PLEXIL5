@@ -20,7 +20,7 @@ fmod PREPLEXILLIST is
 endfm
 
 *** PLEXIL Plan
-mod PLEXIL is
+fmod PLEXIL is
  protecting DEFS .
  including PREPLEXIL .
  including PREPLEXILLIST .
@@ -33,4 +33,4 @@ mod PLEXIL is
  op assignment : Identifier LocalDecls AttributeSet Attribute -> PlexilAssignment  .
  op update : Identifier LocalDecls AttributeSet List{Pair} -> PlexilUpdate  .
  op empty : Identifier LocalDecls AttributeSet -> PlexilEmpty .
-endm
+endfm

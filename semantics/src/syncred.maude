@@ -1,7 +1,7 @@
 ----                                                     Synchronous reductions
 ----                                                       author: Camilo Rocha
 
-mod SYNC-REDUCTION is
+fmod SYNC-REDUCTION is
 
 protecting FUNPRED .
 
@@ -100,4 +100,4 @@ eq activateRedexes([ nodes : < Q : CC | active: false, NA > PS ] Conf)
  = activateRedexes([ nodes : < Q : CC | active: true,  NA > PS ] Conf) .
 eq activateRedexes(Conf) = Conf [owise] .
 
-endm
+endfm
