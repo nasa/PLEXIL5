@@ -28,6 +28,14 @@ var TL           : TraceList .
 var TS           : TransitionSet .
 vars V V' V''    : Value .
 
+op logApplyActions : Config -> Config .
+eq logApplyActions([ nodes : < Q : CC | status: S, AtS > PS ]
+                   [ microacts : setStatus(Q,S'),AS ]
+                   Conf )
+ = logApplyActions([ nodes : < Q : CC | status: S', AtS > PS ]
+                   [ microacts : AS ]
+                   Conf ) [print "    " Q " from " S " to " S'] .
+eq logApplyActions(Conf) = mtsoup [owise] .
 
 op applyActions : Config ~> Config .
 eq applyActions ([ trace :         TL ] Conf)
@@ -39,7 +47,7 @@ eq applyActions'([ nodes : < Q : CC | status: S, AtS > PS ]
                  Conf )
  = applyActions'([ nodes : < Q : CC | status: S', AtS > PS ]
                  [ microacts : AS ]
-                 Conf ) [print "    " Q " from " S " to " S'] .
+                 Conf ) .
 eq applyActions'([ nodes : < Q : CC | outcome: O, AtS > PS ]
                  [ microacts : setOutcome(Q,O'),AS ]
                  Conf )

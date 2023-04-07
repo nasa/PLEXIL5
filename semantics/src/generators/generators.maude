@@ -34,7 +34,7 @@ mod SEQUENCE-GENERATOR is
       else
         generationError(generate(sequenceGenerator(nilEInputsList, started, Conf, Conf'), Conf''))
      fi
-     if BadConf := micro(updateGenerator(updateInterface(Conf'',noExternalInputs),noExternalInputs))
+     if BadConf := microNoLog(updateGenerator(updateInterface(Conf'',noExternalInputs),noExternalInputs))
     [owise].
 
   op generationError : EInputsList ~> EInputsList [ctor strat (0)] .

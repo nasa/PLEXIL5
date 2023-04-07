@@ -34,14 +34,23 @@ mod REDUCTIONS is
   eq computeTransitions(St) = finished(iterended(finishing(failing(executing(waiting(inactive(activateRedexes(St)))))))) .
 
   op executeTransitions : Config ~> Config .
-  eq executeTransitions(St) = applyActions(St) .
+  eq executeTransitions(St) = logApplyActions(St) applyActions(St) .
+
+  op executeTransitionsNoLog : Config ~> Config .
+  eq executeTransitionsNoLog(St) = applyActions(St) .
+
+  op microWithLog : Config -> Config .
+  eq microWithLog(Conf) = executeTransitions(computeTransitions(Conf)) .
+
+  op microNoLog : Config -> Config .
+  eq microNoLog(Conf) = executeTransitionsNoLog(computeTransitions(Conf)) .
 
   op micro : Config ~> Config .
- ceq micro(Conf) = executeTransitions(computeTransitions(Conf))
+ ceq micro(Conf) = microWithLog(Conf)
   if not hasMicroactions?(Conf)   *** TODO: this check shouldn't be done on production
   /\ not hasMacroactions?(Conf) . *** IMPORTANT: this check here is MANDATORY!
- ceq micro(Conf) = Conf
-  if hasMacroactions?(Conf) .
+ ceq micro(Conf) = micro-blocked(Conf)
+  if hasMacroactions?(Conf) [owise] .
   eq micro(KConf) = micro-blocked(KConf) [owise] .
 
   op micro-blocked : Config -> [Config] [ctor] .
@@ -90,15 +99,23 @@ mod REDUCTIONS is
   op macro-log : -> Operation .
   eq [MACRO-relation-log] : macro-log = micro [print "MACRO"] .
 
+  ceq [micro-relation-withMacroactions] :
+    micro | Cfg
+  =
+    quiescence | Cfg
+  if hasMacroactions?(Cfg)
+  .
+
   ceq [micro-relation] :
     micro | Cfg
   =
     Act | Cfg''
-  if Cfg' := micro(Cfg)
+  if Cfg' := micro(Cfg // [ macroacts : mtactions ])
   /\ Nodes  := getNodes(Cfg)
   /\ Nodes' := getNodes(Cfg')
-  /\ Cfg'' := if Nodes == Nodes' then Cfg        else Cfg'      fi
+  /\ Cfg'' := if Nodes == Nodes' then Cfg else Cfg' fi
   /\ Act   := if Nodes == Nodes' then quiescence else micro-log fi
+  [owise]
   .
 
   op micro-log : -> Operation .
