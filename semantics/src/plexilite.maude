@@ -24,7 +24,6 @@ in plexil.maude
 in runtime.maude
 in evaluation.maude
 in funpred.maude
-in syncred.maude
 in interface.maude
 in reductions/top.maude
 in generators/top.maude

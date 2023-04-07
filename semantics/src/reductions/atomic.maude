@@ -1,6 +1,3 @@
-----                                                               Atomic rules
-----                                      authors: Camilo Rocha and Marco Feliú
-
 fmod ATOMIC is
   pr FUNPRED .
   pr CONVERSION .

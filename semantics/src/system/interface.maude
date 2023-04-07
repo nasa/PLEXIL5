@@ -23,10 +23,16 @@ endv
 
 fmod SYSTEM--INTERFACE is
   pr SYSTEM--INTERFACE--CONFIG-INTERFACE .
-
-  sort GlobalConfig .
+  pr EXTERNAL-INPUT-LIST .
 
   sort Operation .
-  ops start stop quiescence micro macro : -> Operation .
+  op start      :             -> Operation .
+  op stop       :             -> Operation .
+  op micro      :             -> Operation .
+  op quiescence :             -> Operation .
+  op macro      :             -> Operation .
+  op NDChoice   : EInputsList -> Operation .
+
+  sort GlobalConfig .
   op _|_ : Operation Config -> GlobalConfig .
 endfm
