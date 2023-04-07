@@ -45,13 +45,15 @@ fmod MACRO is
     quiescence | Cfg
   =
     macro |
-  executeCommands(
-      unSuspendMacroNodes(
-        performAssignments(
-          Cfg
+      executeUpdates(
+        executeCommands(
+          unSuspendMacroNodes(
+            performAssignments(
+              Cfg
+            )
+          )
         )
       )
-    )
   if Cfg' := incrementCycleCount(Cfg)
   /\ N := getCycleCount(Cfg')
   .
@@ -109,6 +111,45 @@ fmod MACRO is
   vars Params : Parameters .
   vars AtS'' : AttributeSet .
   var Intf : Config .
+  vars PAIRS : List{Pair} .
+
+  op executeUpdates : Config ~> Config .
+  eq executeUpdates(
+      [ macroacts : runUpdate(Q,PAIRS), AS ]
+      [ interface : < Q : C:Cid | AtS > Nds ]
+      Cfg
+      )
+    =
+      ERROR(
+        executeUpdates(
+          [ macroacts : runUpdate(Q,PAIRS), AS ]
+          [ interface : < Q : C:Cid | AtS > Nds ]
+          Cfg
+        )
+      )
+  .
+  eq executeUpdates(
+      [ macroacts : runUpdate(Q,PAIRS), AS ]
+      [ interface : Nds ]
+      Cfg
+      )
+    =
+      [ macroacts :                     AS ]
+      [ interface : Nds < Q : update-on-execution | ack: false, pairs: PAIRS > ]
+      Cfg
+  [owise]
+  .
+  eq executeUpdates(
+      [ macroacts : AS  ]
+      [ interface : Nds ]
+      Cfg
+      )
+    =
+      [ macroacts : AS  ]
+      [ interface : Nds ]
+      Cfg
+  [owise]
+  .
 
   op executeCommands : Config -> Config .
  ceq executeCommands(
@@ -176,7 +217,7 @@ fmod MACRO is
     )
      [owise]
      .
-  eq executeCommands([ macroacts : mtactions ] Conf) = [ macroacts : mtactions ] Conf .
+  eq executeCommands([ macroacts : AS ] Conf) = [ macroacts : AS ] Conf [owise] .
 
   op unSuspendMacroNodes : Config -> Config .
   eq unSuspendMacroNodes(

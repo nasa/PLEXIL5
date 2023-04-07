@@ -143,12 +143,26 @@ fmod FUNPRED is
   eq evalpar(Gamma, PS, (E P))
    = (expToVal(eval(Gamma, PS, E)) evalpar(Gamma, PS, P)) .
 
-  vars AT AT' : AssignmentTarget .
+  *** Evaluate lists of pairs
+  op evalPairs : Environment Configuration List{Pair} -> List{Pair} .
+  eq evalPairs(Gamma, PS, (nil).List{Pair})
+   = (nil).List{Pair} .
+  eq evalPairs(Gamma, PS, pair(QID,E) PAIRS)
+   = pair(QID,const(expToVal(eval(Gamma, PS, E)))) evalPairs(Gamma, PS, PAIRS) .
+
+  *** Pairs of update node
+  op getPairs : Qualified Configuration ~> List{Pair} .
+  eq getPairs(Q, < Q : update | pairs: PAIRS, AtS > PS) = PAIRS .
+
+  vars QID : Qid .
+  vars PAIRS : List{Pair} .
 
   *** Assignment expression of node
   op assignmentExpression : Qualified Configuration -> Expression .
   eq assignmentExpression(Q, < Q : assignment | (AT := E), AtS > PS)
    = E .
+
+  vars AT : AssignmentTarget .
 
   *** Assignment variable of node
   op assignmentVariable : Qualified Configuration -> Qualified .

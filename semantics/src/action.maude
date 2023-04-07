@@ -4,11 +4,15 @@ fmod ACTION-BASE is
   protecting STATUS .
   protecting OUTCOME .
   protecting COMMANDINFO .
+  protecting UPDATE .
   protecting MAYBE{Value} .
 
   *** Command actions
   op runCommand     : Qualified CommandInfo -> Action .
   op setCommandInfo : Qualified CommandInfo -> Action .
+
+  *** Update actions
+  op runUpdate : Qualified List{Pair} -> Action .
 
   *** Status/Outcome actions
   op resetNode  : Qualified         -> Action .

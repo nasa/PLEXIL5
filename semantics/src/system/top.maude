@@ -109,4 +109,11 @@ fmod SYSTEM is
 
   vars Conf : Config .
   vars Op   : Operation .
+
+
+  ************************************************************
+  *** DEBUGGING: operators to detect errors
+
+  op ERROR : Config ~> Config [ctor strat(0)] .
+
 endfm

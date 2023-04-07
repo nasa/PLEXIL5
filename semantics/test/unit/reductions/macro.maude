@@ -1,0 +1,90 @@
+mod TEST--REDUCTIONS--MACRO is
+  pr TEST-BASE .
+
+  op test--reductions--macro : -> TestResults .
+  eq test--reductions--macro = begin tests
+
+    assert "`macro` reduction executes updates" from
+      aSystem(
+        quiescence |
+            [ interface : none ]
+            [ macroacts : runUpdate(A,pair('field, const(val(1)))) ]
+            Stub{Config}
+      )
+    reaches
+      aSystem(
+        macro |
+          executeUpdates(
+            [ interface : none ]
+            [ macroacts : runUpdate(A,pair('field, const(val(1)))) ]
+            Stub{Config}
+          )
+      )
+    end
+
+    assert "executeUpdates updates the interface and consumes the action" from
+      executeUpdates(
+        [ interface : none ]
+        [ macroacts : runUpdate(A,pair('field, const(val(1)))) ]
+        Stub{Config}
+      )
+    reaches
+        [ interface :
+            < A : update-on-execution |
+              ack: false,
+              pairs: pair('field, const(val(1))) > ]
+        [ macroacts : mtactions ]
+        Stub{Config}
+    end
+
+    assert "executeUpdates returns an error if there is a name clash" truth
+      not (
+        executeUpdates(
+          [ interface : < 'A : update-on-execution | none > ]
+          [ macroacts : runUpdate('A,pair('field, const(val(1)))) ]
+          Stub{Config}
+        ) :: Config
+      )
+    end
+
+    assert "executeUpdates returns an error if there is a name clash" from
+      executeUpdates(
+        [ interface : < 'A : update-on-execution | none > ]
+        [ macroacts : runUpdate('A,pair('field, const(val(1)))) ]
+        Stub{Config}
+      )
+    reaches
+      ERROR(executeUpdates(
+        [ interface : < 'A : update-on-execution | none > ]
+        [ macroacts : runUpdate('A,pair('field, const(val(1)))) ]
+        Stub{Config}
+      ))
+    end
+
+    assert "executeUpdates ignores non-update actions" from
+      executeUpdates(
+        [ interface : < 'C . 'A : update-on-execution | ack: false > ]
+        [ macroacts : runCommand('A,nilarg / 'C / invoked) ]
+        Stub{Config}
+      )
+    reaches
+      (
+        [ interface : < 'C . 'A : update-on-execution | ack: false > ]
+        [ macroacts : runCommand('A,nilarg / 'C / invoked) ]
+        Stub{Config}
+      )
+    end
+
+    assert "executeCommands ignores other macro actions" from
+      executeCommands(
+        [ interface : < A : update-on-execution | ack: false > ]
+        [ macroacts : runUpdate(A,pair('field, const(val(1)))) ]
+      )
+    reaches
+        [ interface : < A : update-on-execution | ack: false > ]
+        [ macroacts : runUpdate(A,pair('field, const(val(1)))) ]
+    end
+
+  end tests
+  .
+endm

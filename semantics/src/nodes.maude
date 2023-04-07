@@ -25,7 +25,7 @@ fmod NODE is
  subsort NeQualified < Oid .
  sort NodeType .
  subsort NodeType < Cid .
- ops list command retCommand assignment empty update memory library command-on-execution : -> NodeType .
+ ops list command retCommand assignment empty update memory library command-on-execution update-on-execution : -> NodeType .
  sort DeclarationType .
  subsort DeclarationType < Cid .
  ops commandDeclaration stateDeclaration : -> DeclarationType .

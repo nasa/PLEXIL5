@@ -1,10 +1,15 @@
+load update.maude
+
 mod TEST--COMPILER is
 
 pr COMPILER .
 pr TEST-BASE .
+pr TEST--COMPILER--UPDATE .
 
 op compiler--tests : -> TestResults .
-eq compiler--tests = compile--compiler--tests .
+eq compiler--tests =
+    compile--compiler--tests
+    + test--compiler--update .
 
 op anEmptyNode : -> PlexilEmpty .
 eq anEmptyNode = empty('aNode, nilocdecl, none) .

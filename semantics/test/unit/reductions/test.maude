@@ -1,9 +1,11 @@
 in micro.maude
+in macro.maude
 in values.maude
 
 mod TEST--REDUCTIONS is
 
   pr TEST--REDUCTIONS--MICRO .
+  pr TEST--REDUCTIONS--MACRO .
   pr TEST--REDUCTIONS--VALUES .
 
   op reductions--tests : -> TestResults .
@@ -11,7 +13,7 @@ mod TEST--REDUCTIONS is
   eq reductions--tests =
     micro--reductions--tests
     + values--reductions--tests
-    *** + macro--reductions--tests
+    + test--reductions--macro
     .
 
 endm

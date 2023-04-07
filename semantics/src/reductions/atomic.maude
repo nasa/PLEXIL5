@@ -121,9 +121,13 @@ fmod ATOMIC is
                      else if C == command
                      then [ macroacts : runCommand(A, evalpar(GAMMA, MEM, getCommandArguments(A, Nds'))/ getCommandId(A, Nds') / invoked ), AS' ]
                           [ microacts : suspend(A),setStatus(A,executing),logTransition(A,waiting,executing,7),AS ]
+                     else if C == update
+                     then [ macroacts : runUpdate(A, evalPairs(GAMMA, MEM, getPairs(A, Nds'))), AS' ]
+                          [ microacts : suspend(A),setStatus(A,executing),logTransition(A,waiting,executing,7),AS ]
 
                      else [ macroacts : AS' ]
                           [ microacts : setStatus(A,executing),logTransition(A,waiting,executing,7),AS ]
+                     fi
                      fi
                      fi
                    fi
@@ -224,9 +228,29 @@ fmod ATOMIC is
    = CONF [owise] .
 
   op execupdate : Config ~> Config .
- ceq execupdate ( [ nodes : < A : update | status: executing, active: true, inv: InvC, post: PostC, endc: EndC, exitc: ExitC, AtS > PS ]
-                     [ environment : GAMMA ] [ memory : MEM ] [ microacts : AS ] [ macroacts : AS' ] CONF)
-   = execupdate ( [ nodes : Nds' ] [ environment : GAMMA ] [ memory : MEM ]
+ ceq execupdate(
+      [ nodes :
+        < A : update |
+          status: executing,
+          active: true,
+          inv: InvC,
+          post: PostC,
+          endc: EndC,
+          exitc: ExitC,
+          AtS > PS ]
+      [ interface : IFACE ]
+      [ environment : GAMMA ]
+      [ memory : MEM ]
+      [ microacts : AS ]
+      [ macroacts : AS' ]
+      CONF
+    )
+   = execupdate(
+      [ nodes : Nds' ]
+      [ interface : IFACE ]
+      [ environment : GAMMA ]
+      [ memory : MEM ]
+      CONF
       if ancestorExitTrue?(GAMMA, Nds MEM, A)
         then [ microacts : setOutcome(A, interrupted(parentExited)),setStatus(A, failing),logTransition(A,executing,failing,1),AS ]
              [ macroacts : AS' ]
@@ -243,7 +267,7 @@ fmod ATOMIC is
                           then [ microacts : setOutcome(A, failure(invariantFailed)),setStatus(A, failing),logTransition(A,executing,failing,4),AS ]
                                [ macroacts : AS' ]
                           else
-                              if isTrue(eval(GAMMA, Nds MEM, EndC))
+                              if isTrue(eval(GAMMA, Nds MEM IFACE, EndC))
                                 then
                                     if isTrue(eval(GAMMA, Nds MEM, PostC))
                                       then [ microacts : setOutcome(A, success),setStatus(A, iterationEnded),logTransition(A,executing,iterationEnded,6),AS ]

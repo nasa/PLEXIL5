@@ -23,6 +23,7 @@ mod TEST--ATOMIC--EXECUTING--UPDATE-NODE is
         [ microacts : mtactions ]
         [ macroacts : mtactions ]
         [ memory : none ]
+        [ interface : none ]
       )
     reaches
       executing(
@@ -42,6 +43,7 @@ mod TEST--ATOMIC--EXECUTING--UPDATE-NODE is
                       logTransition(B . A, executing, failing, 1) ]
         [ macroacts : mtactions ]
         [ memory : none ]
+        [ interface : none ]
       )
     end
 
@@ -61,6 +63,7 @@ mod TEST--ATOMIC--EXECUTING--UPDATE-NODE is
         [ microacts : mtactions ]
         [ macroacts : mtactions ]
         [ memory : none ]
+        [ interface : none ]
       )
     reaches
       executing(
@@ -80,6 +83,7 @@ mod TEST--ATOMIC--EXECUTING--UPDATE-NODE is
                       logTransition(B . A, executing, failing, 2) ]
         [ macroacts : mtactions ]
         [ memory : none ]
+        [ interface : none ]
       )
     end
 
@@ -99,6 +103,7 @@ mod TEST--ATOMIC--EXECUTING--UPDATE-NODE is
         [ microacts : mtactions ]
         [ macroacts : mtactions ]
         [ memory : none ]
+        [ interface : none ]
       )
     reaches
       executing(
@@ -118,6 +123,7 @@ mod TEST--ATOMIC--EXECUTING--UPDATE-NODE is
                       logTransition(B . A, executing, failing, 3) ]
         [ macroacts : mtactions ]
         [ memory : none ]
+        [ interface : none ]
       )
     end
 
@@ -137,6 +143,7 @@ mod TEST--ATOMIC--EXECUTING--UPDATE-NODE is
         [ microacts : mtactions ]
         [ macroacts : mtactions ]
         [ memory : none ]
+        [ interface : none ]
       )
     reaches
       executing(
@@ -156,6 +163,7 @@ mod TEST--ATOMIC--EXECUTING--UPDATE-NODE is
                       logTransition(B . A, executing, failing, 4) ]
         [ macroacts : mtactions ]
         [ memory : none ]
+        [ interface : none ]
       )
     end
 
@@ -175,6 +183,7 @@ mod TEST--ATOMIC--EXECUTING--UPDATE-NODE is
         [ microacts : mtactions ]
         [ macroacts : mtactions ]
         [ memory : none ]
+        [ interface : none ]
       )
     reaches
       executing(
@@ -194,6 +203,7 @@ mod TEST--ATOMIC--EXECUTING--UPDATE-NODE is
                       logTransition(B . A, executing, iterationEnded, 5) ]
         [ macroacts : mtactions ]
         [ memory : none ]
+        [ interface : none ]
       )
     end
 
@@ -213,6 +223,7 @@ mod TEST--ATOMIC--EXECUTING--UPDATE-NODE is
         [ microacts : mtactions ]
         [ macroacts : mtactions ]
         [ memory : none ]
+        [ interface : none ]
       )
     reaches
       executing(
@@ -232,6 +243,7 @@ mod TEST--ATOMIC--EXECUTING--UPDATE-NODE is
                       logTransition(B . A, executing, iterationEnded, 6) ]
         [ macroacts : mtactions ]
         [ memory : none ]
+        [ interface : none ]
       )
     end
 
@@ -251,6 +263,8 @@ mod TEST--ATOMIC--EXECUTING--UPDATE-NODE is
         [ microacts : mtactions ]
         [ macroacts : mtactions ]
         [ memory : none ]
+        [ interface : none ]
+        [ trace : niltrace ]
       )
     reaches
       executing(
@@ -268,6 +282,8 @@ mod TEST--ATOMIC--EXECUTING--UPDATE-NODE is
         [ microacts : mtactions ]
         [ macroacts : mtactions ]
         [ memory : none ]
+        [ interface : none ]
+        [ trace : niltrace ]
       )
     end
 

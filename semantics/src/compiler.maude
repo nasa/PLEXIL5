@@ -82,11 +82,21 @@ fmod COMPILER is
   eq sanitizeIds((At,AtS), NQ, Cfg) = sanitizeIdsOnAttr(At, NQ, Cfg), sanitizeIds(AtS, NQ, Cfg) .
   eq sanitizeIds(none, NQ, Cfg) = none .
 
+  op sanitizeIdsOnPairs : List{Pair} NeQualified Configuration -> List{Pair} .
+  eq sanitizeIdsOnPairs(nil, NQ, Cfg) = nil .
+  eq sanitizeIdsOnPairs(pair(Q,E) PAIRS, NQ, Cfg)
+    =
+    pair(Q,sanitizeIds(E,NQ,Cfg)) sanitizeIdsOnPairs(PAIRS, NQ, Cfg)
+  .
+
+  vars PAIRS : List{Pair} .
+
   op sanitizeIdsOnParams : Parameters NeQualified Configuration -> Parameters .
   eq sanitizeIdsOnParams(E Ps,   NQ, Cfg) = sanitizeIds(E, NQ, Cfg) sanitizeIdsOnParams(Ps, NQ, Cfg) .
   eq sanitizeIdsOnParams(nilpar, NQ, Cfg) = nilpar .
 
   op  sanitizeIdsOnAttr : Attribute NeQualified Configuration -> Attribute .
+  eq  sanitizeIdsOnAttr((pairs: PAIRS),  NQ, Cfg) = pairs: sanitizeIdsOnPairs(PAIRS, NQ, Cfg) .
   eq  sanitizeIdsOnAttr((AT := E),  NQ, Cfg) = sanitizeIds(AT, NQ, Cfg) := sanitizeIds(E, NQ, Cfg) .
   eq  sanitizeIdsOnAttr((command: NQ' / Ps / Q), NQ, Cfg) = command: NQ' / sanitizeIdsOnParams(Ps,NQ,Cfg) / getFullyQualifiedVariableId(Q, NQ, Cfg) .
   eq  sanitizeIdsOnAttr((command: NQ' / Ps),     NQ, Cfg) = command: NQ' / sanitizeIdsOnParams(Ps,NQ,Cfg) .
@@ -203,6 +213,8 @@ fmod COMPILER is
   eq compileMemory(assignment(I, LD, (AtS), AtS'), Q)
   = createLocalVars((I . Q), LD) .
   eq compileMemory(empty(I, LD, AtS), Q)
+  = createLocalVars((I . Q),LD) .
+  eq compileMemory(update(I, LD, (AtS), PS:List{Pair}), Q)
   = createLocalVars((I . Q),LD) .
 
   --- equations for initializing by-default condition expressions and
