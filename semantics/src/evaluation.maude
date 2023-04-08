@@ -5,7 +5,7 @@ fmod EVAL is
  protecting DEFS .
 
  op eval : Environment Nodes         Expression ~> Expression . *** TODO: refactor to be ... -> Value
- op eval : Environment Configuration Expression ~> Expression . *** TODO: remove dependency from Nodes above
+ op eval : Environment Configuration Expression -> Expression . *** TODO: remove dependency from Nodes above
 
  vars NA  Ats  : AttributeSet .
  vars B B'     : Bool .

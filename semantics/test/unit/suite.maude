@@ -4,6 +4,7 @@ in ./base.maude
 in ./atomic/test.maude
 in ./reductions/test.maude
 in ./expressions/test.maude
+in ./evaluation/test.maude
 in ./model-checking.maude
 in ./compiler/test.maude
 in ./interface.maude
@@ -13,6 +14,7 @@ mod TEST-SUITE is
   pr TEST--ATOMIC .
   pr TEST--REDUCTIONS .
   pr TEST--EXPRESSIONS .
+  pr TEST--EVALUATION .
   pr TEST--MODEL-CHECKING .
   pr TEST--COMPILER .
   pr TEST--INTERFACE .
@@ -22,6 +24,7 @@ mod TEST-SUITE is
     + atomic--tests
     + reductions--tests
     + expressions--tests
+    + test--evaluation
     + model-checking--tests
     + compiler--tests
     + interface--tests

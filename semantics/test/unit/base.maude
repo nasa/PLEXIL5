@@ -24,6 +24,8 @@ mod TEST-BASE is
   op testVariable         : Variable         -> Cell .
   op testGenerator        : ExternalInputGenerator -> Cell .
 
+  op anExpression   : Expression    -> Cell .
+
 
   --- Identifiers for test cases
 
