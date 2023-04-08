@@ -6,9 +6,12 @@ module PSX2Maude.PrettyMaude where
 import PLEXILScript
 
 import Data.List (intersperse)
-import Data.OneOfN (OneOf3(..), OneOf4(..))
+import Data.OneOfN (OneOf3(..), OneOf5(..))
 import Prelude hiding ((<>))
+import Debug.Trace
+import Data.Typeable(typeOf)
 import Text.PrettyPrint
+import Data.Char (toLower)
 
 class Pretty a where
   pretty :: a -> Doc
@@ -43,9 +46,11 @@ instance Pretty Script where
 
 instance Pretty ScriptEntry where
   pretty (ScriptEntry e)
-    | (OneOf4 st)    <- e = pretty st
-    | (TwoOf4 ack)   <- e = pretty ack
-    | (ThreeOf4 sim) <- e = pretty sim
+    | (OneOf5 st)    <- e = pretty st
+    | (TwoOf5 cmd)   <- e = pretty cmd
+    | (ThreeOf5 ca) <- e = pretty ca
+    | (FourOf5 sim)  <- e = pretty sim
+    | (FiveOf5 ua)   <- e = pretty ua
 
 instance Pretty State where
   pretty (State
@@ -54,13 +59,20 @@ instance Pretty State where
     , stValue
     , stType
     }) =
-      text "stateLookup"
-        <> parens (
-          hcat $ punctuate comma
-            [text "'" <> text stName
-            ,text "nilarg"
-            ,text "val" <> (parens $ text $ unValue $ head stValue)]
-        )
+        text "stateLookup"
+          <> parens (
+            hcat $ punctuate comma
+              [text "'" <> text stName
+              ,text "nilarg"
+               , case stType of PXBoolArray   -> text "array" <> parens (hcat $ punctuate (text " # ") $ map wrapVal $ map text $ (map unValue stValue))
+                                PXIntArray    -> text "array" <> parens (hcat $ punctuate (text " # ") $ map wrapVal $ map text $ (map unValue stValue))
+                                PXRealArray   -> text "array" <> parens (hcat $ punctuate (text " # ") $ map wrapVal $ map text $ (map unValue stValue))
+                                PXStringArray -> text "array" <> parens (hcat $ punctuate (text " # ") $ map wrapVal $ map text $ (map unValue stValue))
+                                _             -> text "val" <> (parens $ text $ unValue $ head stValue)]
+          )
+
+wrapVal :: Doc -> Doc -- wraps document in "val(...)"
+wrapVal doc = text "val" <> parens doc
 
 instance Pretty Command where
   pretty (Command
@@ -90,6 +102,21 @@ instance Pretty CommandAck where
             [text "'" <> text caName
             ,if null caParams then text "nilarg" else parens (hsep (map pretty caParams))
             ,pretty caHandle]
+        )
+
+instance Pretty CommandAbort where
+  pretty (CommandAbort
+    { cabName
+    , cabParams
+    , cabResult
+    , cabType
+    }) =
+      text "commandAbort"
+        <> parens (
+          hcat $ punctuate comma
+            [text "'" <> text cabName
+            ,if null cabParams then text "nilarg" else parens (hsep (map pretty cabParams))
+            , pretty cabResult]
         )
 
 instance Pretty Parameter where
@@ -187,3 +214,14 @@ instance Pretty Value where
 
 instance Pretty Result where
   pretty = pretty . unResult
+
+instance Pretty UpdateAck where
+  pretty (UpdateAck
+    { uaName
+    , uaBool
+    }) =
+      text "updateAck"
+        <> parens ( hcat $ punctuate comma
+        [text "'" <> text uaName
+        , text $ map toLower $ show uaBool]
+        )

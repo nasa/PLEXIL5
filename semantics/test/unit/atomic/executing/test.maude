@@ -21,7 +21,7 @@ mod TEST--ATOMIC--EXECUTING is
     tests--atomic--executing--empty-node
     + tests--atomic--executing--assignment-node
     --- TODO: + tests--atomic--executing--command-node
-    --- TODO: + tests--atomic--executing--update-node
+    + tests--atomic--executing--update-node
     + tests--atomic--executing--list-node
     + tests--atomic--executing--library-node
     .

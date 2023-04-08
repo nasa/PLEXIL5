@@ -5,7 +5,7 @@ mod TEST-BASE is
 
   subsort Config Bool < SystemUnderTest .
 
-  --- Test stubs/adapters
+  --- Test Adapters
 
   op testConfiguration    : Configuration    -> Cell .
   op testExpression       : Expression       -> Cell .
@@ -16,6 +16,24 @@ mod TEST-BASE is
   op testSystem           : GlobalConfig     -> Cell .
   op testOperation        : Operation        -> Cell .
   op testQualifiedId      : Qualified        -> Cell .
+
+  op testExternalInputs   : ExternalInputs   -> Cell .
+  op testEInputsList      : EInputsList      -> Cell .
+  op testValue            : Value            -> Cell .
+  op testNat              : Nat              -> Cell .
+  op testVariable         : Variable         -> Cell .
+  op testGenerator        : ExternalInputGenerator -> Cell .
+
+  op aConfiguration : Configuration -> Cell .
+  op anExpression   : Expression    -> Cell .
+  op anAttribute    : AttributeSet  -> Cell .
+  op aSystem        : GlobalConfig  -> Cell .
+  op somePairs      : List{Pair}    -> Cell .
+
+
+  --- Test Stubs
+
+  op Stub{Config} : -> Config [ctor] .
 
 
   --- Identifiers for test cases

@@ -1,4 +1,4 @@
-mod INTERFACE is
+fmod INTERFACE is
   pr DEFS .
 
   vars Cfg             : Config .
@@ -11,6 +11,7 @@ mod INTERFACE is
   vars CmdId           : Identifier .
   vars Cmds Cmds'      : Configuration .
   vars MEM AccCmds     : Configuration .
+  vars ExNds         : Configuration .
   vars Hndl Hndl'      : CommandHandle .
   vars Hndl?           : Maybe{CommandHandle} .
   vars Args            : Arguments .
@@ -18,6 +19,8 @@ mod INTERFACE is
   vars Q Q'            : Qualified .
   vars AtS AtS'        : AttributeSet .
   vars In              : Input .
+
+  var GEN : ExternalInputGenerator .
 
   op updateInterface : Config ExternalInputs -> Config .
   eq updateInterface(
@@ -27,20 +30,17 @@ mod INTERFACE is
       Cfg,
       EInput)
     = [ environment : updateInternalEnvironment(Env, getLookups(EInput), mtenvironment) ]
-      [ interface : updateCommandHandles(Cmds, getCommandHandles(EInput)) ]
+      [ interface : updateUpdateAcks(updateCommandInputs(Cmds, getCommandInputs(EInput)),EInput) ]
       [ memory : updateCommandValues(Cmds,MEM, getCommandValues(EInput)) ]
       updateInterfaceHistory(Cfg,EInput)
   .
-
-  op interface-history : -> CellId .
-  op `[_:_`] : CellId EInputsList -> Cell [format (n d d ++i --i d)] .
 
   op updateInterfaceHistory : Config ExternalInputs -> Config .
   eq updateInterfaceHistory(
       [ interface-history : EIns ]
       Cfg,
-      EInput)
-    = [ interface-history : EInput ]
+      EInput )
+    = [ interface-history : EInput EIns ]
       Cfg .
   eq updateInterfaceHistory(Cfg,EInput) = [ interface-history : EInput ] Cfg [owise] .
 
@@ -48,10 +48,11 @@ mod INTERFACE is
   eq getLookups(EInput stateLookup(Q,Args,V) EInput') = stateLookup(Q,Args,V) getLookups(EInput EInput') .
   eq getLookups(EInput) = noExternalInputs [owise] .
 
-  op getCommandHandles : ExternalInputs -> ExternalInputs .
-  eq getCommandHandles(commandAck(CmdId,Args,Hndl) EInput) = commandAck(CmdId,Args,Hndl) getCommandHandles(EInput) . --- [print "getCommandHandles1(" CmdId "," Args "," Hndl ")"] .
-  eq getCommandHandles(noExternalInputs) = noExternalInputs .
-  eq getCommandHandles(In EInput) = getCommandHandles(EInput) [owise] .
+  op getCommandInputs : ExternalInputs -> ExternalInputs .
+  eq getCommandInputs(commandAck(CmdId,Args,Hndl) EInput) = commandAck(CmdId,Args,Hndl) getCommandInputs(EInput) . --- [print "getCommandInputs1(" CmdId "," Args "," Hndl ")"] .
+  eq getCommandInputs(commandAbort(CmdId,Args,V) EInput) = commandAbort(CmdId,Args,V) getCommandInputs(EInput) .
+  eq getCommandInputs(noExternalInputs) = noExternalInputs .
+  eq getCommandInputs(In EInput) = getCommandInputs(EInput) [owise] .
 
   op getCommandValues : ExternalInputs -> ExternalInputs .
   eq getCommandValues(commandResult(CmdId,Args,V) EInput) = commandResult(CmdId,Args,V) getCommandValues(EInput) .
@@ -103,5 +104,32 @@ mod INTERFACE is
     updateCommandValues(Cmds,MEM,EInput)
   .
   eq updateCommandValues(Cmds,MEM,noExternalInputs) = MEM .
+  eq updateCommandValues(Cmds,MEM,EInput) = MEM [owise print "Could not match: " EInput " with any running command in " Cmds] .
 
-endm
+  op updateCommandInputs : Configuration ExternalInputs -> Configuration .
+  eq updateCommandInputs( Cmds, (commandAck(CmdId, Args, Hndl') EInput))
+    = updateCommandHandles( Cmds, (commandAck(CmdId, Args, Hndl') EInput)) .
+  eq updateCommandInputs(
+    < CmdId . Q : command-on-execution | arguments: Args, aborted: false, AtS > Cmds,
+    (commandAbort(CmdId, Args, V) EInput)
+  )
+  =
+    < CmdId . Q : command-on-execution | arguments: Args, aborted: true, AtS > .
+  eq updateCommandInputs(Cmds, (commandAbort(CmdId, Args, V) EInput)) = updateCommandInputs(Cmds, EInput) .
+  eq updateCommandInputs(Cmds, noExternalInputs) = Cmds .
+
+  op updateUpdateAcks : Configuration ExternalInputs ~> Configuration .
+  eq updateUpdateAcks(
+      < UId . Q : update-on-execution | ack: B, pairs: PAIRS, AtS > ExNds,
+      (updateAck(UId, B') EInput)
+  ) =
+      < UId . Q : update-on-execution | ack: B', pairs: PAIRS, AtS >
+      updateUpdateAcks(ExNds,EInput)
+  .
+  eq updateUpdateAcks(ExNds,noExternalInputs) = ExNds .
+  eq updateUpdateAcks(ExNds,I:Input EInput) = ExNds [owise] .
+
+  vars UId : Identifier .
+  vars B B' : Bool .
+  vars PAIRS : List{Pair} .
+endfm

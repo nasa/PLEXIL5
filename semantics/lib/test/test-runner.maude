@@ -25,6 +25,7 @@ mod TEST-RUNNER is
   pr STRING .
 
   vars S S' : SystemUnderTest .
+  vars KS KS' : [SystemUnderTest] .
   vars BE : Bool .
   vars Str  : String .
   vars TRL TRL'  : TestResultList .
@@ -53,10 +54,12 @@ mod TEST-RUNNER is
   eq assert S !: WSo end = CheckSortNotLeq(S,WSo) .
   eq assert Str truth S end = CheckTrue(Str,S) .
   eq assert Str from S reaches S' end = assert Str from S reaches S' in Wunbounded steps end .
+  eq assert Str from KS reaches KS' end = assert Str from KS reaches KS' in Wunbounded steps end [owise] .
   eq assert Str from S avoids S' end  = assert Str from S avoids S' in Wunbounded steps end .
   eq assert Str from S reaches S' in one step end = assert Str from S reaches S' in 1 steps end .
   eq assert Str from S avoids S' in one step end  = assert Str from S avoids S' in 1 steps end .
   eq assert Str from S reaches S' in B steps end = Check(reachesIn(B), Str, S, S') .
+  eq assert Str from KS reaches KS' in B steps end = CheckWithKinds(reachesIn(B), Str, KS, KS') [owise] .
   eq assert Str from S avoids S' in B steps end  = Check(avoidsIn(B), Str, S, S') .
 
   eq begin tests TRL Success(Str) TRL' end tests = begin tests TRL TRL' end tests .
@@ -129,6 +132,27 @@ mod TEST-RUNNER is
   .
   ceq Check(reachesIn(B), Str, S, S') = Failure(msg: Str, actual: S, expected: S')
     if true [owise print Str] .
+
+  op CheckWithKinds    :    Assertion String [SystemUnderTest] [SystemUnderTest] -> TestResult .
+  ceq CheckWithKinds(reachesIn(B), Str, KS, KS') = Success Str
+  if  T1 := upTerm(KS) /\ T2 := upTerm(KS') /\
+      BUN:Bound := unWrap(B)
+      /\
+      {T:Term, T:Type, none} := metaSearch(
+        upModule('TEST-SUITE, false),
+        upTerm(KS),
+        upTerm(KS'),
+        nil,
+        '*,
+        BUN:Bound,
+        0
+        )
+        [print "Check KS " B "\n" Str "\n" KS "\n" KS' "\n"]
+  .
+  eq CheckWithKinds(reachesIn(B), Str, KS, KS')
+    =
+     Failure(msg: Str, actual: KS, expected: KS')
+  [owise print Str] .
 
 
   op runTests : -> TestResults .

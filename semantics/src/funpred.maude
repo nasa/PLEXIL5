@@ -1,7 +1,7 @@
 ----                                       Predicates and auxiliary definitions
 ----                                                       author: Camilo Rocha
 
-mod FUNPRED is
+fmod FUNPRED is
   protecting EVAL .
   protecting ACTION .
 
@@ -116,6 +116,16 @@ mod FUNPRED is
   eq childrenWaitingFinished(PS, Q)
    = waitingOrFinished(childrenProcesses(Q,PS)) .
 
+  --- *** All nodes finished
+  --- op allNodesFinished : Configuration -> Bool .
+  --- eq allNodesFinished( < Q : C | status: inactive, Ats > PS ) = false .
+  --- eq allNodesFinished( < Q : C | status: waiting, Ats > PS ) = false .
+  --- eq allNodesFinished( < Q : C | status: executing, Ats > PS ) = false .
+  --- eq allNodesFinished( < Q : C | status: finishing, Ats > PS ) = false .
+  --- eq allNodesFinished( < Q : C | status: iterationEnded, Ats > PS ) = false .
+  --- eq allNodesFinished( < Q : C | status: failing, Ats > PS ) = false .
+  --- eq allNodesFinished( PS ) = true [owise] .
+
   *** is Root ?
   op root : Qualified -> Expression .
   eq root(Q)
@@ -133,12 +143,26 @@ mod FUNPRED is
   eq evalpar(Gamma, PS, (E P))
    = (expToVal(eval(Gamma, PS, E)) evalpar(Gamma, PS, P)) .
 
-  vars AT AT' : AssignmentTarget .
+  *** Evaluate lists of pairs
+  op evalPairs : Environment Configuration List{Pair} -> List{Pair} .
+  eq evalPairs(Gamma, PS, (nil).List{Pair})
+   = (nil).List{Pair} .
+  eq evalPairs(Gamma, PS, pair(QID,E) PAIRS)
+   = pair(QID,const(expToVal(eval(Gamma, PS, E)))) evalPairs(Gamma, PS, PAIRS) .
+
+  *** Pairs of update node
+  op getPairs : Qualified Configuration ~> List{Pair} .
+  eq getPairs(Q, < Q : update | pairs: PAIRS, AtS > PS) = PAIRS .
+
+  vars QID : Qid .
+  vars PAIRS : List{Pair} .
 
   *** Assignment expression of node
   op assignmentExpression : Qualified Configuration -> Expression .
   eq assignmentExpression(Q, < Q : assignment | (AT := E), AtS > PS)
    = E .
+
+  vars AT : AssignmentTarget .
 
   *** Assignment variable of node
   op assignmentVariable : Qualified Configuration -> Qualified .
@@ -172,8 +196,10 @@ mod FUNPRED is
    = Q' .
 
   *** Command arguments of node
-  op getCommandArguments : Qualified Configuration -> Expression .
+  op getCommandArguments : Qualified Configuration ~> Expression .
   eq getCommandArguments(Q, < Q : command | command: Q' / Params, AtS > PS)
+   = Params .
+  eq getCommandArguments(Q, < Q : command | command: Q' / Params / Q'' , AtS > PS)
    = Params .
 
   var CH : CommandHandle .
@@ -181,19 +207,30 @@ mod FUNPRED is
 
   var IFACE : Configuration .
 
-  op isCommandHandleKnown : Qualified Configuration -> Bool .
+  op isCommandHandleKnown : Qualified Configuration ~> Bool .
   eq isCommandHandleKnown('pprint . Q, IFACE) = true .
-  eq isCommandHandleKnown(Q, < Q : command-on-execution | handle: just(CH), AtS > IFACE) = true  .
-  eq isCommandHandleKnown(Q, IFACE) = false [owise] .
+  eq isCommandHandleKnown(Q, < Q' . Q : command-on-execution | handle: just(CH), AtS > IFACE) = true  .
+  eq isCommandHandleKnown(Q, < Q' . Q : command-on-execution | handle: nothing, AtS > IFACE) = false  .
 
+  var xf : XFlag .
   *** TODO: fix the implementation once the representation for command
   *** handles is final
-  op abortCompleted : Environment Configuration Qualified -> Bool .
-  eq abortCompleted(Gamma, PS, Q)
-   = true .
+  op hasAborted : Configuration Configuration Qualified -> Bool .
+  eq hasAborted(
+      < Q : command-on-execution | aborted: true, AtS > IFACE,
+      < Q : command | AtS' > PS,
+        Q )
+    = true .
+  eq hasAborted(
+      < Q : command-on-execution | aborted: false, AtS > IFACE,
+      < Q : command | AtS' > PS,
+        Q )
+    = false .
+  eq hasAborted(IFACE, PS, Q)
+    = false [owise] .
 
 *** Type of node
- op nodeType : Object -> Cid .
+ op nodeType : Object ~> Cid .
  eq nodeType( < Q : list | Ats > ) = list .
  eq nodeType( < Q : command | Ats > ) = command .
  eq nodeType( < Q : assignment | Ats > ) = assignment .
@@ -267,4 +304,4 @@ mod FUNPRED is
  eq parametersToExpressionSet(nilpar, Es) = Es .
  eq parametersToExpressionSet(E P, Es) = parametersToExpressionSet(P, Es ; E) .
 
-endm
+endfm

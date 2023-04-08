@@ -1,0 +1,68 @@
+mod TEST--INTERFACE--UPDATE is
+
+  pr TEST-BASE .
+
+  op test--interface--update : -> TestResults .
+
+  eq test--interface--update =
+    begin tests
+
+      assert "updateUpdateAcks" from
+        testConfiguration(
+        updateUpdateAcks(
+          < A . B : update-on-execution | ack: false,
+                                          pairs:
+                                            pair('field1, var(M . B . A))
+                                            pair('field2, const(val(2))) >
+          ,
+          updateAck(A,true)
+        )
+        )
+      reaches
+        testConfiguration(
+          < A . B : update-on-execution | ack: true,
+                                          pairs:
+                                            pair('field1, var(M . B . A))
+                                            pair('field2, const(val(2))) >
+        )
+      end
+
+      assert "updateUpdateAcks" from
+        testConfiguration(
+        updateUpdateAcks(
+          < A . C : update-on-execution | ack: false, pairs: pair('field1, const(val(1))) >
+          < B . C : update-on-execution | ack: false, pairs: pair('field2, const(val(2))) >
+          ,
+          updateAck(B,true)
+          commandAck(A, nilarg, CommandDenied)
+        )
+        )
+      reaches
+        testConfiguration(
+          < A . C : update-on-execution | ack: false, pairs: pair('field1, const(val(1))) >
+          < B . C : update-on-execution | ack: true, pairs: pair('field2, const(val(2))) >
+        )
+      end
+
+      assert "updateUpdateAcks" from
+        testConfiguration(
+        updateUpdateAcks(
+          < A . C : update-on-execution | ack: false, pairs: pair('field1, const(val(1))) >
+          < B . C : update-on-execution | ack: false, pairs: pair('field2, const(val(2))) >
+          ,
+          updateAck(B,true)
+          commandAck(A, nilarg, CommandDenied)
+          commandAck(B, nilarg, CommandDenied)
+        )
+        )
+      reaches
+        testConfiguration(
+          < A . C : update-on-execution | ack: false, pairs: pair('field1, const(val(1))) >
+          < B . C : update-on-execution | ack: true, pairs: pair('field2, const(val(2))) >
+        )
+      end
+
+    end tests
+    .
+
+endm

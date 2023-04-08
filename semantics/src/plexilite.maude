@@ -16,18 +16,18 @@ in environment.maude
 in declarations.maude
 in action.maude
 in traces.maude
-in generator.maude
-in system.maude
+in system/interface.maude
+in generators/interface.maude
+in system/top.maude
 in defs.maude
 in plexil.maude
 in runtime.maude
 in evaluation.maude
 in funpred.maude
-in compiler.maude
-in syncred.maude
-in atomic.maude
 in interface.maude
-in reductions.maude
+in reductions/top.maude
+in generators/top.maude
+in compiler.maude
 
 mod PLEXILITE is
   pr PLEXIL .
@@ -35,6 +35,7 @@ mod PLEXILITE is
   pr RUNTIME .
   pr INTERFACE .
   pr REDUCTIONS .
+  pr BASIC-GENERATORS .
 endm
 
 in model-checker.maude
