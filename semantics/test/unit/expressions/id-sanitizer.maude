@@ -5,8 +5,9 @@ pr TEST-BASE .
 
 op id-sanitizer--tests : -> TestResults .
 eq id-sanitizer--tests =
-        id-sanitizer--expressions--tests
-        + id-sanitizer--attributes--tests .
+    id-sanitizer--expressions--tests
+    + test--expressions--id-sanitizer--pairs
+    + id-sanitizer--attributes--tests .
 
 
 vars Cfg      : Configuration .
@@ -124,6 +125,25 @@ begin tests
         )
     end
 
+    assert "pairs:_ attribute is sanitized" from
+      anAttribute(
+        sanitizeIds(
+          pairs:
+            pair('field1, var(A))
+            pair('field2, arrayVar(B)),
+          C,
+          < A . C : memory | none >
+          < B . C : memory | none >
+        )
+      )
+    reaches
+      anAttribute(
+        pairs:
+            pair('field1, var(A . C))
+            pair('field2, arrayVar(B . C))
+      )
+    end
+
 end tests
 if
     Cfg :=  < 'C . 'B . 'A : list | none >
@@ -134,6 +154,44 @@ if
     /\ Q  := 'C . 'A
     /\ Q' := 'B . 'A
     /\ E' := isStatus?(getFullyQualifiedNodeId(I,Q,Cfg),waiting)
+.
+
+op test--expressions--id-sanitizer--pairs : -> TestResults .
+eq test--expressions--id-sanitizer--pairs =
+begin tests
+  assert "sanitize ids on no pairs " from
+    somePairs(
+      sanitizeIdsOnPairs(
+        nil,
+        C,
+        none
+      )
+    )
+  reaches
+    somePairs(
+      nil
+    )
+  end
+
+  assert "sanitize ids on pairs " from
+    somePairs(
+      sanitizeIdsOnPairs(
+        pair('field1, var(A))
+        pair('field2, arrayVar(B))
+        pair('field3, arrayVar(B,const(val(0)))),
+        C,
+        < A . C : memory | none >
+        < B . C : memory | none >
+      )
+    )
+  reaches
+    somePairs(
+      pair('field1, var(A . C))
+      pair('field2, arrayVar(B . C))
+      pair('field3, arrayVar(B . C,const(val(0))))
+    )
+  end
+end tests
 .
 
 

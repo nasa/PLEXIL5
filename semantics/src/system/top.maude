@@ -1,0 +1,119 @@
+fmod CONFIG is
+  pr ACTION .
+  pr ENVIRONMENTS .
+  pr SYSTEM--INTERFACE--CONFIG-INTERFACE .
+  pr NODE .
+  pr TRACE .
+  pr GENERATORS--INTERFACE .
+
+  op `[_:_`] : CellId ActionSet              -> Cell [format (n d d ++i --i d)] .
+  op `[_:_`] : CellId EnvironmentList        -> Cell [format (n d d ++i --i d)] .
+  op `[_:_`] : CellId Configuration          -> Cell [format (n d d ++i --i d)] .
+  op `[_:_`] : CellId TraceList              -> Cell [format (n d d ++i --i d)] .
+  op `[_:_`] : CellId ExternalInputGenerator -> Cell [format (n d d ++i --i d)] .
+  op `[_:_`] : CellId EInputsList            -> Cell [format (n d d ++i --i d)] .
+
+  *** Constructors
+  op emptyConfig : -> Config .
+  eq emptyConfig
+  = [ environment : mtenvironment ]
+    [ nodes       : none          ]
+    [ memory      : none          ]
+    [ microacts   : mtactions     ]
+    [ macroacts   : mtactions     ]
+    [ trace       : niltrace      ]
+    [ interface   : none          ]
+    [ generator   : noEnvGen      ]
+  .
+
+  *** Modifiers
+  op _/_ : Config Config -> [Config] [prec 80] .
+  eq [ C : AS  ] Conf / [ C : AS'  ] Conf' = [ C : AS'  ] Conf / Conf' .
+  eq [ C : EL  ] Conf / [ C : EL'  ] Conf' = [ C : EL'  ] Conf / Conf' .
+  eq [ C : CS  ] Conf / [ C : CS'  ] Conf' = [ C : CS'  ] Conf / Conf' .
+  eq [ C : TL  ] Conf / [ C : TL'  ] Conf' = [ C : TL'  ] Conf / Conf' .
+  eq [ C : GEN ] Conf / [ C : GEN' ] Conf' = [ C : GEN' ] Conf / Conf' .
+  eq Conf / mtsoup = Conf .
+
+  op _//_ : Config Config -> Config [prec 80] .
+  eq [ C : AS  ] Conf // [ C : AS'  ] Conf' = [ C : AS'  ] Conf // Conf' .
+  eq [ C : EL  ] Conf // [ C : EL'  ] Conf' = [ C : EL'  ] Conf // Conf' .
+  eq [ C : CS  ] Conf // [ C : CS'  ] Conf' = [ C : CS'  ] Conf // Conf' .
+  eq [ C : TL  ] Conf // [ C : TL'  ] Conf' = [ C : TL'  ] Conf // Conf' .
+  eq [ C : GEN ] Conf // [ C : GEN' ] Conf' = [ C : GEN' ] Conf // Conf' .
+  eq Conf // Conf' = Conf Conf' [owise] .
+
+  *** Observers
+  op getNodes     : Config -> Configuration .
+  eq getNodes(    [ nodes : CS ] Conf) = CS .
+
+  op getNodesCell : Config -> Config .
+  eq getNodesCell([ nodes : CS ] Conf) = [ nodes : CS ] .
+
+  op getCells : CellId Config -> Config .
+  eq getCells(C, [ C : AS  ] Conf) = [ C : AS  ] getCells(C,Conf) .
+  eq getCells(C, [ C : EL  ] Conf) = [ C : EL  ] getCells(C,Conf) .
+  eq getCells(C, [ C : CS  ] Conf) = [ C : CS  ] getCells(C,Conf) .
+  eq getCells(C, [ C : TL  ] Conf) = [ C : TL  ] getCells(C,Conf) .
+  eq getCells(C, [ C : GEN ] Conf) = [ C : GEN ] getCells(C,Conf) .
+  eq getCells(C, Conf) = mtsoup [owise] .
+
+  op getMacroacts : Config -> ActionSet .
+  eq getMacroacts([ macroacts : AS ] Conf) = AS .
+
+  op getMicroacts : Config -> ActionSet .
+  eq getMicroacts([ microacts : AS ] Conf) = AS .
+
+  op getObject : Oid Configuration -> Object .
+  eq getObject(OId, < OId : CId | AtS > CS) = < OId : CId | AtS > .
+
+  op getOid : Object -> Oid .
+  eq getOid(< OId : CId | AtS >) = OId .
+
+  op getCid : Object -> Cid .
+  eq getCid(< OId : CId | AtS >) = CId .
+
+  op getAttrs : Object -> AttributeSet .
+  eq getAttrs(< OId : CId | AtS >) = AtS .
+
+  op updateGenerator : Config ExternalInputs ~> Config .
+  eq updateGenerator(
+      Conf [ generator : GEN ],
+      EInput )
+    = Conf [ generator : update( GEN, [ generator : GEN ] Conf, EInput ) ] .
+
+  vars AS AS'     : ActionSet .
+  vars Q          : NeQualified .
+  vars C          : CellId .
+  vars Conf Conf' : Config .
+  vars CS CS'     : Configuration .
+  vars EL EL'     : EnvironmentList .
+  vars EInput     : ExternalInputs .
+  vars GEN GEN'   : ExternalInputGenerator .
+  vars TL TL'     : TraceList .
+  vars OId        : Oid .
+  vars PS         : Configuration .
+  vars CId        : Cid .
+  vars AtS        : AttributeSet .
+endfm
+
+fmod SYSTEM is
+  protecting SYSTEM--INTERFACE .
+  protecting CONFIG .
+
+  op getConfig : GlobalConfig -> Config .
+  eq getConfig(Op | Conf) = Conf .
+
+  op getOperation : GlobalConfig -> Operation .
+  eq getOperation(Op | Conf) = Op .
+
+  vars Conf : Config .
+  vars Op   : Operation .
+
+
+  ************************************************************
+  *** DEBUGGING: operators to detect errors
+
+  op ERROR : Config ~> Config [ctor strat(0)] .
+
+endfm

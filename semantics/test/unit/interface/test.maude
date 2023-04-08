@@ -1,0 +1,58 @@
+load update.maude
+
+mod TEST--INTERFACE is
+  pr TEST-BASE .
+  pr TEST--INTERFACE--UPDATE .
+
+  op interface--tests : -> TestResults .
+
+  eq interface--tests = test--interface--update +
+    begin tests
+
+      assert "updateGenerator calls update on the generator" from
+        (updateGenerator(
+          [ environment : mtenvironment ]
+          [ interface : none ]
+          [ memory : none ]
+          [ generator : noEnvGen ]
+          , noExternalInputs
+        )
+        )
+      reaches
+          [ environment : mtenvironment ]
+          [ interface : none ]
+          [ memory : none ]
+          [ generator : update(
+                          noEnvGen,
+                          [ environment : mtenvironment ]
+                          [ interface : none ]
+                          [ memory : none ]
+                          [ generator : noEnvGen ],
+                          noExternalInputs
+                        ) ]
+      end
+
+      assert "updateInterface calls updateUpdateAcks" from
+        updateInterface(
+          [ environment : mtenvironment ]
+          [ interface : < A . B : update-on-execution | ack: false, pairs: pair('field, const(val(0))) > ]
+          [ memory : none ]
+          ,
+          updateAck(A,true)
+        )
+      reaches
+          [ environment : mtenvironment ]
+          [ interface :
+            updateUpdateAcks(
+              < A . B : update-on-execution | ack: false, pairs: pair('field, const(val(0))) >
+              ,
+              updateAck(A,true)
+            ) ]
+          [ memory : none ]
+          [ interface-history : updateAck(A,true) ]
+      end
+
+    end tests
+    .
+
+endm

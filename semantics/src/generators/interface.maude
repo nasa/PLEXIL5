@@ -1,0 +1,9 @@
+sload generator.maude
+sload base-generator.maude
+sload zero-generator.maude
+sload empty-generator.maude
+
+fmod GENERATORS--INTERFACE is
+  pr GENERATORS--ZERO-GENERATOR .
+  pr GENERATORS--EMPTY-GENERATOR .
+endfm

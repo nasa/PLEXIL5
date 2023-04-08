@@ -6,7 +6,7 @@ import Text.XML.HXT.Core
 import Data.Maybe (fromJust)
 import Data.Either (partitionEithers)
 import Data.Either.Combinators (maybeToRight)
-import Data.OneOfN (OneOf3(..), OneOf4(..))
+import Data.OneOfN (OneOf3(..), OneOf5(..))
 
 data PLEXILScript = PLEXILScript
   { initialState :: InitialState
@@ -38,20 +38,24 @@ xpInitialState =
 newtype Script = Script [ScriptEntry] deriving (Show,Eq)
 
 newtype ScriptEntry = ScriptEntry
-  { unScriptEntry :: (OneOf4 State Command CommandAck Simultaneous)
+  { unScriptEntry :: (OneOf5 State Command CommandAck Simultaneous UpdateAck)
   } deriving (Show,Eq)
 
 instance XmlPickler ScriptEntry where
   xpickle = xpWrap (ScriptEntry,unScriptEntry) $ xpAlt tag ps
     where
-      tag (OneOf4   _) = 0
-      tag (TwoOf4   _) = 1
-      tag (ThreeOf4 _) = 2
+      tag (OneOf5   _) = 0
+      tag (TwoOf5   _) = 1
+      tag (ThreeOf5 _) = 2
+      tag (FourOf5  _) = 3
+      tag (FiveOf5  _) = 4
 
       ps
-        = [ xpWrap (OneOf4,  \(OneOf4 x)   -> x) $ xpickle
-          , xpWrap (TwoOf4,  \(TwoOf4 x)   -> x) $ xpickle
-          , xpWrap (ThreeOf4,\(ThreeOf4 x) -> x) $ xpickle ]
+        = [ xpWrap (OneOf5,  \(OneOf5 x)   -> x) $ xpickle
+          , xpWrap (TwoOf5,  \(TwoOf5 x)   -> x) $ xpickle
+          , xpWrap (ThreeOf5,\(ThreeOf5 x) -> x) $ xpickle
+          , xpWrap (FourOf5, \(FourOf5 x)  -> x) $ xpickle
+          , xpWrap (FiveOf5, \(FiveOf5 x)  -> x) $ xpickle ]
 
 instance XmlPickler Script where
   xpickle = xpScript
@@ -61,7 +65,6 @@ xpScript =
   xpElem "Script" $
   xpWrap (Script,\(Script xs) -> xs) $
   xpList xpickle
-
 
 newtype Simultaneous = Simultaneous [SimultaneousEntry] deriving (Show,Eq)
 
@@ -298,6 +301,7 @@ data State = State
 instance XmlPickler State where
   xpickle = xpState
 
+
 xpState :: PU State
 xpState
   = xpElem "State" $
@@ -309,6 +313,23 @@ xpState
       (xpList xpickle)
       (xpAttr "type" xpickle)
 
+data UpdateAck = UpdateAck
+  { uaName   :: String
+  , uaBool   :: Bool
+  } deriving (Show,Eq)
+
+instance XmlPickler UpdateAck where
+  xpickle = xpUpdateAck
+
+xpUpdateAck :: PU UpdateAck
+xpUpdateAck
+  = xpElem "UpdateAck" $
+    xpWrap
+      ( uncurry UpdateAck
+      , \ua -> (uaName ua, uaBool ua)) $
+    xpPair
+      (xpAttr "name" xpText)
+      (xpDefault True $ xpZero "")
 
 data Parameter = Parameter
   { parValue :: String

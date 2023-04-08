@@ -1,11 +1,11 @@
 ----                                                   Evaluation specification
 ----                                                       author: Camilo Rocha
-mod EVAL is
+fmod EVAL is
  protecting EXTENDED-EXPRESSION .
  protecting DEFS .
 
  op eval : Environment Nodes         Expression ~> Expression . *** TODO: refactor to be ... -> Value
- op eval : Environment Configuration Expression ~> Expression . *** TODO: remove dependency from Nodes above
+ op eval : Environment Configuration Expression -> Expression . *** TODO: remove dependency from Nodes above
 
  vars NA  Ats  : AttributeSet .
  vars B B'     : Bool .
@@ -135,7 +135,7 @@ mod EVAL is
  eq eval(C,PL,E equ E') = eval(C,PL,E) equ eval(C,PL,E') .
  eq eval(C,PL,E nequ E') = not eval(C,PL,E equ E') .
 
- ceq eval(C,PL,isKnown(E)) = const(val(V =/= unknown)) if const(V) := eval(C,PL,E) .
+ ceq eval(C,PL,isKnown(E)) = const(val(if V == unknown then false else true fi)) if const(V) := eval(C,PL,E) .
 
  var ArrV : ArrayValue .
 
@@ -190,6 +190,11 @@ var FT FT' : FailureType .
   = eval(C, [ PS ], isOutcome?(Q,success) and isStatus?(Q,finished)) .
  eq eval(C, [ PS ], hasSkipped?(Q))
   = eval(C, [ PS ], isOutcome?(Q,skipped)) .
+
+ eq eval(C, [ < Q : (X:Cid) | NA, ack: true > PS ], hasRcvAck?(Q) )
+  = const(val(true)) .
+ eq eval(C, [ < Q : (X:Cid) | NA, ack: false > PS ], hasRcvAck?(Q) )
+  = const(val(false)) .
 
  eq eval(C, [ PS ], areChildren?(Q,S)) = const(val(processesWithStatus?(childrenProcesses(Q,PS),S))) .
  eq eval(C, [ PS ], noChildFailed(Q)) = const(val(getFailedProcesses(getProcessesWithStatus(childrenProcesses(Q,PS),finished)) == none)) .
@@ -278,7 +283,7 @@ vars AtS AtS' : AttributeSet .
  eq $childrenMemories(Q, PS, PS') = PS' [owise] .
 
  *** Auxiliary boolean expression predicates
- ops isTrue isFalse isUnknown : Expression -> Bool .
+ ops isTrue isFalse isUnknown : Expression ~> Bool .
  eq isTrue(const(val(true))) = true .
  eq isTrue(const(val(false))) = false .
  eq isTrue(const(unknown)) = false .
@@ -289,4 +294,4 @@ vars AtS AtS' : AttributeSet .
  eq isUnknown(const(val(false))) = false .
  eq isUnknown(const(unknown)) = true .
 
-endm
+endfm

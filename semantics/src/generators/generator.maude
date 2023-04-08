@@ -1,0 +1,8 @@
+fmod GENERATOR{X :: TRIV} is
+  pr EXTERNAL-INPUT-LIST .
+  sort Generator{X} .
+
+  op isConsumed? : Generator{X} X$Elt ~> Bool .
+  op generate    : Generator{X} X$Elt ~> EInputsList .
+  op update      : Generator{X} X$Elt ExternalInputs ~> Generator{X} .
+endfm

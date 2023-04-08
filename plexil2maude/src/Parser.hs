@@ -10,7 +10,7 @@ import Control.Monad.Except
 import Data.Char
 import Data.Either
 import Data.Maybe
-import Data.List (intersperse)
+import Data.List (intersperse, isInfixOf)
 import qualified Data.Map as M
 import Data.Text (Text) --  hiding (map)
 import Debug.Trace
@@ -475,8 +475,9 @@ parseDeclareArray cursor =
     do arrName <- toQID <$> fstMatch parseName children
        arrType <- fstMatch parseType children
        arrSize <- fstMatch parseMaxSize children
-       arrInit <- fstMatch parseArrayInit children <|> getDefaultArrayInit arrType arrSize
-       return $ parens $ (text arrName) <+> colon <+> arrInit
+       arrInit <- fstMatch (parseArrayInit arrType) children
+                            <|> (getDefaultArrayInit arrType arrSize)
+       return $ parens $ (text arrName) <+> colon <+> text "createArray" <> parens ((text (show arrSize)) <+> comma <+> arrInit)
     where
         children = child cursor
 
@@ -491,25 +492,25 @@ parseDeclareArray cursor =
             do checkThisElement "MaxSize" cursor
                read <$> T.unpack <$> getUniqueTextContent' cursor
 
-        parseArrayInit :: Cursor -> ParseError Doc
-        parseArrayInit cursor =
+        parseArrayInit :: String -> Cursor -> ParseError Doc
+        parseArrayInit typ cursor =
           if hasArrayValue1Level cursor
             then
                 return (createArrayWithValues $ head $ (child >=> hasArrayValueAxis1Level) cursor)
             else
                 do checkThisElement "InitialValue" cursor
-                   doc <- mapM parseSimpleValue children
-                   return $ "array" <> parens (hsep $ intersperse (text "#") doc)
+                   doc <- mapM (parseSimpleValue' $ Just $ obtainPLEXILType $ typ) children
+                   return $ hsep $ intersperse (text "#") doc
                 where
                     children = (child >=> isValue) cursor
 
         getDefaultArrayInit :: String -> Int -> ParseError Doc
         getDefaultArrayInit arrType len =
             do arrInitBuilder <- case arrType of
-                "String"  -> Right "unknownStringArray" -- $ buildValue $ doubleQuotes PP.empty
-                "Integer" -> Right "unknownIntArray"    -- $ buildValue $ text "0"
-                "Real"    -> Right "unknownRealArray"   -- $ buildValue $ text "0.0"
-                "Boolean" -> Right "unknownBoolArray"   -- $ buildValue $ text "false"
+                "String"  -> Right "unknownArray" -- $ buildValue $ doubleQuotes PP.empty
+                "Integer" -> Right "unknownArray"    -- $ buildValue $ text "0"
+                "Real"    -> Right "unknownArray"   -- $ buildValue $ text "0.0"
+                "Boolean" -> Right "unknownArray"   -- $ buildValue $ text "false"
                 _ -> Left $ "Don't know how to initialize type " ++ show arrType
                return $ text arrInitBuilder <> parens (text $ show len)
 
@@ -548,14 +549,14 @@ prettyElement rec cursor
 
 createArrayWithValues :: Cursor -> Doc
 createArrayWithValues cursor =
-                    text "array" <> parens (
-                        if (concatMap T.unpack $ attribute "Type" cursor) == "String"
-                            then hcat $ punctuate (text " # ") $ map (wrapVal . doubleQuotes . text . T.unpack) $ (child >=> child >=> content) cursor
-                            else if (concatMap T.unpack $ attribute "Type" cursor) == "Boolean"
-                                then hcat $ punctuate (text " # ") $ map (wrapVal . text . T.unpack . T.toLower) $ (child >=> child >=> content) cursor
-                                else
-                                    hcat $ punctuate (text " # ") $ map (wrapVal . text . T.unpack) $ (child >=> child >=> content) cursor
+                    text "" <> (
+                      if typ == "Real"
+                        then hcat $ punctuate (text " # ") $ map (errorize . (parseSimpleValue' $ Just $ obtainPLEXILType $ typ) ) $ (child >=> anyElement) cursor
+                        else hcat $ punctuate (text " # ") $ map (errorize . parseSimpleValue) $ (child >=> anyElement) cursor
                     )
+                    where
+                      typ = concatMap T.unpack $ attribute "Type" cursor
+                      children = (child >=> anyElement) cursor
 
 -- parsePair :: Cursor -> ParseError Doc
 -- parsePair cursor =
@@ -614,24 +615,17 @@ helper el children =
                 )
             "RealValue" ->
                 text "const" <> parens (
-                    text "val" <> parens (
-                        text $ T.unpack $ T.concat $ concatMap content $ child cursor
-                    )
-                )
+                    errorize $ parseSimpleValue cursor)
             "ArrayValue" ->
                 text "const" <> parens (
-                    createArrayWithValues cursor
+                    text "array" <> parens (
+                        createArrayWithValues cursor
+                    )
                 )
             "IntegerValue" ->
                 text "const" <> parens (
                     text "val" <> parens (
                         text $ T.unpack $ T.concat $ concatMap content $ child cursor
-                    )
-                )
-            "BooleanValue" ->
-                text "const" <> parens (
-                    text "val" <> parens (
-                        text $ T.unpack $ T.concat $ concatMap (map T.toLower . content) $ child cursor
                     )
                 )
             "StringValue" ->
@@ -640,6 +634,9 @@ helper el children =
                         text $ show ( T.unpack $ T.concat $ concatMap content $ child cursor )
                     )
                 )
+            "BooleanValue" ->
+                text "const" <> parens (
+                    errorize $ parseSimpleValue cursor)
             "EQBoolean"  -> text "_equ_" <> parens (hcat $ punctuate comma children)
             "NEBoolean"  -> text "_nequ_" <> parens (hcat $ punctuate comma children)
             "EQNumeric"  -> text "_equ_" <> parens (hcat $ punctuate comma children)
@@ -871,28 +868,52 @@ checkThisElement name cursor =
           then Left $ "An element `" ++ show name ++ "` was expected at: " ++ show cursor
           else Right $ head cursor'
 
+data PLEXILType = PLEXILInteger | PLEXILReal | PLEXILString | PLEXILBoolean
+    deriving (Show,Eq)
+
+obtainPLEXILType :: String -> PLEXILType
+obtainPLEXILType "Integer" = PLEXILInteger
+obtainPLEXILType "Real"    = PLEXILReal
+obtainPLEXILType "String"  = PLEXILString
+obtainPLEXILType "Boolean" = PLEXILBoolean
+obtainPLEXILType t         = error $ "Unknown PLEXIL type: " ++ t
+
+parseSimpleValue' :: Maybe PLEXILType -> Cursor -> ParseError Doc
+parseSimpleValue' typ cursor
+  | Just PLEXILBoolean <- typ = (text "val" <+>) <$> parens <$> parseBooleanValue cursor
+  | Just PLEXILInteger <- typ = (text "val" <+>) <$> parens <$> parseIntegerValue cursor
+  | Just PLEXILReal    <- typ = (text "val" <+>) <$> parens <$> (parseIntegerValueForRealArray cursor
+                                                                 <|> parseRealValue cursor)
+  | Just PLEXILString  <- typ = (text "val" <+>) <$> parens <$> parseStringValue cursor
+  | Nothing            <- typ = (text "val" <+>) <$> parens <$> (parseBooleanValue cursor
+                                                                 <|> parseIntegerValue cursor
+                                                                 <|> parseRealValue cursor
+                                                                 <|> parseStringValue cursor)
+  where
+      parseIntegerValue c = buildIntegerValue <$> parseTag  "IntegerValue" c
+      parseBooleanValue c = buildBoolValue    <$> parseTag  "BooleanValue" c
+      parseRealValue    c = buildRealValue    <$> parseTag  "RealValue" c
+      parseStringValue  c = buildStringValue  <$> parseTag' "StringValue" c
+      parseIntegerValueForRealArray c = buildIntegerValueForRealArray <$> parseTag  "IntegerValue" c
+
+      parseTag  tag cursor = getUniqueTextContent (element tag) cursor
+      parseTag' tag cursor = getUniqueTextContentOrEmpty (element tag) cursor
+
+      buildIntegerValue value = text $ T.unpack value
+      buildRealValue    value = text $ show $ (read :: String -> Double) $ T.unpack value
+      buildIntegerValueForRealArray value = text $ show $ (read :: String -> Double) $ (T.unpack value ++ ".0")
+      buildStringValue  value = doubleQuotes $ text $ T.unpack value
+      buildBoolValue    value = text $ T.unpack $ obtain value
+              where
+                obtain v =
+                  if v == "1"
+                    then "true"
+                    else if v == "0"
+                      then "false"
+                      else (T.toLower v)
 
 parseSimpleValue :: Cursor -> ParseError Doc
-parseSimpleValue cursor = parseIntegerValue
-                      <|> parseBooleanValue
-                      <|> parseRealValue
-                      <|> parseStringValue
-    where
-        parseIntegerValue = buildValue <$> parseTag "IntegerValue" cursor
-        parseBooleanValue = buildValue <$> parseTag "BooleanValue" cursor
-        parseRealValue = buildValue <$> parseTag "RealValue" cursor
-        parseStringValue = buildValue' <$> parseTag' "StringValue" cursor
-
-        parseTag tag cursor = getUniqueTextContent (element tag) cursor
-
-        parseTag' tag cursor = getUniqueTextContentOrEmpty (element tag) cursor
-
-        buildValue value = text "val" <> parens (
-                             text $ T.unpack value
-                           )
-        buildValue' value = text "val" <> parens (
-                             doubleQuotes $ text $ T.unpack value
-                           )
+parseSimpleValue cursor = parseSimpleValue' Nothing cursor
 
 parseVariable :: Cursor -> ParseError String
 parseVariable cursor =

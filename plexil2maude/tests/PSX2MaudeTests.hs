@@ -20,6 +20,8 @@ import PLEXILScript
 import PSX2Maude.PrettyMaude
 import Text.PrettyPrint
 
+import Data.OneOfN (OneOf5(..))
+
 
 testPSX2Maude :: TestTree
 testPSX2Maude =
@@ -31,8 +33,11 @@ testPSX2Maude =
     , testValue
     , testSimultaneous
     , testCommandHandles
+    , testUpdateAck
+    , testScript
     , testPrettyPrint
     , testOptionalElements
+    , testState
     ]
 
 testOptionalElements :: TestTree
@@ -67,6 +72,14 @@ testPrettyPrint = testGroup "Pretty Printer"
         `testPrettiesAs`
            "commandAck('c2,(val(float(1)) val(10)),CommandDenied)"
     ]
+  , testGroup "CommandAbort"
+    [ CommandAbort "c1" [] (Result $ TypedValue (TVBool True)) PXBool
+        `testPrettiesAs`
+           "commandAbort('c1,nilarg,val(true))"
+    , CommandAbort "c2" [] (Result $ TypedValue (TVBool False)) PXBool
+        `testPrettiesAs`
+           "commandAbort('c2,nilarg,val(false))"
+    ]
   , testGroup "Command"
     [ Command "c1" [] (Result $ TypedValue (TVInt 1)) PXInt
         `testPrettiesAs`
@@ -93,15 +106,11 @@ testPrettyPrint = testGroup "Pretty Printer"
         `testPrettiesAs`
            "commandResult('ac4,nilarg,array(val(1.1) # val(2.2) # val(3.3)))"
     ]
-  -- , testGroup "Value"
-  --   [
-  --     Value "1"
-  --       `testPrettiesAs`
-  --         "val(1)"
-  --   , Value "UNKNOWN"
-  --       `testPrettiesAs`
-  --         "unknown"
-  --   ]
+  , testGroup "UpdateAck"
+    [ UpdateAck "u1" True
+        `testPrettiesAs`
+           "updateAck('u1,true)"
+    ]
   , testGroup "Emptyness of Script or Initial State"
     [ Script [] `testPrettiesAs` "nilEInputsList"
     , InitialState [] `testPrettiesAs` "noExternalInputs"
@@ -314,16 +323,6 @@ testValue = testGroup "Value"
       [r|<Value>UNKNOWN</Value>|]
         `testItParsesAs`
           Value { unValue = "UNKNOWN" }
-    -- , [r|<State name="st" type="int"><Value>1</Value><Value>2</Value><Value>3</Value></State>|]
-    --     `testItParsesAs`
-    --       State { stName = "st"
-    --             , stParams = []
-    --             , stValue = [ Value { unValue = "1" }
-    --                         , Value { unValue = "2" }
-    --                         , Value { unValue = "3" }
-    --                         ]
-    --             , stType = PXInt
-    --             }
     ]
   ]
   where
@@ -332,6 +331,27 @@ testValue = testGroup "Value"
 
   testItPicklesAs :: Value -> String -> TestTree
   testItPicklesAs cmd str = testCase (show cmd) $ cmd `isPickledAs` str
+
+testState :: TestTree
+testState = testGroup "State"
+  [ testGroup "fromXML"
+    [
+          State "st" [] [ Value { unValue = "1" }, Value { unValue = "2" }, Value { unValue = "3" }] PXIntArray
+            `testPrettiesAs`
+              "stateLookup('st,nilarg,array(val(1) # val(2) # val(3)))"
+    ,
+          State "st" [] [ Value { unValue = "1" }] PXInt
+            `testPrettiesAs`
+              "stateLookup('st,nilarg,val(1))"
+    ]
+  ]
+  where
+    testPrettiesAs :: forall a. (Pretty a,Show a) => a -> String -> TestTree
+    testPrettiesAs p str =
+      testCase (show p) $
+        assertEqual "is not pretty printed as"
+          (text str)
+          (pretty p)
 
 testSimultaneous :: TestTree
 testSimultaneous = testGroup "Simultaneous"
@@ -401,6 +421,35 @@ testCommandHandles = testGroup "Command Handles"
     testItPicklesAs :: CommandHandle -> String -> TestTree
     testItPicklesAs cmdHandle str = testCase (show cmdHandle) $ cmdHandle `isPickledAs` str
 
+testUpdateAck :: TestTree
+testUpdateAck = testGroup "UpdateAck"
+  [ testGroup "from XML"
+    [ [r|<UpdateAck name="array8"/>|]
+        `testItParsesAs`
+          UpdateAck { uaName = "array8", uaBool = True }
+    ]
+  ]
+  where
+    testItParsesAs :: String -> UpdateAck -> TestTree
+    testItParsesAs str cmd = testCase (show cmd) $ str `parsesOnlyAs` cmd
+
+    testItPicklesAs :: UpdateAck -> String -> TestTree
+    testItPicklesAs cmd str = testCase (show cmd) $ cmd `isPickledAs` str
+
+testScript :: TestTree
+testScript = testGroup "Script"
+  [ testGroup "from XML"
+    [ [r|<Script><UpdateAck name="array8"/></Script>|]
+        `testItParsesAs`
+          Script [ ScriptEntry { unScriptEntry = FiveOf5 $ UpdateAck { uaName = "array8", uaBool = True } } ]
+    ]
+  ]
+  where
+    testItParsesAs :: String -> Script -> TestTree
+    testItParsesAs str cmd = testCase (show cmd) $ str `parsesOnlyAs` cmd
+
+    testItPicklesAs :: Script -> String -> TestTree
+    testItPicklesAs cmd str = testCase (show cmd) $ cmd `isPickledAs` str
 
 parsesOnlyAs :: (XmlPickler a,Eq a,Show a) => String -> a -> Assertion
 parsesOnlyAs str expectedData =

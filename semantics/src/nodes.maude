@@ -1,5 +1,17 @@
-mod NODE is
- inc CONFIGURATION * (op <_:_|_> to <_:_|_> [format (ni d d d d d d d)] ) .
+fmod PURE-CONFIGURATION is
+  sorts Attribute AttributeSet .
+  sorts Oid Cid Object Configuration .
+  subsorts Attribute < AttributeSet .
+  subsorts Object < Configuration .
+  op none : -> AttributeSet [ctor] .
+  op _`,_ : AttributeSet AttributeSet -> AttributeSet [assoc comm id: none ctor] .
+  op <_:_|_> : Oid Cid AttributeSet -> Object [format (ni d d d d d d d) obj ctor] .
+  op none : -> Configuration [ctor] .
+  op __ : Configuration Configuration -> Configuration [assoc comm config id: none ctor] .
+endfm
+
+fmod NODE is
+ pr PURE-CONFIGURATION .
  pr QUALIFIED .
  pr STATUS .
  pr OUTCOME .
@@ -13,7 +25,7 @@ mod NODE is
  subsort NeQualified < Oid .
  sort NodeType .
  subsort NodeType < Cid .
- ops list command retCommand assignment empty update memory library command-on-execution : -> NodeType .
+ ops list command retCommand assignment empty update memory library command-on-execution update-on-execution : -> NodeType .
  sort DeclarationType .
  subsort DeclarationType < Cid .
  ops commandDeclaration stateDeclaration : -> DeclarationType .
@@ -37,6 +49,7 @@ mod NODE is
  op handle:_         : Maybe{CommandHandle} -> Attribute [ctor gather (&)] .
  op value:_          : Nat -> Attribute [ctor gather (&)] .
  op returnVariable:_ : Qualified -> Attribute [ctor gather (&)] .
+ op aborted:_        : Bool -> Attribute [ctor gather (&)] .
 
  op ack:_            : Ack        -> Attribute  [ctor gather (&)] .
  op pairs:_          : List{Pair} -> Attribute [ctor gather (&)] .
@@ -94,6 +107,13 @@ mod NODE is
     =
     endc: E and hasRcvAck?(NQ),
     defaultAttributeEnrichments(NQ, update, AtS) .
+  eq defaultAttributeEnrichments(NQ, command, (endc: E, AtS))
+    =
+    endc: E or
+              (cmdHandleIs?(NQ, CommandDenied)
+              or
+              cmdHandleIs?(NQ, CommandFailed)),
+    defaultAttributeEnrichments(NQ, update, AtS) .
   eq defaultAttributeEnrichments(NQ, NTy, AtS)
     = AtS [owise] .
 
@@ -149,4 +169,4 @@ eq replaceAttribute(inv:     E, E') = inv:     E' .
  sort Nodes .
  op `[_`]          : Configuration -> Nodes .
 
-endm
+endfm

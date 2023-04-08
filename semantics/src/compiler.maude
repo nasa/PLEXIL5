@@ -1,7 +1,7 @@
 ----                       Compilation of a PLEXIL plan into a set of Processes
 ----                                                       author: Camilo Rocha
 
-mod COMPILER is
+fmod COMPILER is
   protecting PLEXIL .
   protecting FUNPRED .
 
@@ -36,12 +36,18 @@ mod COMPILER is
   eq compileNodes(list(I, LD, (AtS), (PL PLL)), Q)
     = (compileNodes(PL, (I . Q)) compileNodes(list(I, LD, (AtS), PLL), Q)) .
   eq compileNodes(command(I, LD, (AtS), C), Q)
-  = < (I . Q) : command | command: C, commandInfo: commDefault(I), defaultAttributes(command,getRepeatCondition(AtS)) / (AtS) > .
+  = < (I . Q) : command |
+    command: C,
+    commandInfo: commDefault(I),
+    defaultAttributes(command,getRepeatCondition(AtS))
+      / defaultAttributeEnrichments(I . Q, command,AtS)
+    > .
   eq compileNodes(assignment(I, LD, (AtS), (AT := E)), Q)
   = < (I . Q) : assignment | (AT := E), defaultAttributes(assignment, getRepeatCondition(AtS)) / (AtS) > .
   eq compileNodes(update(I, LD, (AtS), PS:List{Pair}), Q)
   = < (I . Q) : update |
     pairs: PS:List{Pair},
+    ack: false,
     defaultAttributes(update, getRepeatCondition(AtS))
       / defaultAttributeEnrichments(I . Q, update,AtS)
     > .
@@ -76,11 +82,21 @@ mod COMPILER is
   eq sanitizeIds((At,AtS), NQ, Cfg) = sanitizeIdsOnAttr(At, NQ, Cfg), sanitizeIds(AtS, NQ, Cfg) .
   eq sanitizeIds(none, NQ, Cfg) = none .
 
+  op sanitizeIdsOnPairs : List{Pair} NeQualified Configuration -> List{Pair} .
+  eq sanitizeIdsOnPairs(nil, NQ, Cfg) = nil .
+  eq sanitizeIdsOnPairs(pair(Q,E) PAIRS, NQ, Cfg)
+    =
+    pair(Q,sanitizeIds(E,NQ,Cfg)) sanitizeIdsOnPairs(PAIRS, NQ, Cfg)
+  .
+
+  vars PAIRS : List{Pair} .
+
   op sanitizeIdsOnParams : Parameters NeQualified Configuration -> Parameters .
   eq sanitizeIdsOnParams(E Ps,   NQ, Cfg) = sanitizeIds(E, NQ, Cfg) sanitizeIdsOnParams(Ps, NQ, Cfg) .
   eq sanitizeIdsOnParams(nilpar, NQ, Cfg) = nilpar .
 
   op  sanitizeIdsOnAttr : Attribute NeQualified Configuration -> Attribute .
+  eq  sanitizeIdsOnAttr((pairs: PAIRS),  NQ, Cfg) = pairs: sanitizeIdsOnPairs(PAIRS, NQ, Cfg) .
   eq  sanitizeIdsOnAttr((AT := E),  NQ, Cfg) = sanitizeIds(AT, NQ, Cfg) := sanitizeIds(E, NQ, Cfg) .
   eq  sanitizeIdsOnAttr((command: NQ' / Ps / Q), NQ, Cfg) = command: NQ' / sanitizeIdsOnParams(Ps,NQ,Cfg) / getFullyQualifiedVariableId(Q, NQ, Cfg) .
   eq  sanitizeIdsOnAttr((command: NQ' / Ps),     NQ, Cfg) = command: NQ' / sanitizeIdsOnParams(Ps,NQ,Cfg) .
@@ -129,11 +145,13 @@ mod COMPILER is
   eq sanitizeIds(noChildFailed                      , NQ, Cfg) = noChildFailed(NQ) .
   eq sanitizeIds(isFinished?(sibling(I))            , NQ, Cfg) = isFinished?(getFullyQualifiedNodeId(I,NQ,Cfg)) .
   eq sanitizeIds(hasSucceeded?(sibling(I))          , NQ, Cfg) = hasSucceeded?(getFullyQualifiedNodeId(I,NQ,Cfg)) .
+  eq sanitizeIds(hasSucceeded?(I . Q)               , NQ, Cfg) = hasSucceeded?(getFullyQualifiedNodeId(I . Q,NQ,Cfg)) .
   eq sanitizeIds(hasPostconditionFailed?(sibling(I)), NQ, Cfg) = hasPostconditionFailed?(getFullyQualifiedNodeId(I,NQ,Cfg)) .
   eq sanitizeIds(hasSkipped?(sibling(I))            , NQ, Cfg) = hasSkipped?(getFullyQualifiedNodeId(I,NQ,Cfg)) .
   eq sanitizeIds(isStatus?(I . Q,Status)            , NQ, Cfg) = isStatus?(getFullyQualifiedNodeId(I, Q . NQ, Cfg), Status) .
   eq sanitizeIds(isOutcome?(I . Q,Out)              , NQ, Cfg) = isOutcome?(getFullyQualifiedNodeId(I, Q . NQ, Cfg), Out) .
   eq sanitizeIds(isOutcomeFailure?(I . Q)           , NQ, Cfg) = isOutcomeFailure?(getFullyQualifiedNodeId(I, Q . NQ, Cfg)) .
+  eq sanitizeIds(hasRcvAck?(I . Q)                  , NQ, Cfg) = hasRcvAck?(getFullyQualifiedNodeId(I, Q . NQ, Cfg)) .
   eq sanitizeIds(var(I . Q)                         , NQ, Cfg) = var(getFullyQualifiedVariableId(I, Q . NQ, Cfg)) .
   eq sanitizeIds(arrayVar(I . Q,E)                  , NQ, Cfg) = arrayVar(getFullyQualifiedVariableId(I, Q . NQ, Cfg), sanitizeIds(E, NQ, Cfg)) .
   eq sanitizeIds(arrayVar(I . Q)                    , NQ, Cfg) = arrayVar(getFullyQualifiedVariableId(I, Q . NQ, Cfg)) .
@@ -156,7 +174,7 @@ mod COMPILER is
   op  getFullyQualifiedNodeId : Identifier Qualified Configuration -> Qualified .
   ceq getFullyQualifiedNodeId(I, Q, Cfg) = ambiguity(Q',Cfg)
     if < Q' : Cls | AtS > < Q' : Cls' | AtS' > Cfg' := Cfg  . *** NOTE: This detects ambiguities
-  eq  getFullyQualifiedNodeId(I, Q,                                         Cfg) = getFullyQualifiedNodeId'(I,Q,Cfg,Q) [owise] .
+  eq  getFullyQualifiedNodeId(I, Q, Cfg) = getFullyQualifiedNodeId'(I,Q,Cfg,Q) [owise] .
 
     op getFullyQualifiedNodeId' : Identifier Qualified Configuration Qualified -> Qualified .
     eq getFullyQualifiedNodeId'(I,   nilq, < I      : Cls | AtS > Cfg, Q') = I .
@@ -195,6 +213,8 @@ mod COMPILER is
   eq compileMemory(assignment(I, LD, (AtS), AtS'), Q)
   = createLocalVars((I . Q), LD) .
   eq compileMemory(empty(I, LD, AtS), Q)
+  = createLocalVars((I . Q),LD) .
+  eq compileMemory(update(I, LD, (AtS), PS:List{Pair}), Q)
   = createLocalVars((I . Q),LD) .
 
   --- equations for initializing by-default condition expressions and
@@ -270,4 +290,4 @@ mod COMPILER is
   vars Status Status' : Status .
   --- vars U U'           : Update .
   vars V V'           : Value .
-endm
+endfm

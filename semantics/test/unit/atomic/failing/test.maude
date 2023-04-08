@@ -1,10 +1,14 @@
 in assignment-node.maude
 in list-node.maude
+in update-node.maude
+in command-node.maude
 
 mod TEST--ATOMIC--FAILING is
 
   pr TEST--ATOMIC--FAILING--ASSIGNMENT-NODE .
   pr TEST--ATOMIC--FAILING--LIST-NODE .
+  pr TEST--ATOMIC--FAILING--COMMAND-NODE .
+  pr TEST--ATOMIC--FAILING--UPDATE-NODE .
 
 
   op tests--atomic--failing : -> TestResults .
@@ -12,6 +16,8 @@ mod TEST--ATOMIC--FAILING is
   eq tests--atomic--failing =
     tests--atomic--failing--assignment-node
     + tests--atomic--failing--list-node
+    + tests--atomic--failing--command-node
+    + tests--atomic--failing--update-node
     .
 
 endm

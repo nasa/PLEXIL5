@@ -1,0 +1,38 @@
+fmod SYSTEM--INTERFACE--CONFIG-INTERFACE is
+  sorts CellId Cell Config .
+  subsort Cell < Config .
+  op mtsoup : -> Config .
+  op __ : Config Config -> Config [assoc comm id: mtsoup] .
+
+  *** Cell handles
+  op environment       : -> CellId .
+  op nodes             : -> CellId .
+  op memory            : -> CellId .
+  op microacts         : -> CellId .
+  op macroacts         : -> CellId .
+  op interface         : -> CellId .
+  op interface-history : -> CellId .
+  op trace             : -> CellId .
+  op generator         : -> CellId .
+
+endfm
+
+view Config from TRIV to SYSTEM--INTERFACE--CONFIG-INTERFACE is
+ sort Elt to Config .
+endv
+
+fmod SYSTEM--INTERFACE is
+  pr SYSTEM--INTERFACE--CONFIG-INTERFACE .
+  pr EXTERNAL-INPUT-LIST .
+
+  sort Operation .
+  op start      :             -> Operation .
+  op stop       :             -> Operation .
+  op micro      :             -> Operation .
+  op quiescence :             -> Operation .
+  op macro      :             -> Operation .
+  op NDChoice   : EInputsList -> Operation .
+
+  sort GlobalConfig .
+  op _|_ : Operation Config -> GlobalConfig .
+endfm
