@@ -164,26 +164,26 @@ fmod MACRO is
   if Str:String := string-formatter(Args,true)
   .
   eq executeCommands(
-       [ nodes : < Q : command | command: CmdId / Params, AtS > Nds ]
+       [ nodes : < Q : command | AtS > Nds ]
        [ macroacts : runCommand(Q, Args / CmdId / invoked), AS ]
        [ interface : < CmdId . Q : command-on-execution | AtS'' > Cmds ]
        Conf )
    =
     executeCommands(
-      [ nodes : < Q : command | command: CmdId / Params, AtS > Nds ]
+      [ nodes : < Q : command | AtS > Nds ]
       [ macroacts : AS ]
       [ interface : < CmdId . Q : command-on-execution | arguments: Args, handle: nothing > Cmds ]
       Conf
     )
   .
   eq executeCommands(
-       [ nodes : < Q : command | command: CmdId / Params, AtS > Nds ]
+       [ nodes : < Q : command | AtS > Nds ]
        [ macroacts : runCommand(Q, Args / CmdId / invoked), AS ]
        [ interface : Cmds ]
        Conf )
    =
     executeCommands(
-      [ nodes : < Q : command | command: CmdId / Params, AtS > Nds ]
+      [ nodes : < Q : command | AtS > Nds ]
       [ macroacts : AS ]
       [ interface : < CmdId . Q : command-on-execution | arguments: Args, handle: nothing > Cmds ]
       Conf
@@ -191,26 +191,26 @@ fmod MACRO is
     [owise]
   .
   eq executeCommands(
-       [ nodes : < Q : command | command: CmdId / Params / Q', AtS > Nds ]
+       [ nodes : < Q : command | command: CmdId:CommandId / Params / Q', AtS > Nds ]
        [ macroacts : runCommand(Q, Args / CmdId / invoked), AS ]
        [ interface : < CmdId . Q : command-on-execution | AtS' > Cmds ]
        Conf )
    =
     executeCommands(
-      [ nodes : < Q : command | command: CmdId / Params / Q', AtS > Nds ]
+      [ nodes : < Q : command | command: CmdId:CommandId / Params / Q', AtS > Nds ]
       [ macroacts : AS ]
       [ interface : < CmdId . Q : command-on-execution | arguments: Args, returnVariable: Q', handle: nothing > Cmds ]
       Conf
     )
   .
   eq executeCommands(
-       [ nodes : < Q : command | command: CmdId / Params / Q', AtS > Nds ]
+       [ nodes : < Q : command | command: CmdId:CommandId / Params / Q', AtS > Nds ]
        [ macroacts : runCommand(Q, Args / CmdId / invoked), AS ]
        [ interface : Cmds ]
        Conf )
    =
     executeCommands(
-      [ nodes : < Q : command | command: CmdId / Params / Q', AtS > Nds ]
+      [ nodes : < Q : command | command: CmdId:CommandId / Params / Q', AtS > Nds ]
       [ macroacts : AS ]
       [ interface : < CmdId . Q : command-on-execution | arguments: Args, returnVariable: Q', handle: nothing > Cmds ]
       Conf

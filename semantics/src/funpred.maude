@@ -187,21 +187,28 @@ fmod FUNPRED is
 
   var Params : Parameters .
   var Q'' : Qualified .
+  var MEM : Configuration .
+  var STR : String .
 
   *** Command id of node
-  op getCommandId : Qualified Configuration -> Identifier .
-  eq getCommandId(Q, < Q : command | command: Q' / Params, AtS > PS)
+  op getCommandId : Qualified Configuration Configuration ~> Identifier .
+  eq getCommandId(Q, < Q : command | command: Q' / Params, AtS > PS, MEM)
    = Q' .
-  eq getCommandId(Q, < Q : command | command: Q' / Params / Q'', AtS > PS)
+  eq getCommandId(Q, < Q : command | command: Q' / Params / Q'', AtS > PS, MEM)
    = Q' .
+  eq getCommandId(Q, < Q : command | command: cmdId(var(Q')) / Params, AtS > PS, < Q' : memory | actVal: val(STR), AtS' > MEM)
+   = qid(STR) .
+  eq getCommandId(Q, < Q : command | command: cmdId(var(Q')) / Params / Q'', AtS > PS, < Q' : memory | actVal: val(STR), AtS' > MEM)
+   = qid(STR) .
 
   *** Command arguments of node
   op getCommandArguments : Qualified Configuration ~> Expression .
-  eq getCommandArguments(Q, < Q : command | command: Q' / Params, AtS > PS)
+  eq getCommandArguments(Q, < Q : command | command: CmdId / Params, AtS > PS)
    = Params .
-  eq getCommandArguments(Q, < Q : command | command: Q' / Params / Q'' , AtS > PS)
+  eq getCommandArguments(Q, < Q : command | command: CmdId / Params / Q'' , AtS > PS)
    = Params .
 
+  var CmdId : CommandId .
   var CH : CommandHandle .
   var Env : Environment .
 

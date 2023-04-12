@@ -90,6 +90,7 @@ fmod COMPILER is
   .
 
   vars PAIRS : List{Pair} .
+  vars VE : VariableExpression .
 
   op sanitizeIdsOnParams : Parameters NeQualified Configuration -> Parameters .
   eq sanitizeIdsOnParams(E Ps,   NQ, Cfg) = sanitizeIds(E, NQ, Cfg) sanitizeIdsOnParams(Ps, NQ, Cfg) .
@@ -99,7 +100,9 @@ fmod COMPILER is
   eq  sanitizeIdsOnAttr((pairs: PAIRS),  NQ, Cfg) = pairs: sanitizeIdsOnPairs(PAIRS, NQ, Cfg) .
   eq  sanitizeIdsOnAttr((AT := E),  NQ, Cfg) = sanitizeIds(AT, NQ, Cfg) := sanitizeIds(E, NQ, Cfg) .
   eq  sanitizeIdsOnAttr((command: NQ' / Ps / Q), NQ, Cfg) = command: NQ' / sanitizeIdsOnParams(Ps,NQ,Cfg) / getFullyQualifiedVariableId(Q, NQ, Cfg) .
-  eq  sanitizeIdsOnAttr((command: NQ' / Ps),     NQ, Cfg) = command: NQ' / sanitizeIdsOnParams(Ps,NQ,Cfg) .
+  eq  sanitizeIdsOnAttr((command: cmdId(VE) / Ps / Q), NQ, Cfg) = command: cmdId(sanitizeIds(VE, NQ, Cfg)) / sanitizeIdsOnParams(Ps,NQ,Cfg) / getFullyQualifiedVariableId(Q, NQ, Cfg) .
+  eq  sanitizeIdsOnAttr((command:   NQ' / Ps),     NQ, Cfg) = command: NQ' / sanitizeIdsOnParams(Ps,NQ,Cfg) .
+  eq  sanitizeIdsOnAttr((command: cmdId(VE) / Ps), NQ, Cfg) = command: cmdId(sanitizeIds(VE, NQ, Cfg)) / sanitizeIdsOnParams(Ps,NQ,Cfg) .
   ceq sanitizeIdsOnAttr(At,             NQ, Cfg) = At'
   if
     B := attributeIsSanitizable(At)

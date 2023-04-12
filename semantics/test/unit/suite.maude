@@ -1,6 +1,7 @@
 in ../../lib/test/test.maude
 in ../../src/plexilite.maude
 in ./base.maude
+in ./funpred.maude
 in ./atomic/test.maude
 in ./reductions/test.maude
 in ./expressions/test.maude
@@ -18,6 +19,7 @@ mod TEST-SUITE is
   pr TEST--MODEL-CHECKING .
   pr TEST--COMPILER .
   pr TEST--INTERFACE .
+  pr TEST--FUNPRED .
 
   eq tests =
     AllTestsPassed
@@ -28,6 +30,7 @@ mod TEST-SUITE is
     + model-checking--tests
     + test--compiler
     + interface--tests
+    + test--funpred
     +
 begin tests
 

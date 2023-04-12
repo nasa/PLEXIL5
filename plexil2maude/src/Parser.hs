@@ -164,7 +164,7 @@ parseBooleanExpression cursor =
             recNestChildrenNumericL "_nequ_" cursor
 
         _ -> fail "non-exhaustive pattern"
-    other -> trace ("Hi there!" ++ show other) undefined
+    other -> trace ("Not supported element " ++ show other) undefined
 
 nestChildrenL :: Text -> Cursor -> Maybe Text
 nestChildrenL funName cursor' =
@@ -190,7 +190,7 @@ parseNumericExpression cursor =
       case T.unpack $ nameLocalName $ elementName el of
         "FINISHED" -> return "finished"
         x -> fail x
-    other -> trace ("Hi there!" ++ show other) undefined
+    other -> trace ("Not supported numeric expression " ++ show other) undefined
 
 parseGeneralizedNumericExpression :: Cursor -> Maybe Text
 parseGeneralizedNumericExpression = parseNumericExpression
@@ -293,7 +293,7 @@ errorize :: ParseError Doc -> Doc
 errorize = either ((text "ERROR: "<>) . text) id
 
 errorize' :: String -> ParseError Doc -> Doc
-errorize' str = either ((text ("ERROR: " ++ str)<>) . text) id
+errorize' str = either (parens . (text ("ERROR: " ++ str)<>) . text) id
 
 isCommand cursor =
     case node cursor of
@@ -315,15 +315,16 @@ parseDeclaredVariable = parseVariableId
 parseCommand cursor = parseCommandWithAssignment cursor <|> parseCommand' cursor
 
 parseCommand' cursor =
-    do cmdName <- msum $ map parseNameFromStringValue elementChildren
+    do
+       cmdName <- msum $ map (\cursor -> parseNameFromStringValue cursor <|> parseNameFromStringVariable cursor) elementChildren
        arguments <- parseOptionalArguments cursor
-       return $ trace ("parseCommand: arguments = " ++ show arguments) ()
        return $ parens $ (parens (text cmdName) <+> text "/" <+> arguments)
     where
         elementChildren = (child >=> anyElement) cursor
 
 parseCommandWithAssignment cursor =
-    do var <- msum $ map parseDeclaredVariable children
+    do
+       var <- msum $ map parseDeclaredVariable children
        cmdName <- msum $ map parseNameFromStringValue elementChildren
        arguments <- parseOptionalArguments cursor
        return $ parens $ (parens (text cmdName) <+> text "/" <+> arguments <+> text "/" <+> parens (text var))
@@ -687,7 +688,7 @@ helper el children =
 
             "PlexilPlan" -> -- Header of the plan
                 text ( unlines ["mod " ++ case parseNodeId rootNode of
-                                            Left msg -> trace msg "UNKNOWN"
+                                            Left msg -> trace msg "UNKNOWN NODE ID"
                                             Right id -> id
                                        ++ "-PLAN is",
                                 "",
@@ -872,6 +873,13 @@ parseNameFromStringValue cursor =
        child <- uniqueChildElement cursor
        toQID <$> T.unpack <$> getUniqueTextContent (element "StringValue") child
        -- return (toQID $ T.unpack $ T.concat $ (child >=> element "StringValue" >=> child >=> content) cursor)
+
+parseNameFromStringVariable :: Cursor -> ParseError String
+parseNameFromStringVariable cursor =
+    do checkThisElement "Name" cursor
+       child <- uniqueChildElement cursor
+       qid <- toQID <$> T.unpack <$> getUniqueTextContent (element "StringVariable") child
+       return $ "cmdId(var(" ++ qid ++ "))"
 
 parseInitialSimpleValue :: Cursor -> ParseError Doc
 parseInitialSimpleValue cursor =

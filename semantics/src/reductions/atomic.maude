@@ -119,7 +119,7 @@ fmod ATOMIC is
                      then [ macroacts : setMem(assignmentVariable(A, Nds), expToVal(eval(GAMMA,MEM,assignmentExpression(A,Nds))),if isArrayAssignment(A,Nds) then just(expToVal(eval(GAMMA,MEM,assignmentIndexExpression(A,Nds)))) else nothing fi), AS' ]
                           [ microacts : suspend(A),setStatus(A,executing),logTransition(A,waiting,executing,7),AS ]
                      else if C == command
-                     then [ macroacts : runCommand(A, evalpar(GAMMA, MEM, getCommandArguments(A, Nds'))/ getCommandId(A, Nds') / invoked ), AS' ]
+                     then [ macroacts : runCommand(A, evalpar(GAMMA, MEM, getCommandArguments(A, Nds'))/ getCommandId(A, Nds', MEM) / invoked ), AS' ]
                           [ microacts : suspend(A),setStatus(A,executing),logTransition(A,waiting,executing,7),AS ]
                      else if C == update
                      then [ macroacts : runUpdate(A, evalPairs(GAMMA, MEM, getPairs(A, Nds'))), AS' ]

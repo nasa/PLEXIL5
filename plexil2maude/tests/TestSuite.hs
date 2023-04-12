@@ -53,6 +53,61 @@ main = defaultMain $
     ,testPSX2Maude
     ,testArrays
     ,testNodeRef
+    ,testsRegression
+    ,testGroup "regression tests" $ testParser elementVisitor [
+      ("command1.ple", [r|
+<PlexilPlan xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" FileName="command1.ple">
+  <Node ColNo="0" LineNo="1" NodeType="Command">
+    <NodeId>command1</NodeId>
+    <VariableDeclarations>
+      <DeclareVariable ColNo="2" LineNo="3">
+        <Name>CommandName</Name>
+        <Type>String</Type>
+        <InitialValue>
+          <StringValue>foo</StringValue>
+        </InitialValue>
+      </DeclareVariable>
+    </VariableDeclarations>
+    <NodeBody>
+      <Command ColNo="3" LineNo="5">
+        <Name>
+          <StringVariable>CommandName</StringVariable>
+        </Name>
+        <Arguments ColNo="16" LineNo="5">
+          <StringValue />
+        </Arguments>
+      </Command>
+    </NodeBody>
+  </Node>
+</PlexilPlan>
+    |], "modcommand1-PLANisprotectingPLEXILITE-PREDS.oprootNode:->Plexil.eqrootNode=command('command1,(('CommandName:val(\"foo\"))),(none),((cmdId(var('CommandName)))/(const(val(\"\"))))).endm")
+    ]
+    ]
+
+testsRegression :: TestTree
+testsRegression =
+  testGroup "commands"
+    [testGroup "pieces"
+      [testGroup "parseCommand'" $
+        testErrorParser parseCommand'
+          [("1", [r|
+<Command ColNo="3" LineNo="5">
+  <Name>
+    <StringVariable>CommandName</StringVariable>
+  </Name>
+  <Arguments ColNo="16" LineNo="5">
+    <StringValue />
+  </Arguments>
+</Command>|], "((cmdId(var('CommandName)))/(const(val(\"\"))))")
+          ]
+      ,testGroup "parseNameFromStringVariable" $
+        testStringErrorParser parseNameFromStringVariable
+          [("2", [r|
+    <Name>
+      <StringVariable>CommandName</StringVariable>
+    </Name>|],"cmdId(var('CommandName))")
+          ]
+      ]
     ]
 
 testsLegacy :: TestTree

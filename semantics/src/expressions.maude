@@ -11,10 +11,10 @@ fmod EXPRESSION is
  protecting QUALIFIED .
  protecting VALUE .
  protecting FUNCTION .
- sorts Expression AssignmentTarget .
- subsort AssignmentTarget < Expression .
+ sorts Expression VariableExpression AssignmentTarget .
+ subsort VariableExpression < AssignmentTarget < Expression .
  op const              : Value                  -> Expression [format (b o)] .
- op var                : NeQualified            -> AssignmentTarget [format (b o)] .
+ op var                : NeQualified            -> VariableExpression [format (b o)] .
  op arrayVar           : NeQualified            -> AssignmentTarget [format (b o)] .
  op arrayVar           : NeQualified Expression -> AssignmentTarget [format (b o)] .
  op lookup             : NeQualified Arguments  -> Expression [format (b o)] .

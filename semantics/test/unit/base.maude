@@ -27,6 +27,7 @@ mod TEST-BASE is
   op aConfiguration : Configuration -> Cell .
   op anExpression   : Expression    -> Cell .
   op anAttribute    : AttributeSet  -> Cell .
+  op anIdentifier   : Identifier    -> Cell .
   op aSystem        : GlobalConfig  -> Cell .
   op somePairs      : List{Pair}    -> Cell .
 
