@@ -1,0 +1,39 @@
+mod TEST-OPERATORS is
+    pr TEST-BASE .
+
+    op operators--tests : -> TestResults .
+    eq operators--tests = begin tests
+
+***        assert "2-concat" from
+***            testExpression(
+***                const(val("foo")) + const(val("bar"))
+***            )
+***        reaches
+***            testExpression(
+***                const(val("foobar"))
+***            )
+***        end
+
+        assert "3-concat-v1" from
+            testExpression(
+                (const(val("foo")) + const(val("bar"))) + const(val("fun"))
+            )
+        reaches
+            testExpression(
+                const(val("foobarfun"))
+            )
+        end
+
+        assert "3-concat-v2" from
+            testExpression(
+                const(val("foo")) + (const(val("bar")) + const(val("fun")))
+            )
+        reaches
+            testExpression(
+                const(val("foobarfun"))
+            )
+        end
+
+    end tests .
+
+endm
