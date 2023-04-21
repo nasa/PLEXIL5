@@ -69,6 +69,7 @@ testsLegacy =
         ,testsParseNodeCondition
         ,testLookups
         ,testUpdate
+        ,testsParseConcat
         ,testGroup "Parse internal equality expression" $
             map (testify'' elementVisitor)
                 [("An icarous node failure equality expression ",
@@ -549,6 +550,40 @@ testsParseNodeState =
         map (testify' parseNodeState)
             [("Identifier", "<NodeStateVariable><NodeRef dir=\"child\">NodeIdentifier</NodeRef></NodeStateVariable>", "NodeIdentifier")
             ,("StateValue", "<NodeStateValue>FAILING</NodeStateValue>", "failing")
+            ]
+
+testsParseConcat :: TestTree
+testsParseConcat =
+    testGroup "parseConcat" $
+        map (testify'' elementVisitor)
+            [("2-concat", [r|
+              <Concat ColNo="47" LineNo="11">
+                <StringValue>one</StringValue>
+                <StringValue>two</StringValue>
+              </Concat>
+            |],[r|(const(val("one")) + const(val("two")))|])
+            ,("3-concat", [r|
+              <Concat ColNo="47" LineNo="11">
+                <StringValue>one</StringValue>
+                <StringValue>two</StringValue>
+                <StringValue>three</StringValue>
+              </Concat>
+            |],[r|(const(val("one")) + (const(val("two")) + const(val("three"))))|])
+            ,("4-concat", [r|
+              <Concat ColNo="47" LineNo="11">
+                <StringValue>one</StringValue>
+                <StringValue>two</StringValue>
+                <StringValue>three</StringValue>
+                <StringValue>four</StringValue>
+              </Concat>
+            |],[r|(const(val("one")) + (const(val("two")) + (const(val("three")) + const(val("four")))))|])
+            ,("3-concat with var", [r|
+              <Concat ColNo="47" LineNo="11">
+                <StringValue>one</StringValue>
+                <StringValue>two</StringValue>
+                <StringVariable>bar</StringVariable>
+              </Concat>
+            |],[r|(const(val("one")) + (const(val("two")) + var('bar)))|])
             ]
 
 testsParseNodeOutcomeVariable :: TestTree
