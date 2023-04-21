@@ -450,6 +450,21 @@ parseDeclareVariable cursor =
                                             "Boolean" -> Right $ buildValue $ text "false"
                                             _ -> Left $ "Don't know how to initialize type " ++ show tyStr ++ " at: " ++ show ty
 
+parseConcat :: Cursor -> ParseError Doc
+parseConcat cursor = do
+  childrenDocs <- mapM parseChild $ child cursor
+  let nonEmptyDocs = filter (not . isEmpty) childrenDocs
+      parenthesizedDocs = foldr1 (\d acc -> parens (d <+> text " + " <+> acc)) nonEmptyDocs
+  return parenthesizedDocs
+  where
+    parseChild :: Cursor -> ParseError Doc
+    parseChild childCursor = Right $ elementVisitor childCursor
+    isEmpty doc = render doc == ""
+
+
+
+    
+
 -- parseCommand' cursor =
 --     do cmdName <- msum $ map parseNameFromStringValue elementChildren
 --        arguments <- parseOptionalArguments cursor
@@ -660,6 +675,7 @@ helper el children =
             "MUL" -> binarizeFunctionApplication "*"
             "ADD" -> binarizeFunctionApplication "+"
             "MOD" -> binarizeFunctionApplication "rem"
+            "Concat" -> errorize $ parseConcat cursor
             "IsKnown" -> text "isKnown" <> parens (hcat ( punctuate comma children))
 
             "NoChildFailed" -> text "noChildFailed"
