@@ -59,17 +59,25 @@ instance Pretty State where
     , stValue
     , stType
     }) =
-        text "stateLookup"
-          <> parens (
-            hcat $ punctuate comma
-              [text "'" <> text stName
-              ,text "nilarg"
-               , case stType of PXBoolArray   -> text "array" <> parens (hcat $ punctuate (text " # ") $ map wrapVal $ map text $ (map unValue stValue))
-                                PXIntArray    -> text "array" <> parens (hcat $ punctuate (text " # ") $ map wrapVal $ map text $ (map unValue stValue))
-                                PXRealArray   -> text "array" <> parens (hcat $ punctuate (text " # ") $ map wrapVal $ map text $ (map unValue stValue))
-                                PXStringArray -> text "array" <> parens (hcat $ punctuate (text " # ") $ map wrapVal $ map text $ (map unValue stValue))
-                                _             -> text "val" <> (parens $ text $ unValue $ head stValue)]
-          )
+    text "stateLookup"
+      <> parens (
+        hcat $ punctuate comma
+          [ text "'" <> text stName
+          , text "nilarg"
+          , case stType of
+              PXBoolArray   -> arrayValues
+              PXIntArray    -> arrayValues
+              PXRealArray   -> arrayValues
+              PXStringArray -> arrayValues
+              PXString      -> stringValues
+              _             -> otherValues
+          ]
+      )
+    where
+      arrayValues = text "array" <> parens (hcat $ punctuate (text " # ") $ map wrapVal $ map text $ map unValue stValue)
+      otherValues = text "val" <> parens (text $ unValue $ head stValue)
+      stringValues = text "val" <> parens (doubleQuotes $ text $ unValue $ head stValue)
+
 
 wrapVal :: Doc -> Doc -- wraps document in "val(...)"
 wrapVal doc = text "val" <> parens doc
