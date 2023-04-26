@@ -4,15 +4,15 @@ mod TEST-OPERATORS is
     op operators--tests : -> TestResults .
     eq operators--tests = begin tests
 
-***        assert "2-concat" from
-***            testExpression(
-***                const(val("foo")) + const(val("bar"))
-***            )
-***        reaches
-***            testExpression(
-***                const(val("foobar"))
-***            )
-***        end
+        assert "2-concat" from
+            testExpression(
+                const(val("foo")) + const(val("bar"))
+            )
+        reaches
+            testExpression(
+                const(val("foobar"))
+            )
+        end
 
         assert "3-concat-v1" from
             testExpression(
