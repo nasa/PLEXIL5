@@ -343,6 +343,14 @@ testState = testGroup "State"
           State "st" [] [ Value { unValue = "1" }] PXInt
             `testPrettiesAs`
               "stateLookup('st,nilarg,val(1))"
+    ,
+          State "st" [] [ Value { unValue = "one" }] PXString
+            `testPrettiesAs`
+               [r|stateLookup('st,nilarg,val("one"))|]
+    ,
+          State "st" [] [ Value { unValue = "one" }, Value { unValue = "two" }] PXString
+            `testPrettiesAs`
+               [r|stateLookup('st,nilarg,val("one"))|]
     ]
   ]
   where
