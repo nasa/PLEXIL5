@@ -16,7 +16,8 @@ endv
 *** at most one plan
 fmod PREPLEXILLIST is
  protecting LIST{Plexil} * (sort NeList{Plexil} to NePrePlexilList ,
-                            sort List{Plexil} to PrePlexilList ) .
+                            sort List{Plexil} to PrePlexilList,
+                            op __ to __ [format (d ni d)]) .
 endfm
 
 *** PLEXIL Plan
@@ -27,10 +28,10 @@ fmod PLEXIL is
  sorts PlexilList PlexilCommand PlexilRetCommand PlexilAssignment PlexilUpdate PlexilEmpty .
  subsort PlexilList PlexilCommand PlexilRetCommand PlexilAssignment PlexilUpdate PlexilEmpty < Plexil .
 
- op list : Identifier LocalDecls AttributeSet PrePlexilList -> PlexilList  .
- op command : Identifier LocalDecls AttributeSet Command -> PlexilCommand  .
- op retCommand : Identifier LocalDecls AttributeSet Qualified Qualified Command -> PlexilRetCommand  .
- op assignment : Identifier LocalDecls AttributeSet Attribute -> PlexilAssignment  .
- op update : Identifier LocalDecls AttributeSet List{Pair} -> PlexilUpdate  .
- op empty : Identifier LocalDecls AttributeSet -> PlexilEmpty .
+ op list`(_,_,_,_`) : Identifier LocalDecls AttributeSet PrePlexilList -> PlexilList [format (d d d d ++ni d ni d ni n--i d)] .
+ op command`(_,_,_,_`) : Identifier LocalDecls AttributeSet Command -> PlexilCommand [format (d d d d ++ni d ni d ni-- ni d)] .
+ op retCommand`(_,_,_,_,_,_`) : Identifier LocalDecls AttributeSet Qualified Qualified Command -> PlexilRetCommand [format (d d d d ++ni d ni d ni d ni d ni-- ni d)] .
+ op assignment`(_,_,_,_`) : Identifier LocalDecls AttributeSet Attribute -> PlexilAssignment [format (d d d d ++ni d ni d ni-- ni d)] .
+ op update`(_,_,_,_`) : Identifier LocalDecls AttributeSet List{Pair} -> PlexilUpdate [format (d d d d ++ni d ni d ni-- ni d)] .
+ op empty`(_,_,_`) : Identifier LocalDecls AttributeSet -> PlexilEmpty [format (d d d d ++ni d ni-- ni d)] .
 endfm
