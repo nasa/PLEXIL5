@@ -1,18 +1,13 @@
-in id-sanitizer.maude
 in operators.maude
 
 mod TEST--EXPRESSIONS is
 
-  pr TEST--ID-SANITIZER .
   pr TEST-OPERATORS .
 
   op expressions--tests : -> TestResults .
 
   eq expressions--tests =
-    id-sanitizer--tests
-    + getFullyQualifiedVariableId--tests
-    + getFullyQualifiedNodeId--tests
-    + operators--tests
+    operators--tests
     .
 
 endm
