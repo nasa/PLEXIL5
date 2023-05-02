@@ -841,6 +841,20 @@ begin tests
         )
     end
 
+    assert "A `self` id returns its context as the full qualified id" from
+        testQualified(
+            getFullyQualifiedNodeId(
+                self,
+                'B . 'A,
+                Cfg:Configuration
+            )
+        )
+        reaches
+        testQualified(
+            'B . 'A
+        )
+    end
+
     assert "A duplicated fully qualified identifier of a node returns an `ambiguity`" from
         testQualified(
             getFullyQualifiedNodeId(
