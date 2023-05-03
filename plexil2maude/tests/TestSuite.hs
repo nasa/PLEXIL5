@@ -31,10 +31,9 @@ import Text.XML.Cursor
 
 import Benchmarks(testBenchmarks)
 import PSX2MaudeTests(testPSX2Maude)
-
-import TestArrays(testArrays)
-
 import TestCommon
+import TestArrays(testArrays)
+import TestNodeRef(testNodeRef)
 
 ------------------------------------------------------------
 ----------    Test helpers
@@ -53,6 +52,7 @@ main = defaultMain $
     ,testBenchmarks
     ,testPSX2Maude
     ,testArrays
+    ,testNodeRef
     ]
 
 testsLegacy :: TestTree
@@ -70,6 +70,19 @@ testsLegacy =
         ,testLookups
         ,testUpdate
         ,testsParseConcat
+        ,testGroup "Different issues" $
+          map (testify'' elementVisitor)
+            [("a failing end condition",
+              [r|
+                <EndCondition>
+                  <EQInternal>
+                    <NodeCommandHandleVariable>
+                      <NodeRef dir="self" />
+                    </NodeCommandHandleVariable>
+                    <NodeCommandHandleValue>COMMAND_SUCCESS</NodeCommandHandleValue>
+                  </EQInternal>
+                </EndCondition>
+              |],"(endc:(cmdHandleIs?(self,CommandSuccess)))")]
         ,testGroup "Parse internal equality expression" $
             map (testify'' elementVisitor)
                 [("An icarous node failure equality expression ",

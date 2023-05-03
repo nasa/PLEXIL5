@@ -269,8 +269,8 @@ prettyCommandHandleEq :: Cursor -> [Doc] -> ParseError Doc
 prettyCommandHandleEq parent children =
     do
         var <- text <$> getNodeCommandHandleVariable parent
-        let state = getNodeCommandHandleValue parent
-        return $ text "cmdHandleIs?" <> (parens $ hcat $ punctuate comma [var,text state])
+        st  <- getNodeCommandHandleValue parent
+        return $ text "cmdHandleIs?" <> (parens $ hcat $ punctuate comma [var,text st])
 
 
 --
@@ -461,18 +461,6 @@ parseConcat cursor = do
     parseChild childCursor = Right $ elementVisitor childCursor
     isEmpty doc = render doc == ""
 
-
-
-    
-
--- parseCommand' cursor =
---     do cmdName <- msum $ map parseNameFromStringValue elementChildren
---        arguments <- parseOptionalArguments cursor
---        return $ parens $ (parens (text cmdName) <+> text "/" <+> arguments)
---     where
---         elementChildren = (child >=> anyElement) cursor
-
-
 fstMatch :: (Cursor -> ParseError a) -> [Cursor] -> ParseError a
 fstMatch f = msum . map f
 
@@ -480,10 +468,6 @@ hasArrayValue1Level :: Cursor -> Bool
 hasArrayValue1Level cursor = res
     where
         res = length ((child >=> hasArrayValueAxis1Level) cursor) == 1
-        -- NodeElement el ->
-        --     let label = nameLocalName $ elementName el
-        --     in label == "ArrayValue"
-        -- _ -> False
 
 parseDeclareArray :: Cursor -> ParseError Doc
 parseDeclareArray cursor =
@@ -765,7 +749,15 @@ getNodeStateVariable parent =
     let nodeReference = child >=> element "NodeStateVariable"
      in if null $ nodeReference parent
           then throwError $ "\n\nCould not parse a NodeStateVariable element from:\n\n" ++ show parent ++ "\n\n"
-          else parseNodeReference $ head $ nodeReference parent
+          else
+            do
+              (ref,dir) <- parseRelativeNodeReference $ head $ nodeReference parent
+              case dir of
+                "" -> return ref
+                "child" -> return ref
+                "sibling" -> return ref
+                "self" -> return "self"
+                _ -> throwError $ "\n\nCould not parse relative NodeStateVariable with dir attribute: " ++ dir
 
 getNodeStateValue :: Cursor -> String
 getNodeStateValue cursor =
@@ -786,35 +778,44 @@ getNodeCommandHandleVariable parent =
     let nodeReference = child >=> element "NodeCommandHandleVariable"
      in if null $ nodeReference parent
           then throwError $ "\n\nCould not parse a NodeCommandHandleVariable element from:\n\n" ++ show parent ++ "\n\n"
-          else parseNodeReference $ head $ nodeReference parent
+          else do
+            (ref,dir) <- parseRelativeNodeReference $ head $ nodeReference parent
+            case dir of
+                "" -> return ref
+                "child" -> return ref
+                "sibling" -> return ref
+                "self" -> return "self"
+                _ -> throwError $ "\n\nCould not parse relative NodeStateVariable with dir attribute: " ++ dir
+            -- parseRelativeNodeReference $ head $ nodeReference parent
 
-getNodeCommandHandleValue :: Cursor -> String
+getNodeCommandHandleValue :: Cursor -> ParseError String
 getNodeCommandHandleValue cursor =
     let nodeReference:_ = (child >=> element "NodeCommandHandleValue" >=> child >=> content) cursor
         rawState =  T.unpack $ T.toUpper nodeReference
      in case rawState of
-         "COMMAND_SUCCESS" -> "CommandSuccess"
-         "COMMAND_FAILED" -> "CommandFailed"
-         "COMMAND_DENIED" -> "CommandDenied"
-         "COMMAND_SENT_TO_SYSTEM" -> "CommandSentToSystem"
-         "COMMAND_ACCEPTED" -> "CommandAccepted"
-         "COMMAND_RCVD_BY_SYSTEM" -> "CommandRcvdBySystem"
-         "COMMAND_INTERFACE_ERROR" -> "CommandInterfaceError"
-         _ -> "(Error: don't know how to parse: " ++ rawState ++ ")"
+         "COMMAND_SUCCESS" -> Right "CommandSuccess"
+         "COMMAND_FAILED" -> Right "CommandFailed"
+         "COMMAND_DENIED" -> Right "CommandDenied"
+         "COMMAND_SENT_TO_SYSTEM" -> Right "CommandSentToSystem"
+         "COMMAND_ACCEPTED" -> Right "CommandAccepted"
+         "COMMAND_RCVD_BY_SYSTEM" -> Right "CommandRcvdBySystem"
+         "COMMAND_INTERFACE_ERROR" -> Right "CommandInterfaceError"
+         _ -> Left $ "(Error: don't know how to parse: " ++ rawState ++ ")"
 
 toQID :: String -> String
-toQID = ("'"++)
+toQID [] = []
+toQID s = "'"++ s
 
 parseNodeReference :: Cursor -> ParseError String
 parseNodeReference cursor =
     toQID <$> (parseNodeRef cursor <|> parseNodeId cursor)
          `catchError`
-            \_ -> throwError $ "Could not parse NodeId nor NodeRef from: " ++ show cursor
+            \_ -> throwError $ "Could not parse NodeId THIS IS nor NodeRef from: " ++ show cursor
     where
         parseNodeRef :: Cursor -> ParseError String
         parseNodeRef cursor =
-            let ref = (child >=> element "NodeRef" >=> child >=> content) cursor
-            in case ref of
+            let ref = (child >=> element "NodeRef")
+            in case (ref >=> child >=> content) cursor of
                 [r] -> Right $ maudifyLabel $ T.unpack r
                 _ -> Left $ "Could not parse NodeRef element from: " ++ show cursor
 
@@ -829,8 +830,10 @@ parseRelativeNodeReference cursor =
             let nodeRef = child >=> element "NodeRef"
                 ref = (nodeRef >=> child >=> content) cursor
                 dir = T.concat $ (nodeRef >=> attribute "dir") cursor
-            in case ref of
-                [r] -> Right $ ((maudifyLabel $ T.unpack r),T.unpack  dir)
+            in case T.unpack dir of
+              "self" -> Right ("","self")
+              dir -> case ref of
+                [r] -> Right $ ((maudifyLabel $ T.unpack r), dir)
                 _ -> Left $ "Could not parse NodeRef element from: " ++ show cursor
 
 

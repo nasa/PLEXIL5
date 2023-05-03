@@ -1,14 +1,15 @@
-mod TEST--ID-SANITIZER is
+mod TEST--COMPILER--ID-SANITIZER is
 
 pr TEST-BASE .
 
-
-op id-sanitizer--tests : -> TestResults .
-eq id-sanitizer--tests =
-    id-sanitizer--expressions--tests
-    + test--expressions--id-sanitizer--pairs
-    + id-sanitizer--attributes--tests .
-
+op test--compiler--id-sanitizer : -> TestResults .
+eq test--compiler--id-sanitizer =
+    test--id-sanitizer--on-expressions
+    + test--id-sanitizer--on-pairs
+    + test--id-sanitizer--on-attributes
+    + test--getFullyQualifiedVariableId
+    + test--getFullyQualifiedNodeId
+    .
 
 vars Cfg      : Configuration .
 vars I I'     : Identifier .
@@ -17,8 +18,8 @@ vars E E'     : Expression .
 vars Q Q' Q'' : NeQualified .
 vars QV QW    : NeQualified .
 
-op id-sanitizer--attributes--tests : -> TestResults .
-ceq id-sanitizer--attributes--tests =
+op test--id-sanitizer--on-attributes : -> TestResults .
+ceq test--id-sanitizer--on-attributes =
 begin tests
 
     assert "repeatc: attribute is sanitized" from
@@ -156,8 +157,8 @@ if
     /\ E' := isStatus?(getFullyQualifiedNodeId(I,Q,Cfg),waiting)
 .
 
-op test--expressions--id-sanitizer--pairs : -> TestResults .
-eq test--expressions--id-sanitizer--pairs =
+op test--id-sanitizer--on-pairs : -> TestResults .
+eq test--id-sanitizer--on-pairs =
 begin tests
   assert "sanitize ids on no pairs " from
     somePairs(
@@ -195,8 +196,8 @@ end tests
 .
 
 
-op id-sanitizer--expressions--tests : -> TestResults .
-ceq id-sanitizer--expressions--tests =
+op test--id-sanitizer--on-expressions : -> TestResults .
+ceq test--id-sanitizer--on-expressions =
 begin tests
 
     assert "An `isFailure?` expression computes its fully qualified node id" from
@@ -522,8 +523,8 @@ if
 .
 
 
-op getFullyQualifiedVariableId--tests : -> TestResults .
-ceq getFullyQualifiedVariableId--tests =
+op test--getFullyQualifiedVariableId : -> TestResults .
+ceq test--getFullyQualifiedVariableId =
 begin tests
 
     assert "A top level identifier at the top context returns itself if it exists or `unresolvedVariable` if it doesn't" from
@@ -754,8 +755,8 @@ if Cfg:Configuration :=
     < 'M_B . 'C . 'B . 'A : memory | none >
 .
 
-op getFullyQualifiedNodeId--tests : -> TestResults .
-ceq getFullyQualifiedNodeId--tests =
+op test--getFullyQualifiedNodeId : -> TestResults .
+ceq test--getFullyQualifiedNodeId =
 begin tests
 
     assert "A top level identifier returns the identifier if it exists, otherwise `unresolvedNode`" from
@@ -830,6 +831,20 @@ begin tests
         testQualified(
             getFullyQualifiedNodeId(
                 'B,
+                'B . 'A,
+                Cfg:Configuration
+            )
+        )
+        reaches
+        testQualified(
+            'B . 'A
+        )
+    end
+
+    assert "A `self` id returns its context as the full qualified id" from
+        testQualified(
+            getFullyQualifiedNodeId(
+                self,
                 'B . 'A,
                 Cfg:Configuration
             )

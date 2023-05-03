@@ -177,11 +177,12 @@ fmod COMPILER is
   eq  getFullyQualifiedNodeId(I, Q, Cfg) = getFullyQualifiedNodeId'(I,Q,Cfg,Q) [owise] .
 
     op getFullyQualifiedNodeId' : Identifier Qualified Configuration Qualified -> Qualified .
-    eq getFullyQualifiedNodeId'(I,   nilq, < I      : Cls | AtS > Cfg, Q') = I .
-    eq getFullyQualifiedNodeId'(I,      I, < I      : Cls | AtS > Cfg, Q') = I .
-    eq getFullyQualifiedNodeId'(I,     NQ, < I . NQ : Cls | AtS > Cfg, Q') = (I . NQ) [owise] .
-    eq getFullyQualifiedNodeId'(I, I' . Q,                        Cfg, Q') = getFullyQualifiedNodeId'(I, Q, Cfg, Q') [owise] .
-    eq getFullyQualifiedNodeId'(I,      Q,                        Cfg, Q') = unresolvedNode(I,Q') [owise] .
+    eq getFullyQualifiedNodeId'(self,      Q,                        Cfg, Q') = Q' .
+    eq getFullyQualifiedNodeId'(I   ,   nilq, < I      : Cls | AtS > Cfg, Q') = I [owise] .
+    eq getFullyQualifiedNodeId'(I   ,      I, < I      : Cls | AtS > Cfg, Q') = I [owise] .
+    eq getFullyQualifiedNodeId'(I   ,     NQ, < I . NQ : Cls | AtS > Cfg, Q') = (I . NQ) [owise] .
+    eq getFullyQualifiedNodeId'(I   , I' . Q,                        Cfg, Q') = getFullyQualifiedNodeId'(I, Q, Cfg, Q') [owise] .
+    eq getFullyQualifiedNodeId'(I   ,      Q,                        Cfg, Q') = unresolvedNode(I,Q') [owise] .
 
 
   op getFullyQualifiedVariableId : Qualified Qualified Configuration -> Qualified .

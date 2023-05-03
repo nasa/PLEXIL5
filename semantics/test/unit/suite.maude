@@ -26,7 +26,7 @@ mod TEST-SUITE is
     + expressions--tests
     + test--evaluation
     + model-checking--tests
-    + compiler--tests
+    + test--compiler
     + interface--tests
     +
 begin tests

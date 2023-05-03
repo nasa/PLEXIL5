@@ -100,7 +100,7 @@ test-suite test
   type: exitcode-stdio-1.0
   hs-source-dirs: tests, src, apps
   main-is: TestSuite.hs
-  other-modules: PLEXILScript,Benchmarks,GlobalDeclarations,PSX2MaudeTests,Parser,TestArrays,PSX2Maude.PrettyMaude
+  other-modules: PLEXILScript,Benchmarks,GlobalDeclarations,PSX2MaudeTests,Parser,TestArrays,PSX2Maude.PrettyMaude,TestCommon,TestNodeRef
   ghc-options: -Wall
   default-extensions: OverloadedStrings
   build-depends: tasty >= 1.1, tasty-hspec, hspec >= 2, tasty-hunit, base >=4.9, xml-conduit, raw-strings-qq, text, mtl, pretty, containers,
