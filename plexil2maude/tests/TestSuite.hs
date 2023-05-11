@@ -726,6 +726,12 @@ testsParseBooleanExpression =
                   <NodeRef dir="sibling">ASSIGNMENT__0</NodeRef>
                 </Finished>|],
               "(isFinished?(sibling('ASSIGNMENT--0)))")
+            ,("Finished2",
+              [r|
+                <Finished ColNo="15" LineNo="10">
+                  <NodeId>ConjunctTest1</NodeId>
+                </Finished>|],
+              "(isFinished?('ConjunctsTest1))")
             ,("Succeeded",
               [r|
                 <Succeeded>
