@@ -731,7 +731,7 @@ testsParseBooleanExpression =
                 <Finished ColNo="15" LineNo="10">
                   <NodeId>ConjunctTest1</NodeId>
                 </Finished>|],
-              "(isFinished?('ConjunctsTest1))")
+              "(isFinished?('ConjunctTest1))")
             ,("Succeeded",
               [r|
                 <Succeeded>

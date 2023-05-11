@@ -73,13 +73,22 @@ prettyNodeStateValue cursor =
 t = T.concat
 
 parseFinishedPredicate :: Cursor -> ParseError String
-parseFinishedPredicate cursor = return $ "(isFinished?(" ++ dirAttrText ++ "(" ++ (maudifyLabel $ toQID refText) ++ ")))"
-    where
-        rootElem = checkName (flip elem ["Finished"])
-        refElem = rootElem >=> child >=> checkName (== "NodeRef")
-        dirAttrText = T.unpack $ t $ (refElem >=> attribute "dir") cursor
-        refText = T.unpack $ t $ (refElem >=> child >=> content) cursor
+parseFinishedPredicate cursor = case (refElem cursor, nodeIdElem cursor) of
+    ([], [])   -> Left "no children"
+    ([_], [])  -> processRefElem
+    ([], [_])  -> processNodeIdElem
+    _          -> Left "invalid children"
+  where
+    rootElem = checkName (flip elem ["Finished"])
+    refElem = rootElem >=> child >=> checkName (== "NodeRef")
+    nodeIdElem = rootElem >=> child >=> checkName (== "NodeId")
 
+    dirAttrText = T.unpack $ t $ (refElem >=> attribute "dir") cursor
+    refText = T.unpack $ t $ (refElem >=> child >=> content) cursor
+    processRefElem = return $ "(isFinished?(" ++ dirAttrText ++ "(" ++ (maudifyLabel $ toQID refText) ++ ")))"
+
+    nodeIdText = T.unpack $ t $ (nodeIdElem >=> child >=> content) cursor
+    processNodeIdElem = return $ "(isFinished?(" ++ (maudifyLabel $ toQID nodeIdText) ++ "))"
     -- if null
     -- let axis  = checkName (flip elem ["Finished"])
     --                 >=> child
