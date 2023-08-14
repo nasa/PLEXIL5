@@ -1,0 +1,47 @@
+mod TEST--GENERATORS--REPEAT is
+  protecting TEST-BASE .
+
+  op test--generators--repeat : -> TestResults .
+  ceq test--generators--repeat =
+begin tests
+
+  assert "generate repeat empty" from
+    anInputsSet(
+      generate(repeat(empty),mtsoup)
+    )
+  reaches
+    anInputsSet(
+      empty
+    )
+  end
+
+  assert "generate repeat non-empty" from
+    anInputsSet(
+      generate(repeat((A B, C D)),mtsoup)
+    )
+  reaches
+    anInputsSet(
+      (A B,C D)
+    )
+  end
+
+  assert "update repeat" from
+    aGenerator(
+      update(repeat((A B, C D)),mtsoup, C D)
+    )
+  reaches
+    aGenerator(
+      repeat((C D,A B))
+    )
+  end
+
+end tests
+  if A := stateLookup('a,nilarg, val(true))
+  /\ B := stateLookup('b,nilarg, val(true))
+  /\ C := stateLookup('c,nilarg, val(true))
+  /\ D := stateLookup('d,nilarg, val(true))
+  .
+
+  vars A B C D : StateInput .
+
+endm

@@ -33,32 +33,68 @@ fmod SINGLE-INPUT is
   protecting PARAMETER .
   protecting VALUE .
   protecting COMMAND-HANDLE .
+  protecting ACK .
 
-  sort Input StateInput CommandInput .
-  subsort StateInput CommandInput < Input .
+  sort Input StateInput CommandInput UpdateInput .
+  subsort StateInput CommandInput UpdateInput < Input .
 
-  op stateLookup   : Identifier Arguments Value         -> StateInput   .
-  op commandResult : Identifier Arguments Value         -> CommandInput .
+  op commandAbort  : Identifier Arguments Value         -> CommandInput .
   op commandAck    : Identifier Arguments CommandHandle -> CommandInput .
+  op commandResult : Identifier Arguments Value         -> CommandInput .
+  op stateLookup   : Identifier Arguments Value         -> StateInput   .
+  op updateAck     : Identifier           Ack           -> UpdateInput  .
 endfm
 
 view Input from TRIV to SINGLE-INPUT is
   sort Elt to Input .
 endv
 
-fmod EXTERNAL-INPUT is
-  protecting LIST{Input}
-    * ( sort NeList{Input} to NeExternalInputs,
-        sort List{Input} to ExternalInputs,
-        op nil to noExternalInputs ) .
+fmod INPUTS is
+  protecting SET{Input}
+    * ( sort NeSet{Input} to NeInputs,
+        sort Set{Input} to Inputs,
+        op empty to noInputs,
+        op _`,_ to __,
+        op insert to insertInputs,
+        op delete to deleteInputs,
+        op _in_ to _inInputs_,
+        op |_| to |_|Inputs,
+        op $card to $cardInputs,
+        op union to unionInputs,
+        op intersection to intersectionInputs,
+        op $intersect to $intersectInputs,
+        op _\_ to _\Inputs_,
+        op $diff to $diffInputs,
+        op _subset_ to _subsetInputs_,
+        op _psubset_ to _psubsetInputs_ ) .
 endfm
 
-fmod EXTERNAL-INPUT-LIST is
-  protecting EXTERNAL-INPUT .
+view Inputs from TRIV to INPUTS is
+  sort Elt to Inputs .
+endv
+
+fmod INPUTS-SET is
+  protecting SET{Inputs}
+    * ( sort NeSet{Inputs} to NeInputsSet,
+        sort Set{Inputs} to InputsSet ) .
+
+  op _x_ : InputsSet InputsSet -> InputsSet .
+  eq InS x (In, In', InS') = ((InS x In), (InS x (In',InS'))) .
+  eq (In,InS) x In' = (In In', (InS x In')) .
+  eq InS x empty = empty .
+  eq empty x InS = empty .
+
+  vars In In' : Inputs .
+  vars InS InS' : InputsSet .
+
+endfm
+
+fmod INPUTS-LIST is
+  protecting INPUTS .
   sort EInputsList NeEInputsList .
-  subsort ExternalInputs < NeEInputsList < EInputsList .
+  subsort Inputs < NeEInputsList < EInputsList .
   op nilEInputsList : -> EInputsList .
-  op _#_ : EInputsList   EInputsList   -> EInputsList   [assoc id: nilEInputsList] .
+  op _#_ : EInputsList   EInputsList   -> EInputsList   [assoc id: nilEInputsList prec 50] .
   op _#_ : NeEInputsList EInputsList   -> NeEInputsList [ditto] .
   op _#_ : EInputsList   NeEInputsList -> NeEInputsList [ditto] .
 endfm

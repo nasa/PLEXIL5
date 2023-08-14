@@ -1,7 +1,7 @@
 mod INPUT is
   protecting TRAFFIC-RESOLUTION-PLAN .
 
-  op input : -> ExternalInputGenerator .
+  op input : -> InputGenerator .
   eq input = sequenceGenerator(
     (
     stateLookup('time,nilarg,val(0))

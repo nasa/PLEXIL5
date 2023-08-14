@@ -1,0 +1,336 @@
+fmod SEQUENCE-GENERATOR is
+  pr SYSTEM .
+  pr INPUTS-LIST .
+  pr MICRO .
+  pr INTERFACE .
+
+  op sequence : EInputsList -> InputGenerator [ctor] .
+
+  eq generate(sequence(nilEInputsList),Cfg) = empty .
+  eq generate(sequence(In # InL),Cfg) = In .
+
+  eq update(sequence(nilEInputsList),Cfg,In) = sequence(nilEInputsList) .
+  eq update(sequence(In # InL),Cfg,In') = sequence(InL) .
+
+  vars Cfg : Config .
+  vars In In' : Inputs .
+  vars InL : EInputsList .
+
+  vars Q          : NeQualified .
+  vars CId        : Cid .
+  vars PS         : Configuration .
+  vars Ats        : AttributeSet .
+
+  sort GeneratorStatus .
+  ops uninitialized firstIteration started cleaning : -> GeneratorStatus .
+
+  op sequenceGenerator : EInputsList -> InputGenerator .
+  eq sequenceGenerator(EIL) = sequenceGenerator(EIL,uninitialized,mtsoup,mtsoup) .
+
+  op sequenceGenerator : EInputsList GeneratorStatus Config Config -> InputGenerator [ctor] .
+
+  eq [test4] : generate(sequenceGenerator(EInput # EIL, started, Conf, Conf'), Conf'') = EInput .
+---  ceq [test4-5] : generate(sequenceGenerator(EInput, started, Conf, Conf'), Conf'') = noInputs
+---     if Conf''' := micro(updateGenerator(updateInterface(Conf'',EInput),EInput))
+---     /\ not allNodesFinished(getNodes(Conf''))
+---     /\ not equal?(Conf''', Conf'') .
+ ceq [test5] : generate(sequenceGenerator(nilEInputsList, started, Conf, Conf'), Conf'') = nilEInputsList
+    if allNodesFinished(getNodes(Conf''))
+    .
+ ceq [test51] : generate(sequenceGenerator(nilEInputsList, started, Conf, Conf'), Conf'') =
+      if BadConf :: Config
+      then
+        if equal?(BadConf, Conf'')
+        then nilEInputsList
+        else noInputs
+        fi
+      else
+        generationError(generate(sequenceGenerator(nilEInputsList, started, Conf, Conf'), Conf''))
+     fi
+     if BadConf := microNoLog(updateGenerator(updateInterface(Conf'',noInputs),noInputs))
+    [owise].
+
+  op generationError : EInputsList ~> EInputsList [ctor strat (0)] .
+
+ ceq [test5] : generate(sequenceGenerator(nilEInputsList, started, Conf, Conf'), Conf'') = generationError(generate(sequenceGenerator(nilEInputsList, started, Conf, Conf'), Conf''))
+    if BadConf := micro(updateGenerator(updateInterface(Conf'',noInputs),noInputs)) [owise print "ERROR: could not execute micro"] .
+  eq [test6] : generate(sequenceGenerator(nilEInputsList, started, Conf, Conf'), Conf'') = nilEInputsList [owise] .
+
+  eq [test1] : update(sequenceGenerator(EIL, uninitialized, Conf, Conf'), Conf'', EI) =
+    sequenceGenerator(EIL, started, Conf', removeInterfaceHistory(removeGenerator(Conf''))) .
+  eq [test2] : update(sequenceGenerator(nilEInputsList, started, Conf, Conf'), Conf'', EI) =
+    sequenceGenerator(nilEInputsList,started,Conf',removeInterfaceHistory(removeGenerator(Conf''))) .
+  eq [test3] : update(sequenceGenerator(EInput # EIL, started, Conf, Conf'), Conf'', EInput) =
+    sequenceGenerator(EIL,started,Conf',removeInterfaceHistory(removeGenerator(Conf''))) .
+
+  eq isConsumed?(sequenceGenerator(EInput # EIL,GS:GeneratorStatus,Conf,Conf'),Conf'') = false .
+  eq isConsumed?(sequenceGenerator(EIL,GS:GeneratorStatus,Conf,Conf'),Conf'') = true [owise] .
+
+  op equal? : Config Config -> Bool .
+  --- eq equal?(Conf,Conf') = removeInterfaceHistory(removeGenerator(Conf)) == removeInterfaceHistory(removeGenerator(Conf')) .
+  eq equal?(Conf,Conf') = getNodes(Conf) == getNodes(Conf') .
+
+    op removeInterfaceHistory : Config -> Config .
+    eq removeInterfaceHistory( Conf [ interface-history : EIns:EInputsList] ) =  Conf .
+    eq removeInterfaceHistory( Conf ) = Conf [owise] .
+
+    op removeGenerator : Config -> Config .
+    eq removeGenerator( Conf [ generator : GEN:InputGenerator] ) =  Conf .
+    eq removeGenerator( Conf ) = Conf [owise] .
+
+    op allNodesFinished : Configuration -> Bool .
+    eq allNodesFinished( < Q : CId | status: inactive, Ats > PS ) = false .
+    eq allNodesFinished( < Q : CId | status: waiting, Ats > PS ) = false .
+    eq allNodesFinished( < Q : CId | status: executing, Ats > PS ) = false .
+    eq allNodesFinished( < Q : CId | status: finishing, Ats > PS ) = false .
+    eq allNodesFinished( < Q : CId | status: iterationEnded, Ats > PS ) = false .
+    eq allNodesFinished( < Q : CId | status: failing, Ats > PS ) = false .
+    eq allNodesFinished( PS ) = true [owise] .
+
+  vars Conf Conf' Conf'' Conf''' Conf'''' : Config .
+  vars BadConf : [Config] .
+  vars EInput EInput' EInput'' EInput''' : Inputs .
+  vars EIL   : EInputsList .
+  vars NeEIL : NeEInputsList .
+  vars EI    : Inputs .
+  vars EL    : EnvironmentList .
+  vars GenStatus : GeneratorStatus .
+endfm
+
+fmod COMMAND-ACK-GENERATOR is
+  protecting SEQUENCE-GENERATOR .
+
+  op command-ack : CommandHandle -> InputGenerator [ctor] .
+  eq generate(command-ack(CH),Cfg) = genCommandAcks(Cfg,CH) .
+  eq update(command-ack(CH),Cfg,Ins) = command-ack(CH) .
+
+  op genCommandAcks : Config CommandHandle -> Inputs .
+  eq genCommandAcks(
+      [ interface :
+        < CmdId . Q : command-on-execution
+          | arguments: Args
+          , handle: nothing, AtS > CS ] Cfg,
+      CH)
+    =
+      commandAck(CmdId, Args, CH)
+      genCommandAcks([ interface : CS ], CH)
+  .
+  eq genCommandAcks(Cfg, CH) = noInputs [owise] .
+
+  *** Command Ack Generator
+  op commandAckGenerator : Inputs Nat -> InputGenerator .
+  op commandAckGenerator : Inputs Config Nat Nat GeneratorStatus -> InputGenerator .
+  eq commandAckGenerator(EInput,Ites) = commandAckGenerator(EInput,mtsoup,Ites,0,uninitialized) .
+
+  eq generate(commandAckGenerator(EInput,PrevConf,Ites,It,firstIteration),Conf) = EInput .
+  eq generate(commandAckGenerator(EInput,PrevConf,Ites,It,started),Conf) =
+      if isConsumed?(commandAckGenerator(EInput,PrevConf,Ites,It,started),Conf)
+      then nilEInputsList
+      else computeCommandAcks(Conf)
+      fi .
+
+  eq update(commandAckGenerator(EInput,PrevConf,Ites,0,uninitialized),Conf,EI:Inputs)
+    = commandAckGenerator(EInput,Conf,Ites,0,firstIteration) .
+  eq update(commandAckGenerator(EInput,PrevConf,Ites,0,firstIteration),Conf,EI:Inputs)
+    = commandAckGenerator(EInput,Conf,Ites,1,started) .
+  eq update(commandAckGenerator(EInput,PrevConf,Ites,It,started),Conf,EI:Inputs)
+    = commandAckGenerator(EInput,Conf,Ites,s It,started) .
+
+  eq isConsumed?(commandAckGenerator(EInput,PrevConf,Ites,It,GenStatus),Conf) = Ites <= It .
+
+  *** Command Ack Generator Extended
+  op commandAckGeneratorEx : Inputs Inputs Nat -> InputGenerator .
+  op commandAckGeneratorEx : Inputs Inputs Nat Nat GeneratorStatus -> InputGenerator .
+  eq commandAckGeneratorEx(EInput,EInput',Ites) = commandAckGeneratorEx(EInput,EInput',Ites,0,uninitialized) .
+
+  var GEN : InputGenerator .
+  var EIL'' : EInputsList .
+
+  eq [command-ack-generator-generate-firstIteration] : generate(commandAckGeneratorEx(EInput,EInput',Ites,It,firstIteration),Conf) = EInput .
+  ceq [command-ack-generator-generate-cleaning] : generate(GEN,Conf) = EIL'
+    if commandAckGeneratorEx(EInput,EInput',Ites,It,cleaning) := GEN
+    /\ EInput'' := computeCommandAcks(Conf)
+    /\ EIL' := if isConsumed?(GEN,Conf)
+                then nilEInputsList
+                else EInput''
+                fi
+  .
+  ceq [command-ack-generator-generate-started] : generate(GEN,Conf) = EIL''
+    if commandAckGeneratorEx(EInput,EInput',Ites,It,started) := GEN
+    /\ EInput'' := computeCommandAcks(Conf)
+    /\ EIL := computeLookupCombinations(EInput')
+    /\ EIL' := add(EInput'',EIL,nilEInputsList)
+    /\ EIL'' := if isConsumed?(GEN,Conf)
+                then nilEInputsList
+                else EIL'
+                fi
+    [owise]
+    .
+
+  eq update(commandAckGeneratorEx(EInput,EInput',Ites,0,uninitialized),Conf,EI:Inputs)
+    = commandAckGeneratorEx(EInput,EInput',Ites,0,firstIteration) .
+  eq update(commandAckGeneratorEx(EInput,EInput',Ites,0,firstIteration),Conf,EI:Inputs)
+    = commandAckGeneratorEx(EInput,EInput',Ites,1,started) .
+  eq update(commandAckGeneratorEx(EInput,EInput',Ites,It,started),Conf,EI:Inputs) =
+      if Ites == s It
+      then commandAckGeneratorEx(EInput,noInputs,s s s Ites, s It, cleaning)
+      else commandAckGeneratorEx(EInput,EInput',Ites,s It,started)
+      fi
+    .
+  eq update(commandAckGeneratorEx(EInput,EInput',Ites,It,cleaning),Conf,EI:Inputs) =
+      if Ites == s It
+      then noEnvGen
+      else commandAckGeneratorEx(EInput,EInput',Ites,s It,cleaning)
+      fi
+    [owise]
+    .
+
+  eq isConsumed?(commandAckGeneratorEx(EInput,EInput',Ites,It,GenStatus),Conf) = Ites <= It .
+
+  *** Infinite Command Ack Generator Extended
+  op infiniteCommandAckGeneratorEx : Inputs EInputsList -> InputGenerator .
+  op infiniteCommandAckGeneratorEx : Inputs EInputsList GeneratorStatus -> InputGenerator .
+  eq infiniteCommandAckGeneratorEx(EInput,EILRef) = infiniteCommandAckGeneratorEx(EInput,EILRef,uninitialized) .
+
+  eq generate(infiniteCommandAckGeneratorEx(EInput,EILRef,uninitialized),Conf) = nilEInputsList .
+  eq generate(infiniteCommandAckGeneratorEx(EInput,EILRef,firstIteration),Conf) = EInput .
+  ceq generate(infiniteCommandAckGeneratorEx(EInput,EILRef,started),Conf)
+    = EIL'
+    if EInput'' := computeCommandAcks(Conf)
+    /\ EIL := undup(computeLookupCombinationsEx(EILRef))
+    /\ EIL' := add(EInput'',EIL,nilEInputsList)
+  .
+
+  eq update(infiniteCommandAckGeneratorEx(EInput,EILRef,uninitialized),Conf,EI:Inputs)
+    = infiniteCommandAckGeneratorEx(EInput,EILRef,firstIteration) .
+  eq update(infiniteCommandAckGeneratorEx(EInput,EILRef,firstIteration),Conf,EI:Inputs)
+    = infiniteCommandAckGeneratorEx(EInput,EILRef,started) .
+  eq update(infiniteCommandAckGeneratorEx(EInput,EILRef,started),Conf,EI:Inputs)
+    = infiniteCommandAckGeneratorEx(EInput,EILRef,started) .
+
+  eq isConsumed?(infiniteCommandAckGeneratorEx(EInput,EILRef,GenStatus),Conf) = false .
+
+  *** Common functions
+  op computeCommandAcks : Config -> Inputs .
+  eq computeCommandAcks( [ interface : < CmdId . Q : command-on-execution | arguments: Args, handle: nothing, AtS > CS ] Conf )
+      = commandAck(CmdId, Args, CommandSuccess) computeCommandAcks([ interface : CS ]) .
+  eq computeCommandAcks( Conf )
+      = noInputs [owise] .
+
+  op computeLookupCombinations : Inputs -> EInputsList .
+  eq computeLookupCombinations(ExIn) = computeLookupCombinations(ExIn,noInputs) .
+
+  op computeLookupCombinations : Inputs EInputsList -> EInputsList .
+  eq computeLookupCombinations(In ExIn,ExInLst)
+      = computeLookupCombinations(ExIn, combine(In,ExInLst,nilEInputsList)) .
+  eq computeLookupCombinations(noInputs,ExInLst)
+      = ExInLst .
+
+  op computeLookupCombinationsEx : EInputsList -> EInputsList .
+  eq computeLookupCombinationsEx(EILRef) = computeLookupCombinationsEx(EILRef,noInputs) .
+
+  op computeLookupCombinationsEx : EInputsList EInputsList -> EInputsList .
+  ceq computeLookupCombinationsEx(ExIn # EILRef,ExInLst)
+      = computeLookupCombinationsEx(EILRef, combineEx(EIL,ExInLst,nilEInputsList))
+    if EIL := computeLookupCombinations'(ExIn)
+  .
+  eq computeLookupCombinationsEx(nilEInputsList,ExInLst)
+      = ExInLst .
+
+  op computeLookupCombinations' : Inputs -> EInputsList .
+  eq computeLookupCombinations'(In ExIn) = In # computeLookupCombinations'(ExIn) .
+  eq computeLookupCombinations'(noInputs) = noInputs .
+
+  op toEInputsList : Inputs -> EInputsList .
+  eq toEInputsList(ExIn) = toEInputsList(ExIn,nilEInputsList) .
+
+  op toEInputsList : Inputs EInputsList -> EInputsList .
+  eq toEInputsList(In ExIn,ExInLstAcc) = toEInputsList(ExIn,In # ExInLstAcc) .
+  eq toEInputsList(noInputs,ExInLstAcc) = noInputs # ExInLstAcc .
+
+  op combine : Inputs EInputsList EInputsList -> EInputsList .
+  eq combine(EIns,ExIn # ExInLst, ExInLstAcc)
+      = combine(EIns,ExInLst,(EIns ExIn) # ExIn # ExInLstAcc) .
+  eq combine(EIns,nilEInputsList, ExInLstAcc)
+      = ExInLstAcc [owise] .
+
+  op combineEx : EInputsList EInputsList EInputsList -> EInputsList .
+  eq combineEx(ExIn # ExInLst,EILRef, ExInLstAcc)
+      = combineEx(ExInLst,EILRef,combine(ExIn,EILRef,ExInLstAcc)) .
+  eq combineEx(nilEInputsList,EILRef, ExInLstAcc)
+      = ExInLstAcc [owise] .
+
+  op undup : EInputsList -> EInputsList .
+  eq undup(EInLst:EInputsList # EIns # EInLst':EInputsList # EIns # EInLst'':EInputsList)
+   = undup(EInLst:EInputsList # EIns # EInLst':EInputsList # EInLst'':EInputsList) .
+  eq undup(EInLst:EInputsList # noInputs # EInLst':EInputsList)
+   = undup(EInLst:EInputsList #                    EInLst':EInputsList) .
+  eq undup(EIL) = EIL [owise] .
+
+  op add : Inputs EInputsList -> EInputsList .
+  eq add(EInput,ExInLst) = add(EInput,ExInLst,nilEInputsList) .
+
+    op add : Inputs EInputsList EInputsList -> EInputsList .
+    eq add(EInput,ExIn # ExInLst, ExInLstAcc) = add(EInput,ExInLst,(EInput ExIn) # ExInLstAcc) .
+    eq add(EInput,nilEInputsList, ExInLstAcc) = ExInLstAcc .
+
+  vars Args  : Arguments .
+  vars AtS   : AttributeSet .
+  vars CH : CommandHandle .
+  vars CS    : Configuration .
+  vars Q     : Qualified .
+  vars CmdId : Identifier .
+  vars Cfg : Config .
+  vars Conf Conf' : Config .
+  vars EInput EInput' EInput'' EInput''' : Inputs .
+  vars EIL : EInputsList .
+  vars It Ites : Nat .
+  vars PrevConf : Config .
+  vars EILChosen : Inputs .
+  vars EIL' : EInputsList .
+  vars EILRef : EInputsList .
+  vars GenStatus : GeneratorStatus .
+  vars In : Input .
+  vars Ins : Inputs .
+  vars EIns : Inputs .
+  vars ExIn : Inputs .
+  vars ExInLst ExInLstAcc : EInputsList .
+endfm
+
+fmod REPEAT-GENERATOR is
+  protecting SYSTEM .
+
+  op repeat : InputsSet -> InputGenerator [ctor] .
+  eq generate(repeat(InS),Cfg) = InS .
+  eq update(repeat(InS),Cfg,In) = repeat(InS) .
+
+  vars In : Inputs .
+  vars InS : InputsSet .
+  vars Cfg : Config .
+endfm
+
+fmod X-GENERATOR is
+  protecting SYSTEM .
+
+  op _x_ : InputGenerator InputGenerator -> InputGenerator [ctor] .
+  ceq generate(G1 x G2, Cfg) = InS
+  if InS1 := generate(G1,Cfg)
+  /\ InS2 := generate(G2,Cfg)
+  /\ InS := InS1 x InS2
+  .
+  eq update(G1 x G2, Cfg, In) = update(G1,Cfg,In) x update(G2,Cfg,In) .
+
+  vars Cfg : Config .
+  vars G1 G2 : InputGenerator .
+  vars In : Inputs .
+  vars InS InS1 InS2 : InputsSet .
+
+endfm
+
+fmod BASIC-GENERATORS is
+  pr FILTER-GENERATOR .
+  pr COMMAND-ACK-GENERATOR .
+  pr SEQUENCE-GENERATOR .
+  pr REPEAT-GENERATOR .
+  pr X-GENERATOR .
+endfm

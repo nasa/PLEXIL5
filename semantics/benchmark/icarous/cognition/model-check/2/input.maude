@@ -3,8 +3,8 @@ mod M-CHECK is
   protecting PLEXILITE-PREDS .
   including MODEL-CHECKER .
 
-  op cognitionGen : EInputsList -> ExternalInputGenerator .
-  op cognitionGen : EInputsList GeneratorStatus -> ExternalInputGenerator [ctor] .
+  op cognitionGen : EInputsList -> InputGenerator .
+  op cognitionGen : EInputsList GeneratorStatus -> InputGenerator [ctor] .
   eq cognitionGen(EInsList) = cognitionGen(EInsList,uninitialized) .
 
   eq generate(cognitionGen(EInsList,firstIteration),Conf) = EInsList .
@@ -17,10 +17,10 @@ mod M-CHECK is
       eq extraLookups(EIns # EInsList,EInsListAcc) = extraLookups(EInsList,extraLookups'(EIns) # EInsListAcc) .
       eq extraLookups(nilEInputsList,EInsListAcc) = EInsListAcc [owise] .
 
-        op extraLookups' : ExternalInputs -> ExternalInputs .
-        eq extraLookups'(EIns) = extraLookups'(EIns,noExternalInputs) .
+        op extraLookups' : Inputs -> Inputs .
+        eq extraLookups'(EIns) = extraLookups'(EIns,noInputs) .
 
-          op extraLookups' : ExternalInputs ExternalInputs -> ExternalInputs .
+          op extraLookups' : Inputs Inputs -> Inputs .
           eq extraLookups'(commandAck(CmdId, Args, Hndl) EIns,EIns')
            = extraLookups'(EIns,commandAck(CmdId, Args, Hndl) stateLookup('inConflict,nilarg,val(false)) EIns') [print "GENERATED\n\n"] .
           eq extraLookups'(EIns,EIns') = EIns' [owise] .
@@ -31,7 +31,7 @@ mod M-CHECK is
 
   eq isConsumed?(cognitionGen(EInsList,GenStatus),Conf) = false .
 
-  vars EIns EIns' : ExternalInputs .
+  vars EIns EIns' : Inputs .
   vars EInsList EInsListAcc : EInputsList .
   vars Conf : Config .
   vars Args : Arguments .
@@ -39,7 +39,7 @@ mod M-CHECK is
   vars Hndl : CommandHandle .
   vars GenStatus : GeneratorStatus .
 
-  op input : -> ExternalInputGenerator .
+  op input : -> InputGenerator .
   eq [input] :
     input
   = cognitionGen(

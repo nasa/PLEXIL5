@@ -302,7 +302,7 @@ mod TEST--ATOMIC--WAITING is
                                        startc: const(val(true)),
                                        pre: const(val(true)),
                                        exitc: const(unknown),
-                                       (M . B . A := const(val(10)) + var(M . B . A)) > ]
+                                       (var(M . B . A) := const(val(10)) + var(M . B . A)) > ]
         [ memory :
             < M . B . A : memory     | actVal: val(5),
                                        prevVal: val(0) > ]
@@ -324,7 +324,7 @@ mod TEST--ATOMIC--WAITING is
                                        startc: const(val(true)),
                                        pre: const(val(true)),
                                        exitc: const(unknown),
-                                       (M . B . A := const(val(10)) + var(M . B . A)) > ]
+                                       (var(M . B . A) := const(val(10)) + var(M . B . A)) > ]
         [ memory :
             < M . B . A : memory     | actVal: val(5),
                                        prevVal: val(0) > ]
@@ -378,6 +378,58 @@ mod TEST--ATOMIC--WAITING is
                       logTransition(B . A,waiting,executing,7),
                       suspend(B . A) ]
         [ macroacts : runCommand(B . A, val("Hello World!") / pprint / invoked) ]
+      )
+    end
+
+    assert "Waiting update node follows path 7 (waiting-07-update)" from
+      waiting(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A         : list    | status: executing,
+                                    exitc: const(unknown),
+                                    inv: const(unknown),
+                                    endc: const(unknown) >
+            < B . A     : update  | status: waiting,
+                                    active: true,
+                                    suspended: false,
+                                    skip: const(unknown),
+                                    startc: const(val(true)),
+                                    pre: const(val(true)),
+                                    exitc: const(unknown),
+                                    ack: false,
+                                    pairs:
+                                      pair('field1, var(M . B . A))
+                                      pair('field2, const(val(2))) > ]
+        [ memory :
+            < M . B . A : memory  | actVal: val("Hello World!") > ]
+        [ microacts : mtactions ]
+        [ macroacts : mtactions ]
+      )
+    reaches
+      waiting(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A         : list    | status: executing,
+                                    exitc: const(unknown),
+                                    inv: const(unknown),
+                                    endc: const(unknown) >
+            < B . A     : update  | status: waiting,
+                                    active: false,
+                                    suspended: false,
+                                    skip: const(unknown),
+                                    startc: const(val(true)),
+                                    pre: const(val(true)),
+                                    exitc: const(unknown),
+                                    ack: false,
+                                    pairs:
+                                      pair('field1, var(M . B . A))
+                                      pair('field2, const(val(2))) > ]
+        [ memory :
+            < M . B . A : memory  | actVal: val("Hello World!") > ]
+        [ microacts : setStatus(B . A,executing),
+                      logTransition(B . A,waiting,executing,7),
+                      suspend(B . A) ]
+        [ macroacts : runUpdate(B . A, pair('field1, const(val("Hello World!"))) pair('field2, const(val(2)))) ]
       )
     end
 

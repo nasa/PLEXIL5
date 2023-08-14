@@ -1,0 +1,153 @@
+mod TEST--REDUCTIONS--MACRO is
+  pr TEST-BASE .
+
+  op test--reductions--macro : -> TestResults .
+  eq test--reductions--macro = begin tests
+
+    assert "`macro` reduction executes updates" from
+      aSystem(
+        quiescence |
+            [ interface : none ]
+            [ macroacts : runUpdate(A,pair('field, const(val(1)))) ]
+            Stub{Config}
+      )
+    reaches
+      aSystem(
+        macro |
+          executeUpdates(
+            [ interface : none ]
+            [ macroacts : runUpdate(A,pair('field, const(val(1)))) ]
+            Stub{Config}
+          )
+      )
+    end
+
+    assert "executeUpdates updates the interface and consumes the action" from
+      executeUpdates(
+        [ interface : none ]
+        [ macroacts : runUpdate(A,pair('field, const(val(1)))) ]
+        Stub{Config}
+      )
+    reaches
+        [ interface :
+            < A : update-on-execution |
+              ack: false,
+              pairs: pair('field, const(val(1))) > ]
+        [ macroacts : mtactions ]
+        Stub{Config}
+    end
+
+    assert "executeUpdates returns an error if there is a name clash" truth
+      not (
+        executeUpdates(
+          [ interface : < 'A : update-on-execution | none > ]
+          [ macroacts : runUpdate('A,pair('field, const(val(1)))) ]
+          Stub{Config}
+        ) :: Config
+      )
+    end
+
+    assert "executeUpdates returns an error if there is a name clash" from
+      executeUpdates(
+        [ interface : < 'A : update-on-execution | none > ]
+        [ macroacts : runUpdate('A,pair('field, const(val(1)))) ]
+        Stub{Config}
+      )
+    reaches
+      ERROR(executeUpdates(
+        [ interface : < 'A : update-on-execution | none > ]
+        [ macroacts : runUpdate('A,pair('field, const(val(1)))) ]
+        Stub{Config}
+      ))
+    end
+
+    assert "executeUpdates ignores non-update actions" from
+      executeUpdates(
+        [ interface : < 'C . 'A : update-on-execution | ack: false > ]
+        [ macroacts : runCommand('A,nilarg / 'C / invoked) ]
+        Stub{Config}
+      )
+    reaches
+      (
+        [ interface : < 'C . 'A : update-on-execution | ack: false > ]
+        [ macroacts : runCommand('A,nilarg / 'C / invoked) ]
+        Stub{Config}
+      )
+    end
+
+    assert "executeCommands ignores other macro actions" from
+      executeCommands(
+        [ interface : < A : update-on-execution | ack: false > ]
+        [ macroacts : runUpdate(A,pair('field, const(val(1)))) ]
+      )
+    reaches
+        [ interface : < A : update-on-execution | ack: false > ]
+        [ macroacts : runUpdate(A,pair('field, const(val(1)))) ]
+    end
+
+    assert "executeCommands supports commands without return value 1" from
+      executeCommands(
+        [ nodes : < 'COMMAND--32 : command | command: 'SetVel / nilpar > ]
+        [ macroacts : runCommand('COMMAND--32, (val(-1.0e+5) val(-1.0e+5)) / 'SetVel / invoked) ]
+        [ interface : none ]
+      )
+    reaches
+        [ nodes : < 'COMMAND--32 : command | command: 'SetVel / nilpar > ]
+        [ macroacts : mtactions ]
+        [ interface :
+          < 'SetVel . 'COMMAND--32 : command-on-execution | arguments: (val(-1.0e+5) val(-1.0e+5)), handle: nothing, aborted: false > ]
+    end
+
+    assert "executeCommands supports commands without return value 2" from
+      executeCommands(
+        [ nodes : < 'COMMAND--32 : command | command: 'SetVel / nilpar > ]
+        [ macroacts : runCommand('COMMAND--32, (val(-1.0e+5) val(-1.0e+5)) / 'SetVel / invoked) ]
+        [ interface :
+          < 'SetVel . 'COMMAND--32 : command-on-execution | arguments: (val(-2.0e+5) val(-2.0e+5)), handle: nothing, aborted: false > ]
+      )
+    reaches
+        [ nodes : < 'COMMAND--32 : command | command: 'SetVel / nilpar > ]
+        [ macroacts : mtactions ]
+        [ interface :
+          < 'SetVel . 'COMMAND--32 : command-on-execution | arguments: (val(-1.0e+5) val(-1.0e+5)), handle: nothing, aborted: false > ]
+    end
+
+    assert "Commands are aborted when signaled to do so" from
+      testConfiguration(
+        updateCommandInputs(
+            < 'myCommand . 'myNode : command-on-execution | arguments: nilarg, aborted: false >,
+          (commandAbort('myCommand, nilarg, val(true)))
+        )
+      )
+    reaches
+      testConfiguration(
+        < 'myCommand . 'myNode : command-on-execution | arguments: nilarg, aborted: true >
+      )
+    end
+
+    assert "Suspended update nodes are unsuspended on macrostep start" from
+      unSuspendMacroNodes(
+        [ nodes : < 'anId : update | suspended: true > ]
+      )
+    reaches
+        [ nodes : < 'anId : update | suspended: false > ]
+    end
+
+    assert "Suspended command nodes are unsuspended on macrostep start" from
+      unSuspendMacroNodes(
+        [ nodes : < 'anId : command | suspended: true > ]
+      )
+    reaches
+        [ nodes : < 'anId : command | suspended: false > ]
+    end
+
+    assert "Suspended assignment nodes are unsuspended on macrostep start" from
+      unSuspendMacroNodes(
+        [ nodes : < 'anId : assignment | suspended: true > ]
+      )
+    reaches
+        [ nodes : < 'anId : assignment | suspended: false > ]
+    end
+  end tests
+  .
+endm

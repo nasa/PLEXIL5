@@ -1,0 +1,23 @@
+fmod FILTER-GENERATOR is
+
+  protecting SYSTEM .
+  protecting EVAL .
+
+  op filter : InputGenerator Expression -> InputGenerator [ctor] .
+  eq generate(filter(Gen,Expr),Cfg)
+    =
+    if bEval(Expr,Cfg)
+      then generate(Gen,Cfg)
+      else noInputs
+    fi
+  .
+  eq update(filter(Gen,Expr),Cfg,In) = filter(Gen,Expr) .
+
+  vars C : Bool .
+  vars Cfg : Config .
+  vars Expr : Expression .
+  vars Gen  : InputGenerator .
+  vars In : Inputs .
+  vars InS : InputsSet .
+
+endfm

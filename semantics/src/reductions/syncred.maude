@@ -1,7 +1,7 @@
 ----                                                     Synchronous reductions
 ----                                                       author: Camilo Rocha
 
-mod SYNC-REDUCTION is
+fmod SYNC-REDUCTION is
 
 protecting FUNPRED .
 
@@ -13,23 +13,33 @@ var CC           : Cid .
 vars C C'        : Command .
 vars CI CI'      : CommandInfo .
 var Conf         : Config .
+vars CurrentTime : Value .
 vars PS PS' PS'' : Configuration .
 var Gamma        : Environment .
 vars E E'        : Expression .
-var  ES          : ExpressionSet .
+vars ENV         : EnvironmentList .
 vars I           : Identifier .
 vars N           : Nat .
 vars O O'        : Outcome .
 vars Q Q'        : NeQualified .
 vars S S' T T'   : Status .
 var Str          : String .
+vars TPS         : Timepoints .
 var Tr           : Trace .
 var TL           : TraceList .
 var TS           : TransitionSet .
 vars V V' V''    : Value .
 
+op logApplyActions : Config -> Config .
+eq logApplyActions([ nodes : < Q : CC | status: S, AtS > PS ]
+                   [ microacts : setStatus(Q,S'),AS ]
+                   Conf )
+ = logApplyActions([ nodes : < Q : CC | status: S', AtS > PS ]
+                   [ microacts : AS ]
+                   Conf ) [print "    " Q " from " S " to " S'] .
+eq logApplyActions(Conf) = mtsoup [owise] .
 
-op applyActions : Config -> Config .
+op applyActions : Config ~> Config .
 eq applyActions ([ trace :         TL ] Conf)
  = applyActions'([ trace : mttrans TL ] Conf) .
 
@@ -39,7 +49,7 @@ eq applyActions'([ nodes : < Q : CC | status: S, AtS > PS ]
                  Conf )
  = applyActions'([ nodes : < Q : CC | status: S', AtS > PS ]
                  [ microacts : AS ]
-                 Conf ) [print "    " Q " from " S " to " S'] .
+                 Conf ) .
 eq applyActions'([ nodes : < Q : CC | outcome: O, AtS > PS ]
                  [ microacts : setOutcome(Q,O'),AS ]
                  Conf )
@@ -73,12 +83,21 @@ eq applyActions'([ nodes : < Q : CC | commandInfo: CI,  AtS > PS ]
                  [ microacts : AS ]
                  Conf ) .
 *** TODO: Logging of transitions should be handled in transparent way through `setStatus`
-eq applyActions'([ microacts : logTransition(Q,S,T,N),AS ]
-                 [ trace : TS TL ]
+ceq applyActions'([ microacts : logTransition(Q,S,T,N),AS ]
+                 [ nodes : PS ]
+                 [ environment : ENV ]
                  Conf )
  = applyActions'([ microacts : AS ]
-                 [ trace : ((Q : S -[ pathLabel(N) ]-> T),TS) TL]
-                 Conf ) .
+                 [ nodes : PS'' ]
+                 [ environment : ENV ]
+                 Conf)
+ if < Q : CC | timepoints: TPS, AtS > PS' := PS
+ /\ CurrentTime := expToVal(eval(ENV, PS, lookupOnChange('time, nilarg, val(0.0))))
+ /\ PS'' := < Q : CC | timepoints: updateTimepoint(updateTimepoint(TPS, S, end, CurrentTime), T, start, CurrentTime), AtS > PS'
+ .
+eq applyActions'([ microacts : logTransition(Q,S,T,N),AS ]
+                 Conf )
+ = applyActions'([ microacts : AS ] Conf) [owise] .
 eq applyActions'(Conf) = Conf [owise] .
 
   op pathLabel : Nat -> String .
@@ -92,4 +111,4 @@ eq activateRedexes([ nodes : < Q : CC | active: false, NA > PS ] Conf)
  = activateRedexes([ nodes : < Q : CC | active: true,  NA > PS ] Conf) .
 eq activateRedexes(Conf) = Conf [owise] .
 
-endm
+endfm

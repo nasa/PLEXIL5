@@ -1,10 +1,18 @@
+load update.maude
+load id-sanitizer.maude
+
 mod TEST--COMPILER is
 
 pr COMPILER .
 pr TEST-BASE .
+pr TEST--COMPILER--UPDATE .
+pr TEST--COMPILER--ID-SANITIZER .
 
-op compiler--tests : -> TestResults .
-eq compiler--tests = compile--compiler--tests .
+op test--compiler : -> TestResults .
+eq test--compiler =
+    test--compiler--compile
+    + test--compiler--update
+    + test--compiler--id-sanitizer .
 
 op anEmptyNode : -> PlexilEmpty .
 eq anEmptyNode = empty('aNode, nilocdecl, none) .
@@ -14,8 +22,8 @@ var PrePL : PrePlexilList .
 op aListNodeEmbedding : PrePlexilList -> PlexilList .
 eq aListNodeEmbedding(PrePL) = list('aListNode, nilocdecl, none, PrePL) .
 
-op compile--compiler--tests : -> TestResults .
-eq compile--compiler--tests =
+op test--compiler--compile : -> TestResults .
+eq test--compiler--compile =
 begin tests
 
     assert "compiler__compile(PL) add by default an empty environment generator" from

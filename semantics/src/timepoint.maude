@@ -1,0 +1,61 @@
+fmod TIMEPOINT is
+  sort Timepoint .
+  ops start end : -> Timepoint .
+endfm
+
+fmod TIMEPOINTS is
+  protecting TIMEPOINT .
+  protecting STATUS .
+  protecting VALUE .
+
+  sort Timepoints .
+  *** The collection of timepoints for a given node is represented as an array
+  *** of (7 node states) * (2 timepoints per state) = 14 real values.
+  op timepoints : PrimitiveArray -> Timepoints .
+
+  op unknownTimepoints : -> Timepoints .
+  eq unknownTimepoints = timepoints(unknownArrayHelper(14)) .
+
+  op defaultTimepoints : -> Timepoints .
+  eq defaultTimepoints = unknownTimepoints .
+
+  var TS : Timepoints .
+  var A : PrimitiveArray .
+  var S : Status .
+  var T : Timepoint .
+  var V : Value .
+
+  op lookupTimepoint : Timepoints Status Timepoint -> Value .
+  eq lookupTimepoint(timepoints(A), S, T)
+    = nth'(array(A), timepointIndex(S, T)) .
+
+  op setTimepoint : Timepoints Status Timepoint Value -> Timepoints .
+  eq setTimepoint(timepoints(A), S, T, V)
+    = timepoints(updatePrimitiveArray(A, timepointIndex(S, T), V)) .
+
+    op timepointIndex : Status Timepoint -> Nat .
+    eq timepointIndex(S, T) = 2 * statusCode(S) + timepointCode(T) .
+
+      op statusCode : Status -> Nat .
+      eq statusCode(inactive) = 0 .
+      eq statusCode(waiting) = 1 .
+      eq statusCode(executing) = 2 .
+      eq statusCode(finishing) = 3 .
+      eq statusCode(iterationEnded) = 4 .
+      eq statusCode(failing) = 5 .
+      eq statusCode(finished) = 6 .
+
+      op timepointCode : Timepoint -> Nat .
+      eq timepointCode(start) = 0 .
+      eq timepointCode(end) = 1 .
+
+  op updateTimepoint : Timepoints Status Timepoint Value -> Timepoints .
+  eq updateTimepoint(TS, S, T, V) =
+    if isUnknown?(lookupTimepoint(TS, S, T)) then
+      setTimepoint(TS, S, T, V)
+    else
+      TS
+    fi
+  .
+
+endfm

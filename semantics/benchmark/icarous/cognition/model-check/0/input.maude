@@ -3,7 +3,7 @@ mod M-CHECK is
   protecting PLEXILITE-PREDS .
   including MODEL-CHECKER .
 
-  op input : -> ExternalInputGenerator .
+  op input : -> InputGenerator .
   eq [input] :
     input
   = commandAckGeneratorEx(
@@ -24,7 +24,7 @@ mod M-CHECK is
     ***       to the initial state because the initial state of the environment
     ***       is always empty and as a consequence the `inConflict` property is
     ***       false. Since we cannot control the initial state by modeling the
-    ***       ExternalInputGenerator differently with the current semantics.
+    ***       InputGenerator differently with the current semantics.
     O [] ((~ inConflict)  => (<> hasStatus('TrafficConflictHandler,finished)))
   .
 

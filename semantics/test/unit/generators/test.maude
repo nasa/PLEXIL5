@@ -1,0 +1,24 @@
+load command-ack.maude
+load filter.maude
+load repeat.maude
+load sequence.maude
+load x.maude
+
+mod TEST--GENERATORS is
+  protecting TEST--GENERATORS--COMMAND-ACK .
+  protecting TEST--GENERATORS--FILTER .
+  protecting TEST--GENERATORS--REPEAT .
+  protecting TEST--GENERATORS--SEQUENCE .
+  protecting TEST--GENERATORS--X .
+
+  op test--generators : -> TestResults .
+  eq test--generators =
+    AllTestsPassed
+    + test--generators--command-ack
+    + test--generators--filter
+    + test--generators--repeat
+    + test--generators--sequence
+    + test--generators--x
+    .
+
+endm

@@ -1,18 +1,70 @@
 mod TEST--ENVIRONMENT is
+  protecting TEST-BASE .
 
-  pr TEST-BASE .
+  op test--environment : -> TestResults .
+  eq test--environment = test--environment--x .
 
-  op environment--tests : -> TestResults .
-  eq environment--tests =
-    begin tests
+  op test--environment--x : -> TestResults .
+  ceq test--environment--x =
+begin tests
 
-    assert
-      testEnvironment(emptyEnvironment)
-    reaches
-      testEnvironment(emptyEnvironment)
-    end
+  assert "_x_" from
+    anInputsSet(
+      (A,B) x empty
+    )
+  reaches
+    anInputsSet(
+      empty
+    )
+  end
 
-    end tests
-    .
+  assert "_x_" from
+    anInputsSet(
+      empty x (A,B)
+    )
+  reaches
+    anInputsSet(
+      empty
+    )
+  end
+
+  assert "_x_" from
+    anInputsSet(
+      (A,B) x C
+    )
+  reaches
+    anInputsSet(
+      (A C , B C)
+    )
+  end
+
+  assert "_x_" from
+    anInputsSet(
+      A x (B, C, D)
+    )
+  reaches
+    anInputsSet(
+      (A B, A C, A D)
+    )
+  end
+
+  assert "_x_" from
+    anInputsSet(
+      (A,B) x (C, D)
+    )
+  reaches
+    anInputsSet(
+      (A C, A D, B C, B D)
+    )
+  end
+
+end tests
+  if A := stateLookup('a,nilarg, val(true))
+  /\ B := stateLookup('b,nilarg, val(true))
+  /\ C := stateLookup('c,nilarg, val(true))
+  /\ D := stateLookup('d,nilarg, val(true))
+  .
+
+  vars A B C D : StateInput .
 
 endm

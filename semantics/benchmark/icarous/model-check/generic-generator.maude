@@ -20,7 +20,7 @@ mod GENERIC-GENERATOR is
   sort Time .
   subsort Nat < Time .
 
-  op genericGenerator : Time Behaviors -> ExternalInputGenerator .
+  op genericGenerator : Time Behaviors -> InputGenerator .
 
   vars Id : Identifier .
   vars Args : Arguments .
@@ -43,7 +43,7 @@ mod GENERIC-GENERATOR is
   ---    )
   ---    =>
 
-  op synchronizeBehaviors : Behaviors Config -> ExternalInputs .
+  op synchronizeBehaviors : Behaviors Config -> Inputs .
   eq synchronizeBehaviors(
       ackCommand(Id,Args,Hndl,V?) Bhvs,
       [ interface : < Id . Q : command-on-execution | handle: nothing, arguments: Args, AtS > ExCmds ] Cfg
@@ -51,16 +51,16 @@ mod GENERIC-GENERATOR is
       commandAck(Id,Args,CommandSentToSystem)
       if V? =/= nothing
         then commandResult(Id,Args,fromMaybe(V?))
-        else noExternalInputs
+        else noInputs
       fi
       synchronizeBehaviors(
         Bhvs,
         [ interface : < Id . Q : command-on-execution | handle: nothing, arguments: Args, AtS > ExCmds ] Cfg
       ) .
-  eq synchronizeBehaviors(noBehavior,Cfg) = noExternalInputs .
+  eq synchronizeBehaviors(noBehavior,Cfg) = noInputs .
   eq synchronizeBehaviors(Bhv Bhvs,Cfg) = synchronizeBehaviors(Bhvs,Cfg) [owise] .
 
-  op test0 : -> ExternalInputs .
+  op test0 : -> Inputs .
   eq test0 =
     synchronizeBehaviors(
       ackCommand('A,nilarg,CommandSentToSystem,nothing) ackCommand('B,val(0),CommandSentToSystem,nothing),

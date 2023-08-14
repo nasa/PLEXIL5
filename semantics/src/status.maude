@@ -1,0 +1,6 @@
+fmod STATUS is
+ sort Status .
+ ops inactive waiting executing finishing iterationEnded failing finished : -> Status [format (r o)] .
+ op statusdef : -> Status .
+ eq statusdef = inactive .
+endfm

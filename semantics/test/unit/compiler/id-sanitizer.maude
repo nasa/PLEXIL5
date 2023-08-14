@@ -1,13 +1,15 @@
-mod TEST--ID-SANITIZER is
+mod TEST--COMPILER--ID-SANITIZER is
 
 pr TEST-BASE .
 
-
-op id-sanitizer--tests : -> TestResults .
-eq id-sanitizer--tests =
-        id-sanitizer--expressions--tests
-        + id-sanitizer--attributes--tests .
-
+op test--compiler--id-sanitizer : -> TestResults .
+eq test--compiler--id-sanitizer =
+    test--id-sanitizer--on-expressions
+    + test--id-sanitizer--on-pairs
+    + test--id-sanitizer--on-attributes
+    + test--getFullyQualifiedVariableId
+    + test--getFullyQualifiedNodeId
+    .
 
 vars Cfg      : Configuration .
 vars I I'     : Identifier .
@@ -16,8 +18,8 @@ vars E E'     : Expression .
 vars Q Q' Q'' : NeQualified .
 vars QV QW    : NeQualified .
 
-op id-sanitizer--attributes--tests : -> TestResults .
-ceq id-sanitizer--attributes--tests =
+op test--id-sanitizer--on-attributes : -> TestResults .
+ceq test--id-sanitizer--on-attributes =
 begin tests
 
     assert "repeatc: attribute is sanitized" from
@@ -124,6 +126,39 @@ begin tests
         )
     end
 
+    assert "pairs:_ attribute is sanitized" from
+      anAttributeSet(
+        sanitizeIds(
+          pairs:
+            pair('field1, var(A))
+            pair('field2, arrayVar(B)),
+          C,
+          < A . C : memory | none >
+          < B . C : memory | none >
+        )
+      )
+    reaches
+      anAttributeSet(
+        pairs:
+            pair('field1, var(A . C))
+            pair('field2, arrayVar(B . C))
+      )
+    end
+
+    assert "endc:_ attribute with isFinished? with no siblings is sanitized" from
+      anAttributeSet(
+        sanitizeIdsOnAttr(
+          endc: isFinished?('A),
+          'B,
+          < 'B : list | none >
+          < 'A . 'B : command | none >)
+      )
+    reaches
+      anAttributeSet(
+        endc: isFinished?('A . 'B)
+      )
+    end
+
 end tests
 if
     Cfg :=  < 'C . 'B . 'A : list | none >
@@ -136,9 +171,47 @@ if
     /\ E' := isStatus?(getFullyQualifiedNodeId(I,Q,Cfg),waiting)
 .
 
+op test--id-sanitizer--on-pairs : -> TestResults .
+eq test--id-sanitizer--on-pairs =
+begin tests
+  assert "sanitize ids on no pairs " from
+    somePairs(
+      sanitizeIdsOnPairs(
+        nil,
+        C,
+        none
+      )
+    )
+  reaches
+    somePairs(
+      nil
+    )
+  end
 
-op id-sanitizer--expressions--tests : -> TestResults .
-ceq id-sanitizer--expressions--tests =
+  assert "sanitize ids on pairs " from
+    somePairs(
+      sanitizeIdsOnPairs(
+        pair('field1, var(A))
+        pair('field2, arrayVar(B))
+        pair('field3, arrayVar(B,const(val(0)))),
+        C,
+        < A . C : memory | none >
+        < B . C : memory | none >
+      )
+    )
+  reaches
+    somePairs(
+      pair('field1, var(A . C))
+      pair('field2, arrayVar(B . C))
+      pair('field3, arrayVar(B . C,const(val(0))))
+    )
+  end
+end tests
+.
+
+
+op test--id-sanitizer--on-expressions : -> TestResults .
+ceq test--id-sanitizer--on-expressions =
 begin tests
 
     assert "An `isFailure?` expression computes its fully qualified node id" from
@@ -464,8 +537,8 @@ if
 .
 
 
-op getFullyQualifiedVariableId--tests : -> TestResults .
-ceq getFullyQualifiedVariableId--tests =
+op test--getFullyQualifiedVariableId : -> TestResults .
+ceq test--getFullyQualifiedVariableId =
 begin tests
 
     assert "A top level identifier at the top context returns itself if it exists or `unresolvedVariable` if it doesn't" from
@@ -696,8 +769,8 @@ if Cfg:Configuration :=
     < 'M_B . 'C . 'B . 'A : memory | none >
 .
 
-op getFullyQualifiedNodeId--tests : -> TestResults .
-ceq getFullyQualifiedNodeId--tests =
+op test--getFullyQualifiedNodeId : -> TestResults .
+ceq test--getFullyQualifiedNodeId =
 begin tests
 
     assert "A top level identifier returns the identifier if it exists, otherwise `unresolvedNode`" from
@@ -772,6 +845,20 @@ begin tests
         testQualified(
             getFullyQualifiedNodeId(
                 'B,
+                'B . 'A,
+                Cfg:Configuration
+            )
+        )
+        reaches
+        testQualified(
+            'B . 'A
+        )
+    end
+
+    assert "A `self` id returns its context as the full qualified id" from
+        testQualified(
+            getFullyQualifiedNodeId(
+                self,
                 'B . 'A,
                 Cfg:Configuration
             )

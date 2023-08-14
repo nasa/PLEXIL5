@@ -1,0 +1,156 @@
+mod TEST--GENERATORS--COMMAND-ACK is
+  protecting TEST-BASE .
+
+  op test--generators--command-ack : -> TestResults .
+  eq test--generators--command-ack =
+begin tests
+
+  assert "genCommandAcks empty" from
+    anInputs(
+      genCommandAcks(mtsoup,CommandSuccess)
+    )
+  reaches
+    anInputs(
+      noInputs
+    )
+  end
+
+  assert "genCommandAcks CommandSuccess" from
+    anInputs(
+      genCommandAcks(
+        [ interface :
+            < 'Cmd1 . A : command-on-execution |
+                arguments: nilarg,
+                handle: nothing > ],
+        CommandSuccess
+      )
+    )
+  reaches
+    anInputs(
+      commandAck('Cmd1, nilarg, CommandSuccess)
+    )
+  end
+
+  assert "genCommandAcks propagates arguments" from
+    anInputs(
+      genCommandAcks(
+        [ interface :
+            < 'Cmd1 . A : command-on-execution |
+                arguments: val(4) val(5),
+                handle: nothing > ],
+        CommandSuccess
+      )
+    )
+  reaches
+    anInputs(
+      commandAck('Cmd1, val(4) val(5), CommandSuccess)
+    )
+  end
+
+  assert "genCommandAcks ignores commands with handle " from
+    anInputs(
+      genCommandAcks(
+        [ interface :
+            < 'Cmd1 . A : command-on-execution |
+                arguments: nilarg,
+                handle: just(CommandSentToSystem) > ],
+        CommandSuccess
+      )
+    )
+  reaches
+    anInputs(
+      noInputs
+    )
+  end
+
+  assert "genCommandAcks CommandSentToSystem" from
+    anInputs(
+      genCommandAcks(
+        [ interface :
+            < 'Cmd1 . A : command-on-execution |
+                arguments: nilarg,
+                handle: nothing > ],
+        CommandSentToSystem
+      )
+    )
+  reaches
+    anInputs(
+      commandAck('Cmd1, nilarg, CommandSentToSystem)
+    )
+  end
+
+  assert "genCommandAcks CommandSuccess x2" from
+    anInputs(
+      genCommandAcks(
+        [ interface :
+            < 'Cmd1 . A : command-on-execution |
+                arguments: nilarg,
+                handle: nothing >
+            < 'Cmd2 . B : command-on-execution |
+                arguments: nilarg,
+                handle: nothing > ],
+        CommandSuccess
+      )
+    )
+  reaches
+    anInputs(
+      commandAck('Cmd1, nilarg, CommandSuccess)
+      commandAck('Cmd2, nilarg, CommandSuccess)
+    )
+  end
+
+  assert "generate command-ack empty" from
+    anInputsSet(
+      generate(
+        command-ack(CommandSuccess)
+        ,
+        mtsoup
+      )
+    )
+  reaches
+    anInputsSet(
+      noInputs
+    )
+  end
+
+  assert "generate command-ack" from
+    anInputsSet(
+      generate(
+        command-ack(CommandSentToSystem)
+        ,
+        [ interface :
+            < 'Cmd1 . A : command-on-execution |
+                arguments: val(3),
+                handle: nothing >
+            < 'Cmd2 . A : command-on-execution |
+                arguments: nilarg,
+                handle: nothing > ]
+      )
+    )
+  reaches
+    anInputsSet(
+      commandAck('Cmd1, val(3), CommandSentToSystem)
+      commandAck('Cmd2, nilarg, CommandSentToSystem)
+    )
+  end
+
+  assert "update _x_ InputGenerator combinator with sequences" from
+    aGenerator(
+      update(
+        command-ack(CommandSuccess)
+        ,
+        mtsoup
+        ,
+        noInputs
+      )
+    )
+  reaches
+    aGenerator(
+        command-ack(CommandSuccess)
+    )
+  end
+
+end tests
+  .
+
+endm

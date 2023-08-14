@@ -1,7 +1,7 @@
 ----                       Compilation of a PLEXIL plan into a set of Processes
 ----                                                       author: Camilo Rocha
 
-mod COMPILER is
+fmod COMPILER is
   protecting PLEXIL .
   protecting FUNPRED .
 
@@ -14,7 +14,7 @@ mod COMPILER is
 
   op compile : Plexil -> GlobalConfig .
   eq compile(PL) = compile(PL,emptyEnvGen(30)) .
-  op compile : Plexil ExternalInputGenerator -> GlobalConfig .
+  op compile : Plexil InputGenerator -> GlobalConfig .
   eq compile(PL,EG)
   = sanitizeIds(
     stop |
@@ -36,11 +36,21 @@ mod COMPILER is
   eq compileNodes(list(I, LD, (AtS), (PL PLL)), Q)
     = (compileNodes(PL, (I . Q)) compileNodes(list(I, LD, (AtS), PLL), Q)) .
   eq compileNodes(command(I, LD, (AtS), C), Q)
-  = < (I . Q) : command | command: C, commandInfo: commDefault(I), defaultAttributes(command,getRepeatCondition(AtS)) / (AtS) > .
-  eq compileNodes(assignment(I, LD, (AtS), (Q' := E)), Q)
-  = < (I . Q) : assignment | (Q' := E), defaultAttributes(assignment, getRepeatCondition(AtS)) / (AtS) > .
-  eq compileNodes(assignment(I, LD, (AtS), (Q' [ E' ] := E)), Q)
-  = < (I . Q) : assignment | (Q' [ E' ] := E), defaultAttributes(assignment, getRepeatCondition(AtS)) / (AtS) > .
+  = < (I . Q) : command |
+    command: C,
+    commandInfo: commDefault(I),
+    defaultAttributes(command,getRepeatCondition(AtS))
+      / defaultAttributeEnrichments(I . Q, command,AtS)
+    > .
+  eq compileNodes(assignment(I, LD, (AtS), (AT := E)), Q)
+  = < (I . Q) : assignment | (AT := E), defaultAttributes(assignment, getRepeatCondition(AtS)) / (AtS) > .
+  eq compileNodes(update(I, LD, (AtS), PS:List{Pair}), Q)
+  = < (I . Q) : update |
+    pairs: PS:List{Pair},
+    ack: false,
+    defaultAttributes(update, getRepeatCondition(AtS))
+      / defaultAttributeEnrichments(I . Q, update,AtS)
+    > .
   eq compileNodes(empty(I, LD, AtS), Q)
   = < (I . Q) : empty | defaultAttributes(empty,getRepeatCondition(AtS)) / (AtS) > .
 
@@ -72,15 +82,27 @@ mod COMPILER is
   eq sanitizeIds((At,AtS), NQ, Cfg) = sanitizeIdsOnAttr(At, NQ, Cfg), sanitizeIds(AtS, NQ, Cfg) .
   eq sanitizeIds(none, NQ, Cfg) = none .
 
+  op sanitizeIdsOnPairs : List{Pair} NeQualified Configuration -> List{Pair} .
+  eq sanitizeIdsOnPairs(nil, NQ, Cfg) = nil .
+  eq sanitizeIdsOnPairs(pair(Q,E) PAIRS, NQ, Cfg)
+    =
+    pair(Q,sanitizeIds(E,NQ,Cfg)) sanitizeIdsOnPairs(PAIRS, NQ, Cfg)
+  .
+
+  vars PAIRS : List{Pair} .
+  vars VE : VariableExpression .
+
   op sanitizeIdsOnParams : Parameters NeQualified Configuration -> Parameters .
   eq sanitizeIdsOnParams(E Ps,   NQ, Cfg) = sanitizeIds(E, NQ, Cfg) sanitizeIdsOnParams(Ps, NQ, Cfg) .
   eq sanitizeIdsOnParams(nilpar, NQ, Cfg) = nilpar .
 
   op  sanitizeIdsOnAttr : Attribute NeQualified Configuration -> Attribute .
-  eq  sanitizeIdsOnAttr((Q      := E),  NQ, Cfg) = getFullyQualifiedVariableId(Q, NQ, Cfg) := sanitizeIds(E, NQ, Cfg) .
-  eq  sanitizeIdsOnAttr((Q [E'] := E),  NQ, Cfg) = getFullyQualifiedVariableId(Q, NQ, Cfg) [sanitizeIds(E', NQ, Cfg)] := sanitizeIds(E, NQ, Cfg) .
+  eq  sanitizeIdsOnAttr((pairs: PAIRS),  NQ, Cfg) = pairs: sanitizeIdsOnPairs(PAIRS, NQ, Cfg) .
+  eq  sanitizeIdsOnAttr((AT := E),  NQ, Cfg) = sanitizeIds(AT, NQ, Cfg) := sanitizeIds(E, NQ, Cfg) .
   eq  sanitizeIdsOnAttr((command: NQ' / Ps / Q), NQ, Cfg) = command: NQ' / sanitizeIdsOnParams(Ps,NQ,Cfg) / getFullyQualifiedVariableId(Q, NQ, Cfg) .
-  eq  sanitizeIdsOnAttr((command: NQ' / Ps),     NQ, Cfg) = command: NQ' / sanitizeIdsOnParams(Ps,NQ,Cfg) .
+  eq  sanitizeIdsOnAttr((command: cmdId(VE) / Ps / Q), NQ, Cfg) = command: cmdId(sanitizeIds(VE, NQ, Cfg)) / sanitizeIdsOnParams(Ps,NQ,Cfg) / getFullyQualifiedVariableId(Q, NQ, Cfg) .
+  eq  sanitizeIdsOnAttr((command:   NQ' / Ps),     NQ, Cfg) = command: NQ' / sanitizeIdsOnParams(Ps,NQ,Cfg) .
+  eq  sanitizeIdsOnAttr((command: cmdId(VE) / Ps), NQ, Cfg) = command: cmdId(sanitizeIds(VE, NQ, Cfg)) / sanitizeIdsOnParams(Ps,NQ,Cfg) .
   ceq sanitizeIdsOnAttr(At,             NQ, Cfg) = At'
   if
     B := attributeIsSanitizable(At)
@@ -125,18 +147,22 @@ mod COMPILER is
   eq sanitizeIds(isKnown(E)                         , NQ, Cfg) = isKnown(sanitizeIds(E, NQ, Cfg)) .
   eq sanitizeIds(noChildFailed                      , NQ, Cfg) = noChildFailed(NQ) .
   eq sanitizeIds(isFinished?(sibling(I))            , NQ, Cfg) = isFinished?(getFullyQualifiedNodeId(I,NQ,Cfg)) .
+  eq sanitizeIds(isFinished?(I)                     , NQ, Cfg) = isFinished?(getFullyQualifiedNodeId(I,NQ,Cfg)) .
   eq sanitizeIds(hasSucceeded?(sibling(I))          , NQ, Cfg) = hasSucceeded?(getFullyQualifiedNodeId(I,NQ,Cfg)) .
+  eq sanitizeIds(hasSucceeded?(I . Q)               , NQ, Cfg) = hasSucceeded?(getFullyQualifiedNodeId(I . Q,NQ,Cfg)) .
   eq sanitizeIds(hasPostconditionFailed?(sibling(I)), NQ, Cfg) = hasPostconditionFailed?(getFullyQualifiedNodeId(I,NQ,Cfg)) .
   eq sanitizeIds(hasSkipped?(sibling(I))            , NQ, Cfg) = hasSkipped?(getFullyQualifiedNodeId(I,NQ,Cfg)) .
   eq sanitizeIds(isStatus?(I . Q,Status)            , NQ, Cfg) = isStatus?(getFullyQualifiedNodeId(I, Q . NQ, Cfg), Status) .
   eq sanitizeIds(isOutcome?(I . Q,Out)              , NQ, Cfg) = isOutcome?(getFullyQualifiedNodeId(I, Q . NQ, Cfg), Out) .
   eq sanitizeIds(isOutcomeFailure?(I . Q)           , NQ, Cfg) = isOutcomeFailure?(getFullyQualifiedNodeId(I, Q . NQ, Cfg)) .
+  eq sanitizeIds(hasRcvAck?(I . Q)                  , NQ, Cfg) = hasRcvAck?(getFullyQualifiedNodeId(I, Q . NQ, Cfg)) .
   eq sanitizeIds(var(I . Q)                         , NQ, Cfg) = var(getFullyQualifiedVariableId(I, Q . NQ, Cfg)) .
   eq sanitizeIds(arrayVar(I . Q,E)                  , NQ, Cfg) = arrayVar(getFullyQualifiedVariableId(I, Q . NQ, Cfg), sanitizeIds(E, NQ, Cfg)) .
   eq sanitizeIds(arrayVar(I . Q)                    , NQ, Cfg) = arrayVar(getFullyQualifiedVariableId(I, Q . NQ, Cfg)) .
   eq sanitizeIds(const(V)                           , NQ, Cfg) = const(V) .
   eq sanitizeIds(lookup(I,Args)                     , NQ, Cfg) = lookup(I,Args) .
   eq sanitizeIds(lookupOnChange(I,Args,V)           , NQ, Cfg) = lookupOnChange(I,Args,V) .
+  eq sanitizeIds(timepoint(I . Q, Status, Timepoint), NQ, Cfg) = timepoint(getFullyQualifiedNodeId(I, Q . NQ, Cfg), Status, Timepoint) .
 
 
   ********************************************************************************
@@ -153,19 +179,21 @@ mod COMPILER is
   op  getFullyQualifiedNodeId : Identifier Qualified Configuration -> Qualified .
   ceq getFullyQualifiedNodeId(I, Q, Cfg) = ambiguity(Q',Cfg)
     if < Q' : Cls | AtS > < Q' : Cls' | AtS' > Cfg' := Cfg  . *** NOTE: This detects ambiguities
-  eq  getFullyQualifiedNodeId(I, Q,                                         Cfg) = getFullyQualifiedNodeId'(I,Q,Cfg,Q) [owise] .
+  eq  getFullyQualifiedNodeId(I, Q, Cfg) = getFullyQualifiedNodeId'(I,Q,Cfg,Q) [owise] .
 
     op getFullyQualifiedNodeId' : Identifier Qualified Configuration Qualified -> Qualified .
-    eq getFullyQualifiedNodeId'(I,   nilq, < I      : Cls | AtS > Cfg, Q') = I .
-    eq getFullyQualifiedNodeId'(I,      I, < I      : Cls | AtS > Cfg, Q') = I .
-    eq getFullyQualifiedNodeId'(I,     NQ, < I . NQ : Cls | AtS > Cfg, Q') = (I . NQ) [owise] .
-    eq getFullyQualifiedNodeId'(I, I' . Q,                        Cfg, Q') = getFullyQualifiedNodeId'(I, Q, Cfg, Q') [owise] .
-    eq getFullyQualifiedNodeId'(I,      Q,                        Cfg, Q') = unresolvedNode(I,Q') [owise] .
+    eq getFullyQualifiedNodeId'(self,      Q,                        Cfg, Q') = Q' .
+    eq getFullyQualifiedNodeId'(I   ,   nilq, < I      : Cls | AtS > Cfg, Q') = I [owise] .
+    eq getFullyQualifiedNodeId'(I   ,      I, < I      : Cls | AtS > Cfg, Q') = I [owise] .
+    eq getFullyQualifiedNodeId'(I   ,     NQ, < I . NQ : Cls | AtS > Cfg, Q') = (I . NQ) [owise] .
+    eq getFullyQualifiedNodeId'(I   , I' . Q,                        Cfg, Q') = getFullyQualifiedNodeId'(I, Q, Cfg, Q') [owise] .
+    eq getFullyQualifiedNodeId'(I   ,      Q,                        Cfg, Q') = unresolvedNode(I,Q') [owise] .
 
 
   op getFullyQualifiedVariableId : Qualified Qualified Configuration -> Qualified .
   eq getFullyQualifiedVariableId(nilq  , Q, Cfg) = nilq .
   eq getFullyQualifiedVariableId(I . NQ, Q, Cfg) = getFullyQualifiedVariableId(I, NQ . Q, Cfg) .
+  eq getFullyQualifiedVariableId(child(NQ), Q, Cfg) = getFullyQualifiedVariableId(NQ, Q, Cfg) .
   eq getFullyQualifiedVariableId(I . Q', Q, Cfg) = getFullyQualifiedVariableId(I, Q, Cfg) [owise] .
 
   op getFullyQualifiedVariableId : Identifier Qualified Configuration -> Qualified .
@@ -191,6 +219,8 @@ mod COMPILER is
   eq compileMemory(assignment(I, LD, (AtS), AtS'), Q)
   = createLocalVars((I . Q), LD) .
   eq compileMemory(empty(I, LD, AtS), Q)
+  = createLocalVars((I . Q),LD) .
+  eq compileMemory(update(I, LD, (AtS), PS:List{Pair}), Q)
   = createLocalVars((I . Q),LD) .
 
   --- equations for initializing by-default condition expressions and
@@ -226,13 +256,14 @@ mod COMPILER is
   eq < NQ : assignment | endc: default, AtS >
     = < NQ : assignment | endc: const(val(true)), AtS > .
   *** TODO: Do it!
-  *** eq < NQ : update | endc: default, AtS >
-  ***  = < NQ : update | endc: const(val(true)), AtS > .
+  eq < NQ : update | endc: default, AtS >
+   = < NQ : update | endc: hasRcvAck?(NQ), AtS > .
 
   --- uninitialized variables of types Boolean, Integer, Real, and String
   --- are given the value Unknown
 
   vars Args Args'     : Arguments .
+  vars AT AT'         : AssignmentTarget .
   vars At At'         : Attribute .
   vars AtS AtS'       : AttributeSet .
   vars B B'           : Bool .
@@ -243,7 +274,7 @@ mod COMPILER is
   vars CL             : EnvironmentList .
   vars Conf           : Config .
   vars E E'           : Expression .
-  vars EG EG'         : ExternalInputGenerator .
+  vars EG EG'         : InputGenerator .
   vars EL EL'         : EnvironmentList .
   vars Env Env'       : Environment .
   vars FlTy FlTy'     : FailureType .
@@ -259,8 +290,11 @@ mod COMPILER is
   vars PL             : Plexil .
   vars PLL            : PrePlexilList .
   vars Ps             : Parameters .
+  vars Pairs          : List{Pair} .
   vars Q Q' Q''       : Qualified .
   vars Soup Soup'     : Config .
   vars Status Status' : Status .
+  vars Timepoint      : Timepoint .
+  --- vars U U'           : Update .
   vars V V'           : Value .
-endm
+endfm

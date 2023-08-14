@@ -19,8 +19,6 @@ import Data.String (fromString)
 import Prelude hiding ((<>)) -- (concat)
 -- import System.Environment
 -- import System.Exit
-
--- import Debug.Trace
 -- import Data.Text.Internal.Lazy
 import Test.Tasty
 import Test.Tasty.HUnit
@@ -33,6 +31,9 @@ import Text.XML.Cursor
 
 import Benchmarks(testBenchmarks)
 import PSX2MaudeTests(testPSX2Maude)
+import TestCommon
+import TestArrays(testArrays)
+import TestNodeRef(testNodeRef)
 
 ------------------------------------------------------------
 ----------    Test helpers
@@ -50,6 +51,63 @@ main = defaultMain $
     [testsLegacy
     ,testBenchmarks
     ,testPSX2Maude
+    ,testArrays
+    ,testNodeRef
+    ,testsRegression
+    ,testGroup "regression tests" $ testParser elementVisitor [
+      ("command1.ple", [r|
+<PlexilPlan xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" FileName="command1.ple">
+  <Node ColNo="0" LineNo="1" NodeType="Command">
+    <NodeId>command1</NodeId>
+    <VariableDeclarations>
+      <DeclareVariable ColNo="2" LineNo="3">
+        <Name>CommandName</Name>
+        <Type>String</Type>
+        <InitialValue>
+          <StringValue>foo</StringValue>
+        </InitialValue>
+      </DeclareVariable>
+    </VariableDeclarations>
+    <NodeBody>
+      <Command ColNo="3" LineNo="5">
+        <Name>
+          <StringVariable>CommandName</StringVariable>
+        </Name>
+        <Arguments ColNo="16" LineNo="5">
+          <StringValue />
+        </Arguments>
+      </Command>
+    </NodeBody>
+  </Node>
+</PlexilPlan>
+    |], "modcommand1-PLANisprotectingPLEXILITE-PREDS.oprootNode:->Plexil.eqrootNode=command('command1,(('CommandName:val(\"foo\"))),(none),((cmdId(var('CommandName)))/(const(val(\"\"))))).endm")
+    ]
+    ]
+
+testsRegression :: TestTree
+testsRegression =
+  testGroup "commands"
+    [testGroup "pieces"
+      [testGroup "parseCommand'" $
+        testErrorParser parseCommand'
+          [("1", [r|
+<Command ColNo="3" LineNo="5">
+  <Name>
+    <StringVariable>CommandName</StringVariable>
+  </Name>
+  <Arguments ColNo="16" LineNo="5">
+    <StringValue />
+  </Arguments>
+</Command>|], "((cmdId(var('CommandName)))/(const(val(\"\"))))")
+          ]
+      ,testGroup "parseNameFromStringVariable" $
+        testStringErrorParser parseNameFromStringVariable
+          [("2", [r|
+    <Name>
+      <StringVariable>CommandName</StringVariable>
+    </Name>|],"cmdId(var('CommandName))")
+          ]
+      ]
     ]
 
 testsLegacy :: TestTree
@@ -65,6 +123,30 @@ testsLegacy =
         ,testsBinarizeList
         ,testsParseNodeCondition
         ,testLookups
+        ,testUpdate
+        ,testsParseConcat
+        ,testGroup "Different issues" $
+          map (testify'' elementVisitor)
+            [("a failing end condition",
+              [r|
+                <EndCondition>
+                  <EQInternal>
+                    <NodeCommandHandleVariable>
+                      <NodeRef dir="self" />
+                    </NodeCommandHandleVariable>
+                    <NodeCommandHandleValue>COMMAND_SUCCESS</NodeCommandHandleValue>
+                  </EQInternal>
+                </EndCondition>
+              |],"(endc:(cmdHandleIs?(self,CommandSuccess)))")
+            , ("a self reference",
+              [r|
+                <PostCondition ColNo="6" LineNo="7">
+                        <Skipped ColNo="20" LineNo="7">
+                            <NodeRef dir="self" />
+                        </Skipped>
+                    </PostCondition>
+              |],"(post: (hasSkipped?(self)))")
+            ]
         ,testGroup "Parse internal equality expression" $
             map (testify'' elementVisitor)
                 [("An icarous node failure equality expression ",
@@ -111,7 +193,7 @@ testsLegacy =
                        <Type>Real</Type>
                        <MaxSize>3</MaxSize>
                      </DeclareArray>|],
-                  [r| ('acPosition : unknownRealArray(3)) |])
+                  [r| ('acPosition:createArray(3,unknownArray(3))) |])
                 ,("An icarous array declaration with explicit initialization",
                   [r|
                      <DeclareArray LineNo="4" ColNo="2">
@@ -119,12 +201,33 @@ testsLegacy =
                        <Type>Real</Type>
                        <MaxSize>3</MaxSize>
                        <InitialValue>
-                         <RealValue>0.0</RealValue>
-                         <RealValue>7.0</RealValue>
-                         <RealValue>13.0</RealValue>
+                         <RealValue>0</RealValue>
+                         <RealValue>7</RealValue>
+                         <RealValue>13</RealValue>
                        </InitialValue>
                      </DeclareArray>|],
-                  [r| ('bar : array(val(0.0) # val(7.0) # val(13.0))) |])
+                  [r| ('bar:createArray(3,val(0.0)#val(7.0)#val(13.0))) |])
+                  ,("An empty variable declaration",
+                  [r|
+                     <DeclareVariable ColNo="4" LineNo="3">
+                      <Name>foo</Name>
+                      <Type>String</Type>
+                      <InitialValue>
+                        <StringValue />
+                      </InitialValue>
+                    </DeclareVariable>
+                    |],
+                    [r| ('foo : val("")) |])
+                ]
+        ,testGroup "Parse initial value" $
+            testErrorParser parseInitialSimpleValue
+                [("Empty initial value",
+                  [r|
+                    <InitialValue>
+                      <StringValue />
+                    </InitialValue>
+                    |],
+                  [r| val("") |])
                 ]
         ,testGroup "Parse an array element" $
             map (testify'' elementVisitor)
@@ -137,7 +240,7 @@ testsLegacy =
                        </Index>
                      </ArrayElement>
                     |],
-                  [r| ( 'foo ) [ var( 'i ) ] |])
+                  [r| arrayVar('foo,var('i)) |])
                 ]
         ,testGroup "Parse an empty node" $
             map (testify'' elementVisitor)
@@ -183,7 +286,7 @@ testsLegacy =
                       'ASSIGNMENT--0,
                       nilocdecl,
                       ( none ),
-                      ('r1 := lookup ('r1 , nilarg))
+                      (var('r1) := lookup ('r1 , (nilarg)))
                     )|])
                 ,("A simple array assignment node",
                   [r|
@@ -206,10 +309,7 @@ testsLegacy =
                     |],
                   [r|
                     assignment(
-                      'SimpleArrayAssignment1,
-                       nilocdecl,
-                       ( none ),
-                       ( ('foo ) [ var('i) ] := const(val(1.0)))
+                      'SimpleArrayAssignment1,nilocdecl,(none),(arrayVar('foo,var('i)):=const(val(1.0)))
                     )
                     |])
                 ,("An icarous complex array assignment node",
@@ -232,7 +332,7 @@ testsLegacy =
                      </Assignment>
                     |],
                   [r|
-                       ( ('velCmd ) [ const(val(0)) ] := ( arrayVar('acVelocity,const(val(0))) ) )
+                       ( arrayVar('velCmd,const(val(0))):=(arrayVar('acVelocity,const(val(0)))) )
                     |])
 
                 ]
@@ -341,7 +441,7 @@ testsLegacy =
                          </NumericRHS>
                        </Assignment>
                      </NodeBody>|],
-                  "('r1 := lookup ('r1 , nilarg))")
+                  "(var('r1) := lookup ('r1 , (nilarg)))")
                 ]
         ,testGroup "Parse a command" $
             map (testify'' elementVisitor)
@@ -400,6 +500,73 @@ testsLegacy =
                       <StringValue>pprint</StringValue>
                     </Name>|],
                   "'pprint")
+                ]
+        ,testGroup "Parse a RealValue with no decimals" $
+            map (testify'' elementVisitor)
+                [("1",
+                  [r|
+                    <RealValue>1</RealValue>|],
+                  "const(val(1.0))")
+                ,("Realvalue in assignment",
+                  [r|<Assignment ColNo="16" LineNo="160">
+                      <ArrayElement>
+                        <ArrayVariable>velCmd</ArrayVariable>
+                        <Index>
+                          <IntegerValue>2</IntegerValue>
+                        </Index>
+                      </ArrayElement>
+                      <NumericRHS>
+                        <RealValue>0</RealValue>
+                      </NumericRHS>
+                    </Assignment>|],
+                  "(arrayVar('velCmd,const(val(2))):=const(val(0.0)))")
+                ,("RealValue 1000",
+                  [r|
+                    <RealValue>1000</RealValue>|],
+                  "const(val(1000.0))")
+                ,( "RealValue 1000.0",
+                  [r|
+                    <RealValue>1000.0</RealValue>|],
+                  "const(val(1000.0))")
+                ,("RealValue -100",
+                  [r|
+                    <RealValue>-100</RealValue>|],
+                  "const(val(-100.0))")
+                ,("RealValue -1e2",
+                  [r|
+                    <RealValue>-1e2</RealValue>|],
+                  "const(val(-100.0))")
+                ]
+          ,testGroup "Parse a real array with integervalues" $
+            map (testify'' elementVisitor)
+                [("Array with 3 elements",
+                  [r|
+                    <DeclareArray>
+                      <Name>a1</Name>
+                      <Type>Real</Type>
+                      <MaxSize>10</MaxSize>
+                      <InitialValue>
+                        <ArrayValue Type="Real">
+                          <IntegerValue>1</IntegerValue>
+                          <IntegerValue>2</IntegerValue>
+                          <IntegerValue>3</IntegerValue>
+                        </ArrayValue>
+                      </InitialValue>
+                    </DeclareArray>|],
+                  "('a1 : createArray(10, val(1.0) # val(2.0) # val(3.0)))")
+                ,("Array with 3 elements 2'",
+                  [r|
+                    <DeclareArray>
+                      <Name>a1</Name>
+                      <Type>Real</Type>
+                      <MaxSize>10</MaxSize>
+                      <InitialValue>
+                          <IntegerValue>1</IntegerValue>
+                          <IntegerValue>2</IntegerValue>
+                          <IntegerValue>3</IntegerValue>
+                      </InitialValue>
+                    </DeclareArray>|],
+                  "('a1 : createArray(10, val(1.0) # val(2.0) # val(3.0)))")
                 ]
         ]
 
@@ -462,11 +629,46 @@ testsParseNodeState =
             ,("StateValue", "<NodeStateValue>FAILING</NodeStateValue>", "failing")
             ]
 
+testsParseConcat :: TestTree
+testsParseConcat =
+    testGroup "parseConcat" $
+        map (testify'' elementVisitor)
+            [("2-concat", [r|
+              <Concat ColNo="47" LineNo="11">
+                <StringValue>one</StringValue>
+                <StringValue>two</StringValue>
+              </Concat>
+            |],[r|(const(val("one")) + const(val("two")))|])
+            ,("3-concat", [r|
+              <Concat ColNo="47" LineNo="11">
+                <StringValue>one</StringValue>
+                <StringValue>two</StringValue>
+                <StringValue>three</StringValue>
+              </Concat>
+            |],[r|(const(val("one")) + (const(val("two")) + const(val("three"))))|])
+            ,("4-concat", [r|
+              <Concat ColNo="47" LineNo="11">
+                <StringValue>one</StringValue>
+                <StringValue>two</StringValue>
+                <StringValue>three</StringValue>
+                <StringValue>four</StringValue>
+              </Concat>
+            |],[r|(const(val("one")) + (const(val("two")) + (const(val("three")) + const(val("four")))))|])
+            ,("3-concat with var", [r|
+              <Concat ColNo="47" LineNo="11">
+                <StringValue>one</StringValue>
+                <StringValue>two</StringValue>
+                <StringVariable>bar</StringVariable>
+              </Concat>
+            |],[r|(const(val("one")) + (const(val("two")) + var('bar)))|])
+            ]
+
 testsParseNodeOutcomeVariable :: TestTree
 testsParseNodeOutcomeVariable =
     testGroup "parseNodeOutcomeVariable" $
         map (testify'' elementVisitor)
-            [("Simple child identifier", "<NodeOutcomeVariable><NodeRef dir=\"child\">Printer0</NodeRef></NodeOutcomeVariable>", "Printer0")
+            [("Simple child identifier with NodeRef", "<NodeOutcomeVariable><NodeRef dir=\"child\">Printer0</NodeRef></NodeOutcomeVariable>", "Printer0"),
+             ("Simple child identifier with NodeId", "<NodeOutcomeVariable><NodeId>callBoolArrayCommand</NodeId></NodeOutcomeVariable>", "callBoolArrayCommand")
             ]
 
 testsParseBooleanExpression :: TestTree
@@ -503,6 +705,9 @@ testsParseBooleanExpression =
             ,("Equality EQBoolean",
               "<EQBoolean><BooleanValue>true</BooleanValue><BooleanValue>false</BooleanValue></EQBoolean>",
               "_equ_(const(val(true)),const(val(false)))")
+            ,("Equality NEBoolean",
+              "<NEBoolean><BooleanValue>true</BooleanValue><BooleanValue>false</BooleanValue></NEBoolean>",
+              "_nequ_(const(val(true)),const(val(false)))")
             ,("Equality EQNumeric",
               "<EQNumeric><IntegerValue>3</IntegerValue><IntegerValue>4</IntegerValue></EQNumeric>",
               "_equ_(const(val(3)),const(val(4)))")
@@ -512,6 +717,12 @@ testsParseBooleanExpression =
             ,("Non-Equality NENumeric",
               "<NENumeric><IntegerValue>3</IntegerValue><IntegerValue>4</IntegerValue></NENumeric>",
               "_nequ_(const(val(3)),const(val(4)))")
+            ,("Equality EQString",
+              "<EQString><StringValue>a</StringValue><StringValue>b</StringValue></EQString>",
+              "_equ_(const(val(\"a\")),const(val(\"b\")))")
+            ,("Non-Equality NEString",
+              "<NEString><StringValue>a</StringValue><StringValue>b</StringValue></NEString>",
+              "_nequ_(const(val(\"a\")),const(val(\"b\")))")
             ,("NoChildFailed",
               [r|
                 <NoChildFailed>
@@ -524,6 +735,12 @@ testsParseBooleanExpression =
                   <NodeRef dir="sibling">ASSIGNMENT__0</NodeRef>
                 </Finished>|],
               "(isFinished?(sibling('ASSIGNMENT--0)))")
+            ,("Finished2",
+              [r|
+                <Finished ColNo="15" LineNo="10">
+                  <NodeId>ConjunctTest1</NodeId>
+                </Finished>|],
+              "(isFinished?('ConjunctTest1))")
             ,("Succeeded",
               [r|
                 <Succeeded>
@@ -774,9 +991,126 @@ testLookups :: TestTree
 testLookups =
   testGroup "Lookups" $
     map (testify'' elementVisitor)
-      [("LookupOnChange",
+      [("LookupOnChange wo args",
         [r|
         <LookupOnChange epx="Lookup"><Name><StringValue>inConflict</StringValue></Name></LookupOnChange>
         |],
-        "lookupOnChange('inConflict, nilarg, val(0.0))")
+        "lookupOnChange('inConflict, (nilarg), val(0.0))")
+      ,("LookupOnChange 1 arg",
+        [r|
+        <LookupOnChange>
+            <Name>
+                <StringValue>A</StringValue>
+            </Name>
+            <Arguments ColNo="23" LineNo="15">
+                <IntegerValue>1</IntegerValue>
+            </Arguments>
+        </LookupOnChange>
+        |],
+        [r|lookupOnChange('A, (val(1)), val(0.0))|])
+      ,("LookupOnChange 2 arg",
+        [r|
+        <LookupOnChange>
+            <Name>
+                <StringValue>A</StringValue>
+            </Name>
+            <Arguments ColNo="23" LineNo="15">
+                <StringValue>is</StringValue>
+                <StringValue>isnot</StringValue>
+            </Arguments>
+        </LookupOnChange>
+        |],
+        [r|lookupOnChange('A,(val("is") val("isnot")), val(0.0))|])
+      ,("LookupOnChange tolerance",
+        [r|
+        <LookupOnChange>
+            <Name>
+                <StringValue>A</StringValue>
+            </Name>
+            <Tolerance>
+                <IntegerValue>1</IntegerValue>
+            </Tolerance>
+            <Arguments ColNo="23" LineNo="15">
+                <StringValue>is</StringValue>
+            </Arguments>
+        </LookupOnChange>
+        |],
+        [r|lookupOnChange('A,(val("is")), val(1))|])
+        ,("LookupOnChange 2 arg + tolerance",
+        [r|
+        <LookupOnChange>
+            <Name>
+                <StringValue>A</StringValue>
+            </Name>
+            <Tolerance>
+                <IntegerValue>1</IntegerValue>
+            </Tolerance>
+            <Arguments ColNo="23" LineNo="15">
+                <StringValue>is</StringValue>
+                <StringValue>isnot</StringValue>
+            </Arguments>
+        </LookupOnChange>
+        |],
+        [r|lookupOnChange('A, (val("is") val("isnot")) , val(1))|])
+        ,("LookupOnChange name+tolerance, no args",
+        [r|
+        <LookupOnChange>
+            <Name>
+                <StringValue>time</StringValue>
+            </Name>
+            <Tolerance>
+                <RealValue>0.1</RealValue>
+            </Tolerance>
+        </LookupOnChange>
+        |],
+        [r|lookupOnChange('time,(nilarg),val (0.1))|])
       ]
+
+testUpdate :: TestTree
+testUpdate =
+  testGroup "Update" $
+    map (testify'' elementVisitor)
+    [ ("Update",
+       [r|
+        <Update>
+          <Pair>
+            <Name>taskId</Name>
+            <IntegerVariable>waypt_id</IntegerVariable>
+          </Pair>
+          <Pair>
+            <Name>result</Name>
+            <IntegerVariable>cmd_return_val</IntegerVariable>
+          </Pair>
+        </Update>
+        |],
+       "(pair('taskId, var('waypt_id)) pair('result, var('cmd_return_val)))")
+    , ("Update2",
+        [r|
+          <Update>
+            <Pair>
+              <Name>lookup</Name>
+              <LookupNow>
+                <Name>
+                  <StringValue>someValue</StringValue>
+                </Name>
+              </LookupNow>
+            </Pair>
+          </Update>
+          |],
+        "(pair('lookup, lookup ('someValue, (nilarg))))")
+    , ("UpdateVariable",
+        [r|
+          <Update>
+            <Pair>
+              <Name>realconstant</Name>
+              <RealValue>3.141</RealValue>
+            </Pair>
+            <Pair>
+              <Name>val</Name>
+              <ArrayVariable>src</ArrayVariable>
+            </Pair>
+          </Update>
+        |],
+        "(pair('realconstant, const(val(3.141))) pair('val, arrayVar('src)))")
+
+    ]

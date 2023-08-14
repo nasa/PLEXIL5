@@ -1,0 +1,7 @@
+Boolean Command cmd_name;
+
+commandabort1:
+{
+  ExitCondition Lookup(time) == 1;
+  cmd_name();
+}

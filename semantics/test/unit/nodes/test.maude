@@ -1,0 +1,29 @@
+mod TEST--NODES is
+
+pr TEST-BASE .
+
+op test--nodes : -> TestResults .
+eq test--nodes =
+begin tests
+
+  assert "defaultInternalAttributes" from
+    anAttributeSet(
+      defaultInternalAttributes
+    )
+  reaches
+    anAttributeSet(
+      status: inactive,
+      outcome: none,
+      active: true,
+      timepoints: timepoints(
+        unknown # unknown # unknown # unknown #
+        unknown # unknown # unknown # unknown #
+        unknown # unknown # unknown # unknown #
+        unknown # unknown),
+      suspended: false
+    )
+  end
+
+end tests .
+
+endm

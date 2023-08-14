@@ -3,3 +3,4 @@ temp.*
 output.*
 *.psx
 *.plx
+benchmark/icarous/cognition/TrafficConflictHandler.maude

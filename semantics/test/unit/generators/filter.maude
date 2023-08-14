@@ -1,0 +1,72 @@
+mod TEST--GENERATORS--FILTER is
+  protecting TEST-BASE .
+
+  op test--generators--filter : -> TestResults .
+  ceq test--generators--filter =
+begin tests
+
+  assert "generate filter 1" from
+    anInputsSet(
+      generate(
+        filter(repeat((A B, C D)),const(val(true))),
+        [ nodes : none ] [ environment : mtenvironment ]
+      )
+    )
+  reaches
+    anInputsSet(
+      (A B,C D)
+    )
+  end
+
+  assert "generate filter 2" from
+    anInputsSet(
+      generate(
+        filter(repeat((A B, C D)), const(val(false))),
+        [ nodes : none ] [ environment : mtenvironment ]
+      )
+    )
+  reaches
+    anInputsSet(
+      (noInputs)
+    )
+  end
+
+  assert "update filter 1" from
+    aGenerator(
+      update(
+        filter(repeat((A B, C D)),const(val(true))),
+        [ nodes : none ] [ environment : mtenvironment ],
+        C D
+      )
+    )
+  reaches
+    aGenerator(
+      filter(repeat((C D,A B)),const(val(true)))
+    )
+  end
+
+
+  assert "update filter 2" from
+    aGenerator(
+      update(
+        filter(repeat((A B, C D)),const(val(false))),
+        [ nodes : none ] [ environment : mtenvironment ],
+        C D
+      )
+    )
+  reaches
+    aGenerator(
+      filter(repeat((C D,A B)),const(val(false)))
+    )
+  end
+
+end tests
+  if A := stateLookup('a,nilarg, val(true))
+  /\ B := stateLookup('b,nilarg, val(true))
+  /\ C := stateLookup('c,nilarg, val(true))
+  /\ D := stateLookup('d,nilarg, val(true))
+  .
+
+  vars A B C D : StateInput .
+
+endm

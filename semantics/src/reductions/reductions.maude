@@ -1,0 +1,34 @@
+mod REDUCTIONS is
+  protecting MACRO .
+
+  eq [start] :
+    start | [ generator : GEN                              ] Cfg
+    =
+    macro | [ generator : update(GEN,Cfg,noInputs) ] Cfg
+  .
+
+  op run : GlobalConfig -> GlobalConfig .
+  eq [run] :
+    run(
+      stop | Cfg
+    )
+    =
+    (
+      start | Cfg
+    )
+  .
+
+  rl [MACRO-nd-choose-external-input] :
+    NDChoice((Inputs , InSet))
+      | Cfg
+    =>
+    macro-log
+      | updateGenerator(updateInterface(Cfg,Inputs),Inputs)
+  .
+
+  vars Act    : Operation .
+  vars Cfg    : Config .
+  vars GEN    : InputGenerator .
+  vars InSet  : InputsSet .
+  vars Inputs : Inputs .
+endm

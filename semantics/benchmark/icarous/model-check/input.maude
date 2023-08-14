@@ -3,10 +3,10 @@ mod INPUT is
 
   sort TimedFeedbackGenerator .
 
-  op timedFeedbackGenerator : Nat Int Identifier -> ExternalInputGenerator .
+  op timedFeedbackGenerator : Nat Int Identifier -> InputGenerator .
 
   vars Time Timeout : Nat .
-  vars ExtIns : ExternalInputs .
+  vars ExtIns : Inputs .
   vars Op : Operation .
   vars Cfg : Config .
   vars ExCmds : Configuration .
@@ -86,10 +86,10 @@ mod INPUT is
 ---     )
 ---     = false [owise] .
 
-  op input2 : -> ExternalInputGenerator .
+  op input2 : -> InputGenerator .
   eq input2 = timedFeedbackGenerator(0,0,'SetVel) .
 
-  op input : -> ExternalInputGenerator .
+  op input : -> InputGenerator .
   eq input = sequenceGenerator(
     (
     stateLookup('time,nilarg,val(0))

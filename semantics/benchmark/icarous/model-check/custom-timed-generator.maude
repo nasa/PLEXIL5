@@ -5,15 +5,15 @@ mod CUSTOM-TIMED-GENERATOR is
   sort Time .
   subsort Nat < Time .
 
-  op ctGen : Configuration -> ExternalInputGenerator .
+  op ctGen : Configuration -> InputGenerator .
   op time : Time Time -> Object .
   op onCompletedNext : Object Configuration -> Object .
   op completed : Object -> Object .
   op ackCommand : NeQualified Arguments CommandHandle -> Object .
   op updateLookup : Identifier Arguments Value -> Object .
-  op inputs : ExternalInputs -> Object .
+  op inputs : Inputs -> Object .
 
-  op input : -> ExternalInputGenerator .
+  op input : -> InputGenerator .
   ceq input =
     ctGen(
       time(0,50)
@@ -26,7 +26,7 @@ mod CUSTOM-TIMED-GENERATOR is
       updateLookup('preferredAltitude,nilarg,val(10.0))
       updateLookup('velocity,nilarg,array(val(0.0) # val(0.0) # val(0.0)))
       updateLookup('position,nilarg,array(val(0.0) # val(0.0) # val(0.0)))
-      inputs(noExternalInputs)
+      inputs(noInputs)
       CmdAck:Object
       onCompletedNext(
         CmdAck:Object,
@@ -46,7 +46,7 @@ mod CUSTOM-TIMED-GENERATOR is
   vars Cfg : Config .
   vars GenCfg GenCfg' : Configuration .
   vars ExCmds : Configuration .
-  vars ExtIns : ExternalInputs .
+  vars ExtIns : Inputs .
   vars T T' MaxT : Nat .
   vars Q : Qualified .
   vars Hndl : CommandHandle .
@@ -62,7 +62,7 @@ mod CUSTOM-TIMED-GENERATOR is
   ---     )
   ---     =
   ---     update(
-  ---       ctGen(GenCfg inputs(noExternalInputs)),
+  ---       ctGen(GenCfg inputs(noInputs)),
   ---       Cfg
   ---     )
   ---   if noInputsObject(GenCfg) .
@@ -89,9 +89,9 @@ mod CUSTOM-TIMED-GENERATOR is
   eq update(ctGen(GenCfg),Cfg) = ctGen(updateTime(update'(updateInputs(GenCfg),Cfg))) .
 
   op updateInputs : Configuration -> [Configuration] .
-  eq updateInputs(inputs(ExtIns) GenCfg) = inputs(noExternalInputs) GenCfg .
+  eq updateInputs(inputs(ExtIns) GenCfg) = inputs(noInputs) GenCfg .
 
-  op getInputs : ExternalInputGenerator -> [Object] .
+  op getInputs : InputGenerator -> [Object] .
   eq getInputs(ctGen(inputs(ExtIns) GenCfg)) = inputs(ExtIns) .
 
   op updateTime : Configuration -> [Configuration] .

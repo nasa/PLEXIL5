@@ -2,27 +2,733 @@ in ../../lib/test/test.maude
 in ../../src/plexilite.maude
 in ./base.maude
 in ./atomic/test.maude
-in ./reductions/test.maude
-in ./expressions/test.maude
-in ./model-checking.maude
 in ./compiler/test.maude
+in ./expressions/test.maude
+in ./environment/test.maude
+in ./evaluation/test.maude
+in ./funpred.maude
+in ./generators/test.maude
+in ./interface/test.maude
+in ./model-checker-extensions/test.maude
+in ./nodes/test.maude
+in ./reductions/test.maude
+in ./system.maude
 
 mod TEST-SUITE is
 
   pr TEST--ATOMIC .
-  pr TEST--REDUCTIONS .
-  pr TEST--EXPRESSIONS .
-  pr TEST--MODEL-CHECKING .
   pr TEST--COMPILER .
+  pr TEST--EXPRESSIONS .
+  pr TEST--EVALUATION .
+  pr TEST--ENVIRONMENT .
+  pr TEST--EVALUATION .
+  pr TEST--EXPRESSIONS .
+  pr TEST--FUNPRED .
+  pr TEST--GENERATORS .
+  pr TEST--INTERFACE .
+  pr TEST--MODEL-CHECKER-EXTENSIONS .
+  pr TEST--NODES .
+  pr TEST--REDUCTIONS .
+  pr TEST--SYSTEM .
 
   eq tests =
     AllTestsPassed
     + atomic--tests
-    + reductions--tests
+    + test--compiler
+    + test--environment
+    + test--evaluation
     + expressions--tests
-    + model-checking--tests
-    + compiler--tests
+    + test--funpred
+    + test--generators
+    + interface--tests
+    + test--legacy-tests
+    + test--model-checker-extensions
+    + test--nodes
+    + reductions--tests
+    + test--system
     .
+
+op test--legacy-tests : -> TestResults .
+eq test--legacy-tests =
+begin tests
+
+    assert "An Update node" from
+      testConfiguration(
+        < 'anUpdate : update |
+          pairs: (pair('val,const(val("foo"))) pair('taskId,var('waypointId))),
+          ack: false >
+      )
+    reaches
+      testConfiguration(
+        < 'anUpdate : update |
+          pairs: (pair('val,const(val("foo"))) pair('taskId,var('waypointId))),
+          ack: false >
+      )
+    end
+
+    assert "Compile Command node 1" from
+      testConfiguration(
+        compileNodes(command('anId, nilocdecl, endc: const(val(false)), 'boolArrayCommand / nilpar / 'myBooleanArray), 'aRootId)
+      )
+    reaches
+      testConfiguration(
+        < 'anId . 'aRootId : command |
+          defaultInternalAttributes,
+          command: 'boolArrayCommand / nilpar / 'myBooleanArray,
+          commandInfo: nilarg / 'anId / idle,
+          startc:  const(val(true)),
+          skip:    const(val(false)),
+          pre:     const(val(true)),
+          inv:     const(val(true)),
+          exitc:   const(val(false)),
+          repeatc: const(val(false)),
+          post:    const(val(true)),
+          endc:    const(val(false)) or (cmdHandleIs?('anId . 'aRootId, CommandDenied) or cmdHandleIs?('anId . 'aRootId, CommandFailed))
+        >
+      )
+    end
+
+    assert "Compile Command node 2" from
+      testConfiguration(
+        compileNodes(command('anId, nilocdecl, endc: const(val(true)), 'boolArrayCommand / nilpar / 'myBooleanArray), 'aRootId)
+      )
+    reaches
+      testConfiguration(
+        < 'anId . 'aRootId : command |
+          defaultInternalAttributes,
+          command: 'boolArrayCommand / nilpar / 'myBooleanArray,
+          commandInfo: nilarg / 'anId / idle,
+          startc:  const(val(true)),
+          skip:    const(val(false)),
+          pre:     const(val(true)),
+          inv:     const(val(true)),
+          exitc:   const(val(false)),
+          repeatc: const(val(false)),
+          post:    const(val(true)),
+          endc:    const(val(true)) or (cmdHandleIs?('anId . 'aRootId, CommandDenied) or cmdHandleIs?('anId . 'aRootId, CommandFailed))
+        >
+      )
+    end
+
+    assert "Update interface with a CommandAbort 1" from
+      testConfiguration(
+        updateCommandInputs(
+          < 'anId . 'aRootId : command-on-execution | arguments: nilarg, aborted: false >,
+          (commandAbort('anId, nilarg, val(true)))
+        )
+      )
+    reaches
+      testConfiguration(
+        < 'anId . 'aRootId : command-on-execution | arguments: nilarg, aborted: true >
+      )
+    end
+
+    assert "Update interface with empty external inputs" from
+      testConfiguration(
+        updateCommandInputs(
+          < 'anId . 'aRootId : command-on-execution | arguments: nilarg, aborted: false >,
+          noInputs
+        )
+      )
+    reaches
+      testConfiguration(
+        < 'anId . 'aRootId : command-on-execution | arguments: nilarg, aborted: false >
+      )
+    end
+
+    assert "Update interface with a CommandAck 1" from
+      testConfiguration(
+        updateCommandInputs(
+          < 'anId . 'aRootId : command-on-execution | arguments: nilarg, handle: nothing >,
+          (commandAck('anId, nilarg, CommandDenied))
+        )
+      )
+    reaches
+      testConfiguration(
+        < 'anId . 'aRootId : command-on-execution | arguments: nilarg, handle: just(CommandDenied) >
+      )
+    end
+
+    assert "Get command inputs 1" from
+      testInputs(
+        getCommandInputs(
+          commandAck('anId, nilarg, CommandDenied)
+        )
+      )
+    reaches
+      testInputs(
+        commandAck('anId, nilarg, CommandDenied)
+      )
+    end
+
+    assert "Get command inputs 2" from
+      testInputs(
+        getCommandInputs(
+          commandAbort('anId, nilarg, val(true))
+        )
+      )
+    reaches
+      testInputs(
+        commandAbort('anId, nilarg, val(true))
+      )
+    end
+
+    assert "Get command inputs 3" from
+      testInputs(
+        getCommandInputs(
+          commandAbort('anId, nilarg, val(true)) commandAck('anId, nilarg, CommandDenied)
+        )
+      )
+    reaches
+      testInputs(
+        commandAbort('anId, nilarg, val(true)) commandAck('anId, nilarg, CommandDenied)
+      )
+    end
+
+    assert "Command abort completed 1" from
+      testBool(
+        hasAborted(
+          < 'cmdId . 'anId : command-on-execution | aborted: true >,
+          < 'anId : command | command: 'cmdId / nilpar, active: true >,
+          'anId
+        )
+      )
+    reaches
+      testBool(
+        true
+      )
+    end
+
+    assert "Command abort completed 2" from
+      testBool(
+        hasAborted(
+          < 'cmdId . 'anId : command-on-execution | aborted: false >,
+          < 'anId : command | command: 'cmdId / nilpar, active: true >,
+          'anId
+        )
+      )
+    reaches
+      testBool(
+        false
+      )
+    end
+
+    assert "Command abort with return var completed 1" from
+      testBool(
+        hasAborted(
+          < 'cmdId . 'anId : command-on-execution | aborted: true >,
+          < 'anId : command | command: 'cmdId / nilpar / 'anotherId, active: true >,
+          'anId
+        )
+      )
+    reaches
+      testBool(
+        true
+      )
+    end
+
+    assert "Command abort with return var completed 2" from
+      testBool(
+        hasAborted(
+          < 'cmdId . 'anId : command-on-execution | aborted: false >,
+          < 'anId : command | command: 'cmdId / nilpar / 'anotherId, active: true >,
+          'anId
+        )
+      )
+    reaches
+      testBool(
+        false
+      )
+    end
+
+    assert "Create len 0 empty PrimitiveArray" from
+      testValue(
+        createArray(0, mtPrimitiveArray)
+      )
+    reaches
+      testValue(
+        array(mtPrimitiveArray)
+      )
+    end
+
+    assert "Create len 0 PrimitiveArray" from
+      testValue(
+        createArray(0, val(1) # val(2) # val(3))
+      )
+    reaches
+      testValue(
+        array(mtPrimitiveArray)
+      )
+    end
+
+    assert "Create len 3 empty IntArray" from
+      testValue(
+        createArray(3, mtPrimitiveArray)
+      )
+    reaches
+      testValue(
+        array(unknown # unknown # unknown)
+      )
+    end
+
+    assert "Create len 3 IntArray" from
+      testValue(
+        createArray(3, val(1) # val(2) # val(3))
+      )
+    reaches
+      testValue(
+        array(val(1) # val(2) # val(3))
+      )
+    end
+
+    assert "Create len 3 IntArray with 2 values" from
+      testValue(
+        createArray(3, val(1) # val(2))
+      )
+    reaches
+      testValue(
+        array(val(1) # val(2) # unknown)
+      )
+    end
+
+    assert "Create len 3 IntArray with 4 values" from
+      testValue(
+        createArray(3, val(1) # val(2) # val(3) # val(4))
+      )
+    reaches
+      testValue(
+        array(val(1) # val(2) # val(3))
+      )
+    end
+
+    assert "Create len 3 IntArray with 2 values and 1 unknown" from
+      testValue(
+        createArray(3, val(1) # val(2) # unknown)
+      )
+    reaches
+      testValue(
+        array(val(1) # val(2) # unknown)
+      )
+    end
+
+    assert "Create len 3 IntArray with 3 unknowns" from
+      testValue(
+        createArray(3, unknown # unknown # unknown)
+      )
+    reaches
+      testValue(
+        array(unknown # unknown # unknown)
+      )
+    end
+
+    assert "Create an arrayVariable with 3 unknowns in arrayvalue form" from
+      testVariable(
+        ('acPosition : createArray(3, array(unknown # unknown # unknown)))
+      )
+    reaches
+      testVariable(
+        ('acPosition : array(unknown # unknown # unknown))
+      )
+    end
+
+    assert "Create an arrayVariable with 3 unknowns in primitivearray form" from
+      testVariable(
+        ('acPosition : createArray(3, unknown # unknown # unknown))
+      )
+    reaches
+      testVariable(
+        ('acPosition : array(unknown # unknown # unknown))
+      )
+    end
+
+    --- assert "length of empty IntArray" from
+    ---   testNat(
+    ---     length(mtPrimitiveArray)
+    ---   )
+    --- reaches
+    ---   testNat(
+    ---     0
+    ---   )
+    --- end
+
+    --- assert "length of IntArray" from
+    ---   testNat(
+    ---     length(val(1) # val(2) # val(3))
+    ---   )
+    --- reaches
+    ---   testNat(
+    ---     3
+    ---   )
+    --- end
+
+    --- assert "length of half initialised IntArray" from
+    ---   testNat(
+    ---     length(val(1) # val(2) # val(3) # unknown # unknown)
+    ---   )
+    --- reaches
+    ---   testNat(
+    ---     5
+    ---   )
+    --- end
+
+    assert "Sequence Generator 1" from
+      testEInputsList(
+        generate(
+          sequenceGenerator(nilEInputsList, started, mtsoup, mtsoup)
+         ,emptyConfig
+        )
+      )
+    reaches
+      testEInputsList(
+        nilEInputsList
+      )
+    end
+
+    assert "Sequence Generator 2" from
+      testEInputsList(
+        generate(
+          sequenceGenerator(noInputs, started, mtsoup, mtsoup)
+         ,mtsoup
+        )
+      )
+    reaches
+      testEInputsList(
+        noInputs
+      )
+    end
+
+    assert "Sequence Generator 3" from
+      testEInputsList(
+        generate(
+          sequenceGenerator(stateLookup('id,nilarg, val(1)), started, mtsoup, mtsoup)
+         ,mtsoup
+        )
+      )
+    reaches
+      testEInputsList(
+        stateLookup('id,nilarg, val(1))
+      )
+    end
+
+    assert "Sequence Generator 4" from
+      testEInputsList(
+        generate(
+          sequenceGenerator(nilEInputsList, started, mtsoup, mtsoup),
+          (emptyConfig // [ nodes :
+            < 'id2 : empty |
+              status: waiting,
+              outcome: none,
+              active: false,
+              repeatc: const(val(false)),
+              startc: const(val(true)),
+              endc: const(val(true)),
+              exitc: const(val(false)),
+              post: const(val(true)),
+              skip: const(val(false)),
+              pre: const(val(true)),
+              inv: const(val(true)),
+              suspended: false > ]
+          )
+        )
+      )
+    reaches
+      testEInputsList(
+        noInputs
+      )
+    end
+
+    assert "Sequence Generator 5" from
+      testEInputsList(
+        generate(
+          sequenceGenerator(
+            nilEInputsList,
+            started,
+            mtsoup,
+            (emptyConfig // [ nodes :
+              < 'id2 : empty |
+                status: waiting,
+                outcome: none,
+                active: false,
+                repeatc: const(val(false)),
+                startc: const(val(false)),
+                endc: const(val(true)),
+                exitc: const(val(false)),
+                post: const(val(true)),
+                skip: const(val(false)),
+                pre: const(val(true)),
+                inv: const(val(true)),
+                suspended: false > ])
+          )
+         ,
+            (emptyConfig // [ nodes :
+              < 'id2 : empty |
+                status: waiting,
+                outcome: none,
+                active: false,
+                repeatc: const(val(false)),
+                startc: const(val(false)),
+                endc: const(val(true)),
+                exitc: const(val(false)),
+                post: const(val(true)),
+                skip: const(val(false)),
+                pre: const(val(true)),
+                inv: const(val(true)),
+                suspended: false > ])
+        )
+      )
+    reaches
+      testEInputsList(
+        nilEInputsList
+      )
+    end
+
+    assert "Sequence Generator Update 1" from
+      testGenerator(
+        update(
+          sequenceGenerator(
+            nilEInputsList,
+            started,
+            [ nodes : < 'id1 : list | status: inactive > ],
+            [ nodes : < 'id2 : list | status: inactive > ]
+          )
+         ,[ nodes : < 'id3 : list | status: inactive > ]
+         ,noInputs
+        )
+      )
+    reaches
+      testGenerator(
+        sequenceGenerator(
+          nilEInputsList,
+          started,
+          [ nodes : < 'id2 : list | status: inactive > ],
+          [ nodes : < 'id3 : list | status: inactive > ]
+        )
+      )
+    end
+
+    assert "Sequence Generator Update 2" from
+      testGenerator(
+        update(
+          sequenceGenerator(
+            noInputs,
+            started,
+            [ nodes : < 'id1 : list | status: inactive > ],
+            [ nodes : < 'id2 : list | status: inactive > ]
+          )
+         ,[ nodes : < 'id3 : list | status: inactive > ]
+         ,noInputs
+        )
+      )
+    reaches
+      testGenerator(
+        sequenceGenerator(
+          nilEInputsList,
+          started,
+          [ nodes : < 'id2 : list | status: inactive > ],
+          [ nodes : < 'id3 : list | status: inactive > ]
+        )
+      )
+    end
+
+    assert "Sequence Generator Update 2" from
+      testGenerator(
+        update(
+          sequenceGenerator(
+            noInputs # stateLookup('id,nilarg, val(1)),
+            started,
+            [ nodes : < 'id1 : list | status: inactive > ],
+            [ nodes : < 'id2 : list | status: inactive > ]
+          )
+         ,[ nodes : < 'id3 : list | status: inactive > ]
+         ,noInputs
+        )
+      )
+    reaches
+      testGenerator(
+        sequenceGenerator(
+          stateLookup('id,nilarg, val(1)),
+          started,
+          [ nodes : < 'id2 : list | status: inactive > ],
+          [ nodes : < 'id3 : list | status: inactive > ]
+        )
+      )
+    end
+
+    assert "Sequence Generator Update ignores generators 1" from
+      testGenerator(
+        update(
+          sequenceGenerator(
+            noInputs # stateLookup('id,nilarg, val(1)),
+            started,
+            [ nodes : < 'id1 : list | status: inactive > ],
+            [ nodes : < 'id2 : list | status: inactive > ]
+          )
+         ,[ nodes : < 'id3 : list | status: inactive > ]
+          [ generator : noEnvGen ]
+         ,noInputs
+        )
+      )
+    reaches
+      testGenerator(
+        sequenceGenerator(
+          stateLookup('id,nilarg, val(1)),
+          started,
+          [ nodes : < 'id2 : list | status: inactive > ],
+          [ nodes : < 'id3 : list | status: inactive > ]
+        )
+      )
+    end
+
+    assert "Sequence Generator Update ignores generators 2" from
+      testGenerator(
+        update(
+          sequenceGenerator(
+            nilEInputsList,
+            started,
+            [ nodes : < 'id1 : list | status: inactive > ],
+            [ nodes : < 'id2 : list | status: inactive > ]
+          )
+         ,[ nodes : < 'id3 : list | status: inactive > ]
+          [ generator : noEnvGen ]
+         ,noInputs
+        )
+      )
+    reaches
+      testGenerator(
+        sequenceGenerator(
+          nilEInputsList,
+          started,
+          [ nodes : < 'id2 : list | status: inactive > ],
+          [ nodes : < 'id3 : list | status: inactive > ]
+        )
+      )
+    end
+
+    assert "Sequence Generator Update ignores generators 3" from
+      testGenerator(
+        update(
+          sequenceGenerator(
+            nilEInputsList,
+            uninitialized,
+            mtsoup,
+            mtsoup
+          )
+         ,[ nodes : < 'id3 : list | status: inactive > ]
+          [ generator : noEnvGen ]
+         ,noInputs
+        )
+      )
+    reaches
+      testGenerator(
+        sequenceGenerator(
+          nilEInputsList,
+          started,
+          mtsoup,
+          [ nodes : < 'id3 : list | status: inactive > ]
+        )
+      )
+    end
+
+    assert "Sequence Generator Update ignores interface-history 1" from
+      testGenerator(
+        update(
+          sequenceGenerator(
+            noInputs # stateLookup('id,nilarg, val(1)),
+            started,
+            [ nodes : < 'id1 : list | status: inactive > ],
+            [ nodes : < 'id2 : list | status: inactive > ]
+          )
+         ,[ nodes : < 'id3 : list | status: inactive > ]
+          [ interface-history : nilEInputsList ]
+         ,noInputs
+        )
+      )
+    reaches
+      testGenerator(
+        sequenceGenerator(
+          stateLookup('id,nilarg, val(1)),
+          started,
+          [ nodes : < 'id2 : list | status: inactive > ],
+          [ nodes : < 'id3 : list | status: inactive > ]
+        )
+      )
+    end
+    assert "Sequence Generator Update ignores interface-history 2" from
+      testGenerator(
+        update(
+          sequenceGenerator(
+            nilEInputsList,
+            started,
+            [ nodes : < 'id1 : list | status: inactive > ],
+            [ nodes : < 'id2 : list | status: inactive > ]
+          )
+         ,[ nodes : < 'id3 : list | status: inactive > ]
+          [ interface-history : nilEInputsList ]
+         ,noInputs
+        )
+      )
+    reaches
+      testGenerator(
+        sequenceGenerator(
+          nilEInputsList,
+          started,
+          [ nodes : < 'id2 : list | status: inactive > ],
+          [ nodes : < 'id3 : list | status: inactive > ]
+        )
+      )
+    end
+
+    assert "Sequence Generator Update ignores interface-history 3" from
+      testGenerator(
+        update(
+          sequenceGenerator(
+            nilEInputsList,
+            uninitialized,
+            mtsoup,
+            mtsoup
+          )
+         ,[ nodes : < 'id3 : list | status: inactive > ]
+          [ interface-history : nilEInputsList ]
+         ,noInputs
+        )
+      )
+    reaches
+      testGenerator(
+        sequenceGenerator(
+          nilEInputsList,
+          started,
+          mtsoup,
+          [ nodes : < 'id3 : list | status: inactive > ]
+        )
+      )
+    end
+
+    assert "Uninitialized sequence generator 1" from
+      testGenerator(
+        update(
+          sequenceGenerator(
+            noInputs,
+            uninitialized,
+            [ nodes : < 'id1 : list | status: inactive > ],
+            [ nodes : < 'id2 : list | status: inactive > ]
+          )
+         ,[ nodes : < 'id3 : list | status: inactive > ]
+         ,noInputs
+        )
+      )
+    reaches
+    testGenerator(
+      sequenceGenerator(
+            noInputs,
+            started,
+            [ nodes : < 'id2 : list | status: inactive > ],
+            [ nodes : < 'id3 : list | status: inactive > ]
+          )
+      )
+    end
+
+end tests
+.
 
 endm
 

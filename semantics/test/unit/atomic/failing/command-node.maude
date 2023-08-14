@@ -1,0 +1,109 @@
+mod TEST--ATOMIC--FAILING--COMMAND-NODE is
+
+  pr TEST-BASE .
+
+
+  op tests--atomic--failing--command-node : -> TestResults .
+
+  eq tests--atomic--failing--command-node = begin tests
+
+  *** TODO: uncomment the line when abortComplete is implemented
+
+    assert "Failing command node incomplete abort" from
+      failing(
+        [ nodes :
+            < A : command | status: failing,
+                               active: true,
+                               outcome: failure(exited) > ]
+        [ interface :
+            < A : command-on-execution | aborted: false > ]
+        [ microacts : mtactions ]
+      )
+    reaches
+      failing(
+        [ nodes :
+            < A : command | status: failing,
+                               active: false,
+                               outcome: failure(exited) > ]
+        [ interface :
+            < A : command-on-execution | aborted: false > ]
+        [ microacts : mtactions ]
+      )
+    end
+
+    assert "Failing command node follows path 1 (failing--command--01)" from
+      failing(
+        [ nodes :
+            < A : command | command: 'cmdId / nilpar,
+                            status: failing,
+                            active: true,
+                            outcome: failure(parentExited) > ]
+        [ microacts : mtactions ]
+        [ interface :
+            < 'cmdId . A : command-on-execution | aborted: true > ]
+      )
+    reaches
+      failing(
+        [ nodes :
+            < A : command | command: 'cmdId / nilpar,
+                            status: failing,
+                               active: false,
+                               outcome: failure(parentExited) > ]
+        [ microacts : setStatus(A, finished),logTransition(A,failing,finished,1) ]
+        [ interface :
+            < 'cmdId . A : command-on-execution | aborted: true > ]
+      )
+    end
+
+        assert "Failing command node follows path 3 (failing--command--03)" from
+      failing(
+        [ nodes :
+            < A : command | command: 'cmdId / nilpar,
+                            status: failing,
+                            active: true,
+                            outcome: failure(parentFailed) > ]
+        [ microacts : mtactions ]
+        [ interface :
+            < 'cmdId . A : command-on-execution | aborted: true > ]
+      )
+    reaches
+      failing(
+        [ nodes :
+            < A : command | command: 'cmdId / nilpar,
+                            status: failing,
+                               active: false,
+                               outcome: failure(parentFailed) > ]
+        [ microacts : setStatus(A, finished),logTransition(A,failing,finished,2) ]
+        [ interface :
+            < 'cmdId . A : command-on-execution | aborted: true > ]
+      )
+    end
+
+
+        assert "Failing command node follows path 4 (failing--command--04)" from
+      failing(
+        [ nodes :
+            < A : command | command: 'cmdId / nilpar,
+                            status: failing,
+                            active: true,
+                            outcome: failure(exited) > ]
+        [ microacts : mtactions ]
+        [ interface :
+            < 'cmdId . A : command-on-execution | aborted: true > ]
+      )
+    reaches
+      failing(
+        [ nodes :
+            < A : command | command: 'cmdId / nilpar,
+                            status: failing,
+                               active: false,
+                               outcome: failure(exited) > ]
+        [ microacts : setStatus(A, iterationEnded),logTransition(A,failing,iterationEnded,3) ]
+        [ interface :
+            < 'cmdId . A : command-on-execution | aborted: true > ]
+      )
+    end
+
+  end tests .
+
+endm

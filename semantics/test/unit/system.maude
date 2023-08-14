@@ -1,0 +1,38 @@
+mod TEST--SYSTEM is
+
+pr TEST-BASE .
+
+op test--system : -> TestResults .
+eq test--system =
+begin tests
+
+  assert "getEnvironment 1" from
+    anEnvironment(
+      getEnvironment(
+        [ environment : mtenvironment ]
+        mtsoup
+      )
+    )
+  reaches
+    anEnvironment(
+      mtenvironment
+    )
+  end
+
+  assert "getEnvironment 2" from
+    anEnvironment(
+      getEnvironment(
+        [ environment : 'A(nilarg): val(0) ]
+        mtsoup
+      )
+    )
+  reaches
+    anEnvironment(
+      'A(nilarg): val(0)
+    )
+  end
+
+end tests
+.
+
+endm

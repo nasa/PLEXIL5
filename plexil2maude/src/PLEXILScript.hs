@@ -6,7 +6,7 @@ import Text.XML.HXT.Core
 import Data.Maybe (fromJust)
 import Data.Either (partitionEithers)
 import Data.Either.Combinators (maybeToRight)
-import Data.OneOfN (OneOf3(..))
+import Data.OneOfN (OneOf3(..), OneOf6(..))
 
 data PLEXILScript = PLEXILScript
   { initialState :: InitialState
@@ -30,6 +30,7 @@ instance XmlPickler InitialState where
 
 xpInitialState :: PU InitialState
 xpInitialState =
+  xpDefault (InitialState []) $
   xpElem "InitialState" $
   xpWrap (InitialState,\(InitialState x) -> x) $
   xpList xpickle
@@ -37,20 +38,26 @@ xpInitialState =
 newtype Script = Script [ScriptEntry] deriving (Show,Eq)
 
 newtype ScriptEntry = ScriptEntry
-  { unScriptEntry :: (OneOf3 State CommandAck Simultaneous)
+  { unScriptEntry :: (OneOf6 State Command CommandAck Simultaneous UpdateAck CommandAbort)
   } deriving (Show,Eq)
 
 instance XmlPickler ScriptEntry where
   xpickle = xpWrap (ScriptEntry,unScriptEntry) $ xpAlt tag ps
     where
-      tag (OneOf3   _) = 0
-      tag (TwoOf3   _) = 1
-      tag (ThreeOf3 _) = 2
+      tag (OneOf6   _) = 0
+      tag (TwoOf6   _) = 1
+      tag (ThreeOf6 _) = 2
+      tag (FourOf6  _) = 3
+      tag (FiveOf6  _) = 4
+      tag (SixOf6   _) = 5
 
       ps
-        = [ xpWrap (OneOf3,  \(OneOf3 x)   -> x) $ xpickle
-          , xpWrap (TwoOf3,  \(TwoOf3 x)   -> x) $ xpickle
-          , xpWrap (ThreeOf3,\(ThreeOf3 x) -> x) $ xpickle ]
+        = [ xpWrap (OneOf6,  \(OneOf6 x)   -> x) $ xpickle
+          , xpWrap (TwoOf6,  \(TwoOf6 x)   -> x) $ xpickle
+          , xpWrap (ThreeOf6,\(ThreeOf6 x) -> x) $ xpickle
+          , xpWrap (FourOf6, \(FourOf6 x)  -> x) $ xpickle
+          , xpWrap (FiveOf6, \(FiveOf6 x)  -> x) $ xpickle
+          , xpWrap (SixOf6,  \(SixOf6  x)  -> x) $ xpickle ]
 
 instance XmlPickler Script where
   xpickle = xpScript
@@ -60,7 +67,6 @@ xpScript =
   xpElem "Script" $
   xpWrap (Script,\(Script xs) -> xs) $
   xpList xpickle
-
 
 newtype Simultaneous = Simultaneous [SimultaneousEntry] deriving (Show,Eq)
 
@@ -81,6 +87,9 @@ instance XmlPickler SimultaneousEntry where
 data OneOf
   = OneState State
   | OneCommandAck CommandAck
+  | OneCommandAbort CommandAbort
+  | OneCommand Command
+  | OneUpdateAck UpdateAck
   deriving (Show,Eq)
 
 instance XmlPickler OneOf where
@@ -92,10 +101,98 @@ xpOneOf =
   where
     tag (OneState _) = 0
     tag (OneCommandAck _) = 1
+    tag (OneCommandAbort _) = 2
+    tag (OneCommand _) = 3
+    tag (OneUpdateAck _) = 4
 
     ps =
-      [ xpWrap (OneState,      \(OneState s)      -> s) $ xpickle
-      , xpWrap (OneCommandAck, \(OneCommandAck a) -> a) $ xpickle ]
+      [ xpWrap (OneState,       \(OneState s)          -> s  ) $ xpickle
+      , xpWrap (OneCommandAck,  \(OneCommandAck ca)    -> ca ) $ xpickle
+      , xpWrap (OneCommandAbort,\(OneCommandAbort cab) -> cab) $ xpickle
+      , xpWrap (OneCommand,     \(OneCommand cmd)      -> cmd) $ xpickle
+      , xpWrap (OneUpdateAck,   \(OneUpdateAck ua)     -> ua ) $ xpickle ]
+
+data Command = Command
+  { cmdName   :: String
+  , cmdParams :: [Parameter]
+  , cmdResult :: Result
+  , cmdType   :: Type
+  } deriving (Show,Eq)
+
+instance XmlPickler Command where
+  xpickle = xpCommand
+
+xpCommand :: PU Command
+xpCommand =
+  xpElem "Command" $
+  xpWrap
+    ( \(n,phs,t) -> let (ps,r:_) = partitionEithers phs in toCommand n phs t
+    , \a -> (cmdName a, Right (cmdResult a):map Left (cmdParams a), cmdType a)) $
+  xpTriple
+    (xpAttr "name" xpText)
+    (xpWrap (projectOneTwo, projectLeftRight) $ xpList $ xpAlt tag ps)
+    (xpAttr "type" xpickle)
+  where
+    projectOneTwo [] = []
+    projectOneTwo ((OneOf3 x):xs) = Left x : projectOneTwo xs
+    projectOneTwo ((TwoOf3 x):xs) = Right x : projectOneTwo xs
+    projectOneTwo (_:xs) = projectOneTwo xs
+
+    projectLeftRight [] = []
+    projectLeftRight (Left x:xs) = OneOf3 x : projectLeftRight xs
+    projectLeftRight (Right x:xs) = TwoOf3 x : projectLeftRight xs
+    projectLeftRight (_:xs) = projectLeftRight xs
+
+    tag (OneOf3 _) = 0
+    tag (TwoOf3 _) = 1
+    tag (ThreeOf3 _) = 2
+
+    ps =
+      [ xpWrap (OneOf3, \(OneOf3 params) -> params) $ xpickle
+      , xpWrap (TwoOf3, \(TwoOf3 result) -> result) $ xpickle
+      , xpWrap (ThreeOf3, \(ThreeOf3 text) -> text) $ xpText]
+
+    toCommand name paramsOrResult typ = Command name params result typ
+      where
+        (params,untypedResult:_) = partitionEithers paramsOrResult
+        result = Result $ case unResult untypedResult of
+          Values strs ->
+            case typ of
+              PXBool -> case strs of
+                [str] -> TypedValue $ TVBool (strToBool str)
+                _ -> error $ "Wrong number of values: " ++ show strs ++ " in `toCommand`"
+              PXInt -> case strs of
+                [str] -> TypedValue $ TVInt (read str)
+                _ -> error $ "Wrong number of values: " ++ show strs ++ " in `toCommand`"
+              PXReal -> case strs of
+                [str] -> TypedValue $ TVReal (read str)
+                _ -> error $ "Wrong number of values: " ++ show strs ++ " in `toCommand`"
+              PXString -> case strs of
+                [str] -> TypedValue $ TVString $ read $ ("\"") ++ str ++ "\""
+                _ -> error $ "Wrong number of values: " ++ show strs ++ " in `toCommand`"
+              PXBoolArray   -> TypedValue $ TVBoolArray (map strToBool strs)
+              PXStringArray -> TypedValue $ TVStringArray strs
+              PXIntArray    -> TypedValue $ TVIntArray (map read strs)
+              PXRealArray   -> TypedValue $ TVRealArray (map read strs)
+          anotherValue -> error $ "Unsupported value: " ++ show anotherValue ++ " in `toCommand`"
+
+        strToBool str =
+          case str of
+            "1" -> True
+            "0" -> False
+            str -> error $ "Impossible to parse: '" ++ str
+              ++ "' as a PXBool from `toCommand "
+              ++ show name ++ " "
+              ++ show paramsOrResult ++ " "
+              ++ show typ ++ "`"
+
+
+
+data Result = Result { unResult :: Value } deriving (Show,Eq)
+
+instance XmlPickler Result where
+  xpickle = xpWrap ( Result . Values , unValues . unResult ) $
+    xpList1 $ xpElem "Result" $ xpDefault "" $ xpWrap ( id , id ) xpText
 
 
 data CommandAck = CommandAck
@@ -125,7 +222,8 @@ data CommandHandle
   | CommandSentToSystem
   | CommandReceivedBySystem
   | CommandSuccess
-  | CommandFailed deriving (Show,Eq)
+  | CommandFailed
+  | CommandInterfaceError deriving (Show,Eq)
 
 instance XmlPickler CommandHandle where
   xpickle = xpCommandHandle
@@ -148,7 +246,63 @@ xpCommandHandle = xpElem "Result" $
              ,("COMMAND_SENT_TO_SYSTEM",CommandSentToSystem)
              ,("COMMAND_RCVD_BY_SYSTEM",CommandReceivedBySystem)
              ,("COMMAND_SUCCESS",CommandSuccess)
-             ,("COMMAND_FAILED",CommandFailed)]
+             ,("COMMAND_FAILED",CommandFailed)
+             ,("COMMAND_INTERFACE_ERROR",CommandInterfaceError)]
+
+data CommandAbort = CommandAbort
+  { cabName   :: String
+  , cabParams :: [Parameter]
+  , cabResult :: Result
+  , cabType   :: Type
+  } deriving (Show,Eq)
+
+instance XmlPickler CommandAbort where
+  xpickle = xpCommandAbort
+
+xpCommandAbort :: PU CommandAbort
+xpCommandAbort =
+  xpElem "CommandAbort" $
+  xpWrap
+    ( \(n,phs,t) -> let (ps,r:_) = partitionEithers phs in toCommandAbort n phs t
+    , \a -> (cabName a, Right (cabResult a):map Left (cabParams a), cabType a)) $
+  xpTriple
+    (xpAttr "name" xpText)
+    (xpList xpickle)
+    (xpAttr "type" xpickle)
+  where
+    toCommandAbort name paramsOrResult typ = CommandAbort name params result typ
+      where
+        (params,untypedResult:_) = partitionEithers paramsOrResult
+        result = Result $ case unResult untypedResult of
+          Values strs ->
+            case typ of
+              PXBool -> case strs of
+                [str] -> TypedValue $ TVBool (strToBool str)
+                _ -> error $ "Wrong number of values: " ++ show strs ++ " in `toCommandAbort`"
+              PXInt -> case strs of
+                [str] -> TypedValue $ TVInt (read str)
+                _ -> error $ "Wrong number of values: " ++ show strs ++ " in `toCommandAbort`"
+              PXReal -> case strs of
+                [str] -> TypedValue $ TVReal (read str)
+                _ -> error $ "Wrong number of values: " ++ show strs ++ " in `toCommandAbort`"
+              PXString -> case strs of
+                [str] -> TypedValue $ TVString str
+                _ -> error $ "Wrong number of values: " ++ show strs ++ " in `toCommandAbort`"
+              PXBoolArray   -> TypedValue $ TVBoolArray (map strToBool strs)
+              PXStringArray -> TypedValue $ TVStringArray strs
+              PXIntArray    -> TypedValue $ TVIntArray (map read strs)
+              PXRealArray   -> TypedValue $ TVRealArray (map read strs)
+          anotherValue -> error $ "Unsupported value: " ++ show anotherValue ++ " in `toCommandAbort`"
+
+        strToBool str =
+          case str of
+            "1" -> True
+            "0" -> False
+            str -> error $ "Impossible to parse: '" ++ str
+              ++ "' as a PXBool from `toCommandAbort "
+              ++ show name ++ " "
+              ++ show paramsOrResult ++ " "
+              ++ show typ ++ "`"
 
 data State = State
   { stName   :: String
@@ -159,6 +313,7 @@ data State = State
 
 instance XmlPickler State where
   xpickle = xpState
+
 
 xpState :: PU State
 xpState
@@ -171,6 +326,23 @@ xpState
       (xpList xpickle)
       (xpAttr "type" xpickle)
 
+data UpdateAck = UpdateAck
+  { uaName   :: String
+  , uaBool   :: Bool
+  } deriving (Show,Eq)
+
+instance XmlPickler UpdateAck where
+  xpickle = xpUpdateAck
+
+xpUpdateAck :: PU UpdateAck
+xpUpdateAck
+  = xpElem "UpdateAck" $
+    xpWrap
+      ( uncurry UpdateAck
+      , \ua -> (uaName ua, uaBool ua)) $
+    xpPair
+      (xpAttr "name" xpText)
+      (xpDefault True $ xpZero "")
 
 data Parameter = Parameter
   { parValue :: String
@@ -186,10 +358,24 @@ xpParameter
     xpWrap
       ( uncurry Parameter
       , \p -> (parValue p, parType p)) $
-    xpPair xpText (xpAttr "type" xpickle)
+    xpPair
+      xpText0
+      (xpAttr "type" xpickle)
 
+data Value =
+  Value { unValue :: String }
+  | Values { unValues :: [String] }
+  | TypedValue { unTypedValue :: TypedValue } deriving (Show,Eq)
 
-newtype Value = Value { unValue :: String } deriving (Show,Eq)
+data TypedValue = TVString String
+                | TVInt Int
+                | TVReal Double
+                | TVBool Bool
+                | TVStringArray [String]
+                | TVIntArray [Int]
+                | TVRealArray [Double]
+                | TVBoolArray [Bool]
+                deriving (Show,Eq)
 
 instance XmlPickler Value where
   xpickle = xpElem "Value" $ xpWrap ( Value, unValue ) xpText

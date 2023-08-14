@@ -1,0 +1,14 @@
+fmod GENERATORS--EMPTY-GENERATOR is
+  pr GENERATORS--BASE-GENERATOR .
+
+  vars Conf : Config .
+
+  op emptyEnvGen : Nat -> InputGenerator .
+  eq generate(emptyEnvGen(s N:Nat),Conf) = noInputs .
+  eq generate(emptyEnvGen(0),Conf) = empty .
+
+  eq update(emptyEnvGen(s N:Nat),Conf,EI:Inputs) = emptyEnvGen(N:Nat) .
+
+  eq isConsumed?(emptyEnvGen(s N:Nat),Conf) = false .
+  eq isConsumed?(emptyEnvGen(0),Conf) = true [owise] .
+endfm

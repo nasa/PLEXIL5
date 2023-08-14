@@ -1,0 +1,49 @@
+mod TEST--EVALUATION is
+
+  pr TEST-BASE .
+
+  op test--evaluation : -> TestResults .
+  eq test--evaluation =
+    begin tests
+
+    assert "bEval over Config 1" from
+      aBool(
+        bEval(const(val(true)), [ nodes : none ] [ environment : mtenvironment ])
+      )
+    reaches
+      aBool(
+        true
+      )
+    end
+
+    assert "bEval over Config" from
+      aBool(
+        bEval(const(val(false)), [ nodes : none ] [ environment : mtenvironment ])
+      )
+    reaches
+      aBool(
+        false
+      )
+    end
+
+    assert "eval of arrayVar" from
+      anExpression(
+        eval(
+            mtenvironment,
+            [ < 'src . 'array8 : memory |
+                    initVal: array(val(5.0) # val(6.0)),
+                    actVal: array(val(5.0) # val(6.0)),
+                    prevVal: array(val(5.0) # val(6.0)) > ],
+            arrayVar('src . 'array8)
+        )
+      )
+    reaches
+      anExpression(
+        const(array(val(5.0) # val(6.0)))
+      )
+    end
+
+    end tests
+    .
+
+endm

@@ -1,70 +1,15 @@
-----                                Extra/temporary definitions for expressions
-----                                                       author: Camilo Rocha
-
-fmod EXTENDED-EXPRESSION is
- extending VALUE .
- protecting INT .
- protecting STATUS .
- protecting OUTCOME .
- protecting QUALIFIED .
- protecting EXPRESSION .
- protecting COMMAND-HANDLE .
- extending FUNCTION .
-
- op _+_           : Expression Expression -> Expression [prec 13 format (o sc o o)] .
- op _-_           : Expression Expression -> Expression [prec 13 format (o sc o o)] .
- op _*_           : Expression Expression -> Expression [prec 12 format (o sc o o)] .
- op _rem_         : Expression Expression -> Expression [prec 12 format (o sc o o)] .
- op _<_           : Expression Expression -> Expression [prec 15 format (o sc o o)] .
- op _<=_          : Expression Expression -> Expression [prec 15 format (o sc o o)] .
- op _>_           : Expression Expression -> Expression [prec 15 format (o sc o o)] .
- op _>=_          : Expression Expression -> Expression [prec 15 format (o sc o o)] .
- op _and_         : Expression Expression -> Expression [prec 18 format (o sc o o)] .
- op _or_          : Expression Expression -> Expression [prec 18 format (o sc o o)] .
- op _equ_         : Expression Expression -> Expression [prec 20 format (o sc o o)] .
- op _nequ_        : Expression Expression -> Expression [prec 20 format (o sc o o)] .
- op not_          : Expression            -> Expression [prec 17 format (c o o)] .
- op isKnown       : Expression            -> Expression .
- op noChildFailed           :             -> Expression .
- op noChildFailed           : NeQualified -> Expression .
- op isFinished?             : NeQualified -> Expression .
- op hasSucceeded?           : NeQualified -> Expression .
- op hasPostconditionFailed? : NeQualified -> Expression .
- op hasSkipped?             : NeQualified -> Expression .
-
-
-*** Function Ids
-**** Absolute value (of integers and reals)
- op absp  : -> Function .
-**** Square root (of reals)
- op sqrt  : -> Function .
-**** Boolean negation
- op notp  : -> Function .
-
-*** Predicates on processes
- op isStatus?         : NeQualified Status      -> Expression .
- op isOutcome?        : NeQualified Outcome     -> Expression .
- op isOutcomeFailure? : NeQualified             -> Expression .
- op isOutcomeSuccess? : NeQualified             -> Expression .
- op isFailure?        : NeQualified FailureType -> Expression .
- op areChildren?      : NeQualified Status      -> Expression .
- op areChildren?      : Status                  -> Expression .
- op cmdHandleRcv?     : NeQualified             -> Expression .
- op cmdHandleRcv?     :                         -> Expression .
- op cmdHandleIs?      : NeQualified CommandHandle -> Expression .
-endfm
-
 ----                                                   Evaluation specification
 ----                                                       author: Camilo Rocha
-mod EVAL is
+fmod EVAL is
  protecting EXTENDED-EXPRESSION .
  protecting DEFS .
 
  op eval : Environment Nodes         Expression ~> Expression . *** TODO: refactor to be ... -> Value
- op eval : Environment Configuration Expression ~> Expression . *** TODO: remove dependency from Nodes above
+ op eval : Environment Configuration Expression -> Expression . *** TODO: remove dependency from Nodes above
 
  vars NA  Ats  : AttributeSet .
  vars B B'     : Bool .
+ vars Cfg      : Config .
  var Cd        : Cid .
  vars PS PS'   : Configuration .
  var C         : Environment .
@@ -79,6 +24,7 @@ mod EVAL is
  vars O O'     : Outcome .
  var PL        : Nodes .
  vars S S'     : Status .
+ var Tp        : Timepoint .
  var R R'      : String .
  vars V V'     : Value .
  vars Args Args' : Arguments .
@@ -191,7 +137,7 @@ mod EVAL is
  eq eval(C,PL,E equ E') = eval(C,PL,E) equ eval(C,PL,E') .
  eq eval(C,PL,E nequ E') = not eval(C,PL,E equ E') .
 
- ceq eval(C,PL,isKnown(E)) = const(val(V =/= unknown)) if const(V) := eval(C,PL,E) .
+ ceq eval(C,PL,isKnown(E)) = const(val(if V == unknown then false else true fi)) if const(V) := eval(C,PL,E) .
 
  var ArrV : ArrayValue .
 
@@ -205,6 +151,10 @@ mod EVAL is
  eq eval(C,[ < Q : memory | NA , actVal: ArrV > PS ],arrayVar(Q)) = const(ArrV) .
  ceq eval(C,[ < Q : memory | NA , actVal: ArrV > PS ],arrayVar(Q,E)) = const(nth(ArrV,I))
     if val(I) := expToVal(eval(C,[ < Q : memory | NA , actVal: ArrV > PS ],E)) .
+
+*** On node timepoints
+ eq eval(C,[ < Q : CC:Cid | timepoints: TPS:Timepoints, AtS > PS ],timepoint(Q,S,Tp))
+   = const(lookupTimepoint(TPS:Timepoints, S, Tp)) .
 
 *** On context variables
  eq eval(((Q(Args) : V),C), PL, lookup(Q,Args)) = const(V) . --- [print "lookup(" Q "," Args ") = const(" V ")"] .
@@ -246,6 +196,11 @@ var FT FT' : FailureType .
   = eval(C, [ PS ], isOutcome?(Q,success) and isStatus?(Q,finished)) .
  eq eval(C, [ PS ], hasSkipped?(Q))
   = eval(C, [ PS ], isOutcome?(Q,skipped)) .
+
+ eq eval(C, [ < Q : (X:Cid) | NA, ack: true > PS ], hasRcvAck?(Q) )
+  = const(val(true)) .
+ eq eval(C, [ < Q : (X:Cid) | NA, ack: false > PS ], hasRcvAck?(Q) )
+  = const(val(false)) .
 
  eq eval(C, [ PS ], areChildren?(Q,S)) = const(val(processesWithStatus?(childrenProcesses(Q,PS),S))) .
  eq eval(C, [ PS ], noChildFailed(Q)) = const(val(getFailedProcesses(getProcessesWithStatus(childrenProcesses(Q,PS),finished)) == none)) .
@@ -334,7 +289,7 @@ vars AtS AtS' : AttributeSet .
  eq $childrenMemories(Q, PS, PS') = PS' [owise] .
 
  *** Auxiliary boolean expression predicates
- ops isTrue isFalse isUnknown : Expression -> Bool .
+ ops isTrue isFalse isUnknown : Expression ~> Bool .
  eq isTrue(const(val(true))) = true .
  eq isTrue(const(val(false))) = false .
  eq isTrue(const(unknown)) = false .
@@ -345,4 +300,10 @@ vars AtS AtS' : AttributeSet .
  eq isUnknown(const(val(false))) = false .
  eq isUnknown(const(unknown)) = true .
 
-endm
+  *** Auxiliary partial boolean evaluation function
+  op bEval : Expression Config ~> Bool .
+  ceq bEval(E,Cfg) = B:Bool
+  if val(B:Bool) := expToVal(eval(getEnvironment(Cfg),getNodes(Cfg),E))
+  .
+
+endfm

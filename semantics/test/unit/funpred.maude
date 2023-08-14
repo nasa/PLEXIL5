@@ -1,0 +1,76 @@
+mod TEST--FUNPRED is
+
+pr FUNPRED .
+pr TEST-BASE .
+
+op test--funpred : -> TestResults .
+eq test--funpred =
+begin tests
+
+  assert "getCommandId 1" from
+    anIdentifier(
+      getCommandId(
+        'A . 'B,
+        < 'A . 'B : command | command: 'ID / nilpar >
+        < 'A      : command | command: 'ID2 / nilpar >
+        < 'B      : command | command: 'ID3 / nilpar >,
+        none
+      )
+    )
+  reaches
+    anIdentifier(
+      'ID
+    )
+  end
+
+  assert "getCommandId 2" from
+    anIdentifier(
+      getCommandId(
+        'A . 'B,
+        < 'A . 'B : command | command: 'ID  / nilpar / 'T >
+        < 'A      : command | command: 'ID2 / nilpar / 'T >
+        < 'B      : command | command: 'ID3 / nilpar / 'T >,
+        none
+      )
+    )
+  reaches
+    anIdentifier(
+      'ID
+    )
+  end
+
+  assert "getCommandId 3" from
+    anIdentifier(
+      getCommandId(
+        'A . 'B
+        ,
+        < 'A . 'B : command | command: cmdId(var('C . 'A . 'B))  / nilpar >
+        ,
+        < 'C . 'A . 'B : memory | actVal: val("bar foo") >
+      )
+    )
+  reaches
+    anIdentifier(
+      'bar`foo
+    )
+  end
+
+  assert "getCommandId 4" from
+    anIdentifier(
+      getCommandId(
+        'A . 'B
+        ,
+        < 'A . 'B : command | command: cmdId(var('C . 'A . 'B))  / nilpar / 'T >
+        ,
+        < 'C . 'A . 'B : memory | actVal: val("foo") >
+      )
+    )
+  reaches
+    anIdentifier(
+      'foo
+    )
+  end
+
+end tests
+.
+endm

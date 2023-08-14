@@ -1,0 +1,8 @@
+fmod GENERATOR{X :: TRIV} is
+  pr INPUTS-SET .
+  sort Generator{X} .
+
+  op isConsumed? : Generator{X} X$Elt ~> Bool .
+  op generate    : Generator{X} X$Elt ~> InputsSet .
+  op update      : Generator{X} X$Elt Inputs ~> Generator{X} .
+endfm

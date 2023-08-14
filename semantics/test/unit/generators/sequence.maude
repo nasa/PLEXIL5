@@ -1,0 +1,57 @@
+mod TEST--GENERATORS--SEQUENCE is
+  protecting TEST-BASE .
+
+  op test--generators--sequence : -> TestResults .
+  ceq test--generators--sequence =
+begin tests
+
+  assert "generate sequence empty" from
+    anInputsSet(
+      generate(sequence(nilEInputsList),mtsoup)
+    )
+  reaches
+    anInputsSet(
+      empty
+    )
+  end
+
+  assert "generate sequence non-empty" from
+    anInputsSet(
+      generate(sequence(A B # C D),mtsoup)
+    )
+  reaches
+    anInputsSet(
+      A B
+    )
+  end
+
+  assert "update sequence" from
+    aGenerator(
+      update(sequence(nilEInputsList),mtsoup, C D)
+    )
+  reaches
+    aGenerator(
+      sequence(nilEInputsList)
+    )
+  end
+
+  assert "update sequence" from
+    aGenerator(
+      update(sequence(A B # C D),mtsoup, B)
+    )
+  reaches
+    aGenerator(
+      sequence(C D)
+    )
+  end
+
+end tests
+  if A := stateLookup('a,nilarg, val(true))
+  /\ B := stateLookup('b,nilarg, val(true))
+  /\ C := stateLookup('c,nilarg, val(true))
+  /\ D := stateLookup('d,nilarg, val(true))
+  .
+
+  vars A B C D : StateInput .
+
+endm

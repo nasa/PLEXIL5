@@ -8,23 +8,27 @@ in identifiers.maude
 in values.maude
 in expressions.maude
 in commands.maude
+in status.maude
+in timepoint.maude
+in outcome.maude
+in extended-expression.maude
 in nodes.maude
 in environment.maude
 in declarations.maude
 in action.maude
 in traces.maude
-in generator.maude
-in system.maude
+in system/interface.maude
+in generators/interface.maude
+in system/top.maude
 in defs.maude
 in plexil.maude
 in runtime.maude
 in evaluation.maude
 in funpred.maude
-in compiler.maude
-in syncred.maude
-in atomic.maude
 in interface.maude
-in reductions.maude
+in reductions/top.maude
+in generators/top.maude
+in compiler.maude
 
 mod PLEXILITE is
   pr PLEXIL .
@@ -32,6 +36,7 @@ mod PLEXILITE is
   pr RUNTIME .
   pr INTERFACE .
   pr REDUCTIONS .
+  pr BASIC-GENERATORS .
 endm
 
 in model-checker.maude
@@ -63,6 +68,22 @@ mod PLEXILITE-PREDS is
 
 
   *** Predicates ****************************************
+
+  op hasCmdHandle? : NeQualified CommandHandle -> Prop [ctor] .
+  eq ( Op | [ interface : < NQ : command-on-execution | handle: just(CmdHandle) , AtS > NdS ] Conf)
+    |= hasCmdHandle?(NQ,CmdHandle)
+    = true .
+
+  op hasNoCmdHandle? : NeQualified -> Prop [ctor] .
+  eq ( Op | [ interface : < NQ : command-on-execution | handle: nothing, AtS > NdS ] Conf)
+    |= hasNoCmdHandle?(NQ)
+    = true .
+  eq ( Op | [ interface : < NQ : command-on-execution | handle: just(CmdHandle), AtS > NdS ] Conf)
+    |= hasNoCmdHandle?(NQ)
+    = false .
+  eq ( Op | [ interface : NdS ] Conf)
+    |= hasNoCmdHandle?(NQ)
+    = true [owise] .
 
   op commandIsExecuting : Identifier -> Prop .
   eq ( Op | [ nodes : < Q : command | status: executing, AtS' > NdS' ]
@@ -96,6 +117,15 @@ mod PLEXILITE-PREDS is
     = V == val(false)
   if V := expToVal(eval(ENV, MEM IFACE,E)) .
 
+  op isUnknown? : Expression -> Prop .
+  ceq [propIsUnknown] : ( Op | [ memory : MEM ] [ interface : IFACE ] [ environment : ENV ] Conf)
+    |= isUnknown?(E)
+    = V == unknown
+    if V := expToVal(eval(ENV, MEM IFACE,E)) .
+
+  op isKnown? : Expression -> Prop .
+  eq isKnown?(E) = ~ isUnknown?(E) .
+
 
   *** TODO: Enforce assumptions or change property
   ***   Assumptions:
@@ -112,6 +142,7 @@ mod PLEXILITE-PREDS is
 
   vars AtS AtS'     : AttributeSet .
   vars C            : Cid .
+  vars CmdHandle    : CommandHandle .
   vars Conf         : Config .
   vars GAMMA GAMMA' : Environment .
   vars Id           : Identifier .
@@ -119,6 +150,7 @@ mod PLEXILITE-PREDS is
   vars Op           : Operation .
   vars P            : Prop .
   vars Q            : Qualified .
+  vars NQ           : NeQualified .
   vars S            : Status .
   vars St           : State .
   vars V            : Value .
@@ -141,9 +173,9 @@ mod PLEXILITE-PREDS is
       eq extractInterfaceHistory((nil).TransitionList) = nilEInputsList .
       eq extractInterfaceHistory(({St,RN} TransList)) = extractInterfaceHistory'(St) # extractInterfaceHistory(TransList) .
 
-        op extractInterfaceHistory' : State -> ExternalInputs .
+        op extractInterfaceHistory' : State -> Inputs .
         eq extractInterfaceHistory'(Op | [ interface-history : EInput ] Conf) = EInput .
-        eq extractInterfaceHistory'(Op | Conf) = noExternalInputs [owise] .
+        eq extractInterfaceHistory'(Op | Conf) = noInputs [owise] .
 
   sort CustomModelCheckResultEI .
   subsort Bool < CustomModelCheckResultEI .
@@ -153,32 +185,33 @@ mod PLEXILITE-PREDS is
 
   sorts EnvInput TransitionCounterexample .
   subsort EnvInput < TransitionCounterexample < CustomModelCheckResultEI .
-  op Input : ExternalInputs -> EnvInput [ctor format (y! o)] .
+  op Input : Inputs -> EnvInput [ctor format (y! o)] .
   op Loop{_} : TransitionCounterexample -> EnvInput [ctor format (nr! o+ ni n-i o)] .
-  op NoTransitionCounterexample : -> TransitionCounterexample .
-  op _-->_ : TransitionCounterexample TransitionCounterexample -> TransitionCounterexample [assoc format (ny! no g o) id: NoTransitionCounterexample] .
+  op NoTransitions : -> TransitionCounterexample .
+  op _-->_ : TransitionCounterexample TransitionCounterexample -> TransitionCounterexample [assoc format (ny! no g o) id: NoTransitions] .
 
   op customModelCheck : State Formula CounterexamplesTypes -> CustomModelCheckResultEI .
   eq customModelCheck(St,F,transitionCounterexample) = customModelCheckEI(St,F) .
 
   op customModelCheckEI : State Formula ~> CustomModelCheckResult .
-  eq customModelCheckEI(St,F) = customModelCheckEI'(modelCheck(St,F)) .
+  eq customModelCheckEI(St,F) = prettyPrintWithInputsOnly(modelCheck(St,F)) .
 
-    op customModelCheckEI' : ModelCheckResult ~> CustomModelCheckResultEI .
-    eq customModelCheckEI'(true) = true .
-    eq customModelCheckEI'(false) = false .
-    eq customModelCheckEI'(counterexample(TS1,TS2))
+    op prettyPrintWithInputsOnly : ModelCheckResult ~> CustomModelCheckResultEI .
+    eq prettyPrintWithInputsOnly(true) = true .
+    eq prettyPrintWithInputsOnly(false) = false .
+    eq prettyPrintWithInputsOnly(counterexample(TS1,TS2))
     = extractInterfaceHistoryEI(TS1) --> Loop{extractInterfaceHistoryEI(TS2)} .
 
       op extractInterfaceHistoryEI : TransitionList -> TransitionCounterexample .
-      eq extractInterfaceHistoryEI((nil).TransitionList) = NoTransitionCounterexample .
+      eq extractInterfaceHistoryEI((nil).TransitionList) = NoTransitions .
       eq extractInterfaceHistoryEI(({St,RN} TransList)) = extractInterfaceHistoryEI'(St) --> extractInterfaceHistoryEI(TransList) .
 
         op extractInterfaceHistoryEI' : State -> EnvInput .
-        eq extractInterfaceHistoryEI'(Op | [ interface-history : EInput ] Conf) = Input(EInput) .
-        eq extractInterfaceHistoryEI'(Op | Conf) = Input(noExternalInputs) [owise] .
+        eq extractInterfaceHistoryEI'(Op | [ interface-history : EInput # EINS ] Conf) = Input(EInput) .
+        eq extractInterfaceHistoryEI'(Op | Conf) = Input(noInputs) [owise] .
 
-  vars EInput : ExternalInputs .
+  vars EInput : Inputs .
+  vars EINS : EInputsList .
   vars F : Formula .
   vars McR : ModelCheckResult .
   vars RN : RuleName .
