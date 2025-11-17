@@ -1,0 +1,48 @@
+default:
+  image: plexil-6-base:latest
+
+before_script:
+  - git submodule update --init --recursive
+  - cd $PLEXIL_HOME && (diff -s <(git -C $CI_PROJECT_DIR rev-parse HEAD:plexil) <(git rev-parse HEAD) && echo "The PLEXIL versions of the container and the repository match.") || exit 1
+  - cd $CI_PROJECT_DIR/plexil2maude
+  - cabal v2-install --overwrite-policy=always
+  - cd $CI_PROJECT_DIR/plexilog
+  - cabal v2-install --overwrite-policy=always
+
+stages:
+  - test
+
+plexil2maude_tests:
+  stage: test
+  script:
+    - cd $CI_PROJECT_DIR/plexil2maude
+    - cabal new-run test -- --hide-successes --ansi-tricks=false
+
+semantics_unit_tests:
+  stage: test
+  script:
+    - cd $CI_PROJECT_DIR/semantics
+    - ./runTests.sh --check
+
+semantics_acceptance_tests:
+  stage: test
+  script:
+    - export PATH=/plexil/scripts:/plexil/bin:$PATH:~/.cabal/bin
+    - cd $CI_PROJECT_DIR/semantics
+    - ./runAT.sh --check
+  artifacts:
+    when: always
+    paths:
+      - $CI_PROJECT_DIR/test/icarous/ci/*
+    expire_in: 2 days
+
+semantics_regression_tests:
+  stage: test
+  script:
+    - export PATH=/plexil/scripts:/plexil/bin:$PATH:~/.cabal/bin
+    - cd $CI_PROJECT_DIR/semantics/test/regression
+    - python3 runRegression.py -p
+
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'

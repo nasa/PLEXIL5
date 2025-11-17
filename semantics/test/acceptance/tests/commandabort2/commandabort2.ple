@@ -1,0 +1,21 @@
+/*
+ * name: commandabort2
+ *
+ * description: This plan showcases if the PLEXIL executor forces a new MACRO step
+ *              after a command is requested to abort or not (EXECUTING -> FAILING).
+ */
+
+Boolean Command cmd_name;
+
+commandabort2: Concurrence
+{
+  Integer i = 0;
+  {
+    Invariant false;
+    cmd_name();
+  }
+  Sequence {
+    {}
+    {}
+  }
+}

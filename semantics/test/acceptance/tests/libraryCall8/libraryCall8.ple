@@ -1,0 +1,11 @@
+LibraryNode library1 (InOut Integer number1);
+
+/*
+ * Two nested library calls
+ */
+libraryCall8: CheckedSequence
+{
+   Integer myNumber = 1;
+   EndCondition myNumber == 2;
+   LibraryCall library1 (number1=myNumber);
+}

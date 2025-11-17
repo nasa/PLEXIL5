@@ -1,0 +1,8 @@
+/*
+ * Default variable initialization for String.
+ */
+variableInitialization0:
+{
+  String name;
+  StartCondition !isKnown(name);
+}

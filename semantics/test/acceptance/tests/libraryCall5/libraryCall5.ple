@@ -1,0 +1,12 @@
+LibraryNode theLibrary (InOut Integer number);
+/*
+ * Library call with one input/output (InOut) argument from a parent variable
+ */
+libraryCall5:
+{
+   Integer myNumber = 1;
+   EndCondition myNumber == 2;
+   theLibraryCall: {
+      LibraryCall theLibrary (number=myNumber);
+   }
+}

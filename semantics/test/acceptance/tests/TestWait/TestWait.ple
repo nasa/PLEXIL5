@@ -1,0 +1,5 @@
+TestWait:
+{
+  Wait 1;
+  Wait 5.0, 0.1;
+}

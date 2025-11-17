@@ -1,0 +1,184 @@
+fmod PURE-CONFIGURATION is
+  sorts Attribute AttributeSet .
+  sorts Oid Cid Object Configuration .
+  subsorts Attribute < AttributeSet .
+  subsorts Object < Configuration .
+  op none : -> AttributeSet [ctor] .
+  op _`,_ : AttributeSet AttributeSet -> AttributeSet [assoc comm id: none ctor] .
+  op <_:_|_> : Oid Cid AttributeSet -> Object [format (ni d d d d d d d) obj ctor] .
+  op none : -> Configuration [ctor] .
+  op __ : Configuration Configuration -> Configuration [assoc comm config id: none ctor] .
+endfm
+
+fmod NODE is
+ pr PURE-CONFIGURATION .
+ pr QUALIFIED .
+ pr STATUS .
+ pr TIMEPOINTS .
+ pr OUTCOME .
+ pr COMMAND .
+ pr COMMAND-ABORT .
+ pr COMMANDINFO .
+ pr LIBRARY .
+ pr UPDATE .
+ pr EXTENDED-EXPRESSION .
+ pr RAT .
+ pr MAYBE{CommandHandle} .
+
+ subsort NeQualified < Oid .
+ sort NodeType .
+ subsort NodeType < Cid .
+ ops list command retCommand assignment empty update library command-on-execution update-on-execution : -> NodeType .
+ op memory            : -> NodeType .
+ op memory-forwarding : -> NodeType .
+
+ op callee:_     : Identifier -> Attribute [ctor gather (&)] .
+ op parameters:_ : Identifiers -> Attribute [ctor gather (&)] .
+ op arguments:_  : Parameters -> Attribute [ctor gather (&)] .
+ op target:_     : Qualified  -> Attribute [ctor gather (&)] .
+
+
+ sort DeclarationType .
+ subsort DeclarationType < Cid .
+ ops commandDeclaration stateDeclaration : -> DeclarationType .
+
+ op status:_         : Status -> Attribute [ctor gather (&) format (u o o)] .
+ op outcome:_        : Outcome -> Attribute [ctor gather (&)] .
+ op command:_        : Command -> Attribute [ctor gather (&)] .
+ op qid:_            : Qualified -> Attribute [ctor gather (&)] .
+ op extVar:_         : Qualified -> Attribute [ctor gather (&)] .
+ op locVar:_         : Qualified -> Attribute [ctor gather (&)] .
+ op _:=_             : AssignmentTarget Expression -> Attribute [ctor] .
+ op active:_         : Bool -> Attribute [ctor gather (&)] .
+ op initVal:_        : Value -> Attribute [ctor gather (&)] .
+ op actVal:_         : Value -> Attribute [ctor gather (&)] .
+ op prevVal:_        : Value -> Attribute [ctor gather (&)] .
+ op node:_           : Expression -> Attribute [ctor gather (&)] .
+ op threshold:_      : Value -> Attribute [ctor gather (&)] .
+ op fromrepeat:_     : Bool -> Attribute [ctor gather (&)] .
+ op arguments:_      : Arguments -> Attribute [ctor gather (&)] .
+ op handle:_         : Maybe{CommandHandle} -> Attribute [ctor gather (&)] .
+ op value:_          : Nat -> Attribute [ctor gather (&)] .
+ op returnVariable:_ : Maybe{NeQualified} -> Attribute [ctor gather (&)] .
+ op abort:_          : CommandAbort -> Attribute [ctor gather (&)] .
+ op timepoints:_     : Timepoints -> Attribute [ctor gather (&)] .
+ op ack:_            : Ack        -> Attribute [ctor gather (&)] .
+ op pairs:_          : List{Pair{Qid,Expression}} -> Attribute [ctor gather (&)] .
+
+*** Body conditions
+ op repeatc:_       : Expression -> Attribute [ctor gather (&)] .
+ op startc:_        : Expression -> Attribute [ctor gather (&)] .
+ op endc:_          : Expression -> Attribute [ctor gather (&)] .
+ op exitc:_         : Expression -> Attribute [ctor gather (&)] .
+ op post:_          : Expression -> Attribute [ctor gather (&)] .
+ op skip:_          : Expression -> Attribute [ctor gather (&)] .
+ op pre:_           : Expression -> Attribute [ctor gather (&)] .
+ op inv:_           : Expression -> Attribute [ctor gather (&)] .
+ op suspended:_     : Bool -> Attribute [ctor gather (&)] .
+
+  *** Interface attributes elements
+  op name:_       : Identifier       -> Attribute .
+  op return:_     : Identifier       -> Attribute .
+
+ op getRepeatCondition : AttributeSet -> Expression .
+ eq getRepeatCondition(repeatc: E:Expression , As:AttributeSet) = E:Expression .
+
+
+  op defaultConditionAttributes : NodeType -> AttributeSet .
+  eq defaultConditionAttributes(NTy)
+    = endc: default,
+      exitc: default,
+      inv: default,
+      post: default,
+      pre: default,
+      repeatc: default,
+      skip: default,
+      startc: default
+  .
+
+  var NTy : NodeType .
+  var repeatC : Expression .
+
+  op defaultAttributes : NodeType Expression -> AttributeSet .
+  eq defaultAttributes(NTy, repeatC)
+    = defaultInternalAttributes,
+      defaultConditionAttributes(NTy)
+  .
+
+  op defaultInternalAttributes : -> AttributeSet .
+  eq defaultInternalAttributes =
+    status: statusdef,
+    outcome: outcomedef,
+    active: true,
+    suspended: false,
+    timepoints: defaultTimepoints
+  .
+
+  op defaultAttributeEnrichments : NeQualified NodeType AttributeSet -> AttributeSet .
+  eq defaultAttributeEnrichments(NQ, update, (endc: E, AtS))
+    =
+    endc: E and hasRcvAck?(NQ),
+    defaultAttributeEnrichments(NQ, update, AtS) .
+  eq defaultAttributeEnrichments(NQ, command, (endc: E, AtS))
+    =
+    endc: E or
+              (cmdHandleIs?(NQ, CommandDenied)
+              or
+              cmdHandleIs?(NQ, CommandFailed)),
+    defaultAttributeEnrichments(NQ, command, AtS) .
+  eq defaultAttributeEnrichments(NQ, NTy, AtS)
+    = AtS [owise] .
+
+ vars AtS AtS' : AttributeSet .
+ vars E E' : Expression .
+ vars R R' : Rat .
+ vars NQ : NeQualified .
+
+
+*** Attribute manipulation ***
+
+op getAttribute : Attribute -> Expression .
+eq getAttribute(repeatc: E) = E .
+eq getAttribute(startc:  E) = E .
+eq getAttribute(endc:    E) = E .
+eq getAttribute(exitc:   E) = E .
+eq getAttribute(post:    E) = E .
+eq getAttribute(skip:    E) = E .
+eq getAttribute(pre:     E) = E .
+eq getAttribute(inv:     E) = E .
+
+op replaceAttribute : Attribute Expression -> Attribute .
+eq replaceAttribute(repeatc: E, E') = repeatc: E' .
+eq replaceAttribute(startc:  E, E') = startc:  E' .
+eq replaceAttribute(endc:    E, E') = endc:    E' .
+eq replaceAttribute(exitc:   E, E') = exitc:   E' .
+eq replaceAttribute(post:    E, E') = post:    E' .
+eq replaceAttribute(skip:    E, E') = skip:    E' .
+eq replaceAttribute(pre:     E, E') = pre:     E' .
+eq replaceAttribute(inv:     E, E') = inv:     E' .
+
+
+ op _/_ : AttributeSet AttributeSet -> [AttributeSet] [prec 80] .
+ eq (repeatc: E,  AtS) / (repeatc: E',  AtS') = (repeatc: E',  AtS) / AtS' .
+ eq (startc: E,   AtS) / (startc: E',   AtS') = (startc: E',   AtS) / AtS' .
+ eq (endc: E,     AtS) / (endc: E',     AtS') = (endc: E',     AtS) / AtS' .
+ eq (exitc: E,    AtS) / (exitc: E',    AtS') = (exitc: E',    AtS) / AtS' .
+ eq (post: E,     AtS) / (post: E',     AtS') = (post: E',     AtS) / AtS' .
+ eq (skip: E,     AtS) / (skip: E',     AtS') = (skip: E',     AtS) / AtS' .
+ eq (pre: E,      AtS) / (pre: E',      AtS') = (pre: E',      AtS) / AtS' .
+ eq (inv: E,      AtS) / (inv: E',      AtS') = (inv: E',      AtS) / AtS' .
+ eq AtS / (repeatc: E',  AtS') = (repeatc: E',  AtS) / AtS' [owise] .
+ eq AtS / (startc: E',   AtS') = (startc: E',   AtS) / AtS' [owise] .
+ eq AtS / (endc: E',     AtS') = (endc: E',     AtS) / AtS' [owise] .
+ eq AtS / (exitc: E',    AtS') = (exitc: E',    AtS) / AtS' [owise] .
+ eq AtS / (post: E',     AtS') = (post: E',     AtS) / AtS' [owise] .
+ eq AtS / (skip: E',     AtS') = (skip: E',     AtS) / AtS' [owise] .
+ eq AtS / (pre: E',      AtS') = (pre: E',      AtS) / AtS' [owise] .
+ eq AtS / (inv: E',      AtS') = (inv: E',      AtS) / AtS' [owise] .
+ eq AtS / none = AtS .
+
+ *** Processes TODO: Try to remove
+ sort Nodes .
+ op `[_`]          : Configuration -> Nodes .
+
+endfm

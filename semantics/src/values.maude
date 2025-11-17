@@ -1,0 +1,146 @@
+fmod PRIMITIVE-VALUE is
+  protecting INT .
+  protecting FLOAT .
+  protecting STRING .
+  sort PrimitiveValue .
+  sorts   IntValue BoolValue FloatValue StringValue .
+  subsort IntValue BoolValue FloatValue StringValue < PrimitiveValue .
+
+  sort Value .
+  subsort PrimitiveValue < Value .
+
+  op val : Int    -> IntValue .
+  op val : Bool   -> BoolValue .
+  op val : Float  -> FloatValue .
+  op val : String -> StringValue .
+
+  op unknown  : -> PrimitiveValue .
+
+  op isUnknown? : Value -> Bool .
+  eq isUnknown?(unknown) = true .
+  eq isUnknown?(V:Value) = false [owise] .
+endfm
+
+view PrimitiveValue from TRIV to PRIMITIVE-VALUE is
+  sort Elt to PrimitiveValue .
+endv
+
+fmod VALUE is
+  protecting PRIMITIVE-VALUE .
+  protecting CONVERSION .
+  protecting QUALIFIED .
+
+  op varForwarding : NeQualified -> Value [ctor] .
+
+  sort ArrayValue .
+  subsort ArrayValue < Value .
+
+  sort PrimitiveArray .
+  subsort PrimitiveValue < PrimitiveArray .
+  op mtPrimitiveArray : -> PrimitiveArray [ctor] .
+  op _#_ : PrimitiveArray PrimitiveArray -> PrimitiveArray [ctor assoc] .
+
+  op array : PrimitiveArray     -> ArrayValue .
+
+  op length : ArrayValue -> Nat .
+  eq length(array(Arr)) = length(Arr) .
+
+  op length : PrimitiveArray -> Nat .
+  eq length(mtPrimitiveArray) = 0 .
+  eq length(PV) = 1 .
+  eq length(PV # PArr) = s(length(PArr)) .
+
+  op unknownArray : Nat -> ArrayValue .
+  eq unknownArray(N) = array(unknownArrayHelper(N)) .
+     op unknownArrayHelper : Nat -> PrimitiveArray .
+     eq unknownArrayHelper(0) = mtPrimitiveArray .
+     eq unknownArrayHelper(1) = unknown .
+     eq unknownArrayHelper(s N) = unknown # unknownArrayHelper(N) .
+
+  eq unknownFloatArray(N) = unknownArray(N) .
+  op unknownRealArray : Nat -> ArrayValue .
+  eq unknownRealArray(N) = unknownArray(N) .
+  op unknownIntArray : Nat -> ArrayValue .
+  eq unknownIntArray(N) = unknownArray(N) .
+  op unknownBoolArray : Nat -> ArrayValue .
+  eq unknownBoolArray(N) = unknownArray(N) .
+  op unknownStringArray : Nat -> ArrayValue .
+  eq unknownStringArray(N) = unknownArray(N) .
+  op unknownFloatArray : Nat -> ArrayValue .
+
+  op createArray : Nat ArrayValue -> ArrayValue .
+  eq createArray(N,array(PArr)) = createArray(N,PArr) .
+
+  op createArray : Nat PrimitiveArray -> ArrayValue .
+  eq createArray(0,PArr) = array(mtPrimitiveArray) .
+  eq createArray(N,mtPrimitiveArray) = unknownArray(N) .
+  eq createArray(N,PArr) = if length(PArr) == N
+                             then array(createArrayHelper(N,PArr))
+                             else array(createArrayHelperWithFill(N,PArr))
+                           fi .
+    op createArrayHelper : Nat PrimitiveArray -> PrimitiveArray .
+    eq createArrayHelper(0,PArr) = mtPrimitiveArray .
+    eq createArrayHelper(1,PV) = PV .
+    eq createArrayHelper(1,PV # mtPrimitiveArray) = PV .
+    eq createArrayHelper(s N,PV # PArr) = PV # createArrayHelper(N,PArr) .
+    op createArrayHelperWithFill : Nat PrimitiveArray -> PrimitiveArray .
+    eq createArrayHelperWithFill(0,PArr) = mtPrimitiveArray .
+    eq createArrayHelperWithFill(1,PV) = PV .
+    eq createArrayHelperWithFill(1,mtPrimitiveArray) = unknown .
+    eq createArrayHelperWithFill(1,PV # mtPrimitiveArray) = PV .
+    eq createArrayHelperWithFill(1,PV # PArr) = PV .
+    eq createArrayHelperWithFill(s N,mtPrimitiveArray) = unknown # createArrayHelperWithFill(N,mtPrimitiveArray) .
+    eq createArrayHelperWithFill(s N,PV) = PV # createArrayHelperWithFill(N,mtPrimitiveArray).
+    eq createArrayHelperWithFill(s N,PV # PArr) = PV # createArrayHelperWithFill(N,PArr).
+
+
+  vars FV FV'     : FloatValue .
+  vars SV SV'     : StringValue .
+  vars BV BV'     : BoolValue .
+  vars IV IV'     : IntValue .
+  vars PV PV'     : PrimitiveValue .
+  vars PArr PArr' : PrimitiveArray .
+  vars N N'       : Nat .
+  vars Nz Nz'     : NzNat .
+  vars I I'       : Int .
+  vars Arr        : ArrayValue .
+
+  op assign : PrimitiveArray PrimitiveArray -> ArrayValue .
+  eq assign(mtPrimitiveArray, PArr) = array(mtPrimitiveArray) .
+  eq assign(PArr, PArr') = array(createArrayHelperWithFill(length(PArr),PArr')) .
+
+  op updateArray : ArrayValue Nat PrimitiveValue -> ArrayValue .
+  eq updateArray(array(PArr),N,FV) = array(updatePrimitiveArray(PArr,N,FV)) .
+  eq updateArray(array(PArr),N,val(I)) = array(updatePrimitiveArray(PArr,N,val(float(I)))) .
+  eq updateArray(array(PArr),N,PV) = array(updatePrimitiveArray(PArr,N,PV)) [owise] .
+
+  op updatePrimitiveArray : PrimitiveArray Nat FloatValue -> PrimitiveArray .
+  eq updatePrimitiveArray(FV,0, FV') = FV' .
+  eq updatePrimitiveArray(FV # PArr, s N, FV') = FV  # updatePrimitiveArray(PArr, N, FV') .
+  eq updatePrimitiveArray(FV # PArr,   0, FV') = FV' # PArr .
+
+  op updatePrimitiveArray : PrimitiveArray Nat PrimitiveValue -> PrimitiveArray .
+  eq updatePrimitiveArray(PV,0, PV') = PV' .
+  eq updatePrimitiveArray(PV # PArr, s N, PV') = PV  # updatePrimitiveArray(PArr, N, PV') .
+  eq updatePrimitiveArray(PV # PArr,   0, PV') = PV' # PArr .
+
+  op nth : ArrayValue Int -> PrimitiveValue .
+  eq nth(Arr,I) = nth'(Arr,abs(I)) .
+  op nth' : ArrayValue Nat -> PrimitiveValue .
+
+  eq nth'(array(mtPrimitiveArray),N) = unknown .
+  eq nth'(array(PV),0) = PV .
+  eq nth'(array(PV),s N) = unknown .
+  eq nth'(array(PV # PArr),0) = PV .
+  eq nth'(array(PV # PArr),s N) = nth'(array(PArr),N) .
+
+endfm
+
+view Value from TRIV to VALUE is
+ sort Elt to Value .
+endv
+
+fmod ARGUMENTS is
+ protecting LIST{Value} * ( sort List{Value} to Arguments ,
+                            op nil to nilarg ) .
+endfm

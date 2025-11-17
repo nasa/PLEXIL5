@@ -1,0 +1,13 @@
+initial-state {
+  state time           () = 0 : int;
+  state inConflict     () = true : bool;
+}
+
+script {
+  simultaneous {
+    state time           () = 1 : int;
+    state inConflict     () = false : bool;
+  }
+  state time           () = 2 : int;
+  state time           () = 3 : int;
+}

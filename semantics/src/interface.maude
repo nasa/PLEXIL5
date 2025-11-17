@@ -1,0 +1,172 @@
+fmod INTERFACE is
+  pr DEFS .
+
+  vars Cfg             : Config .
+  vars Env Env' AccEnv : Environment .
+  vars EInput EInput'  : Inputs .
+  vars EIns            : EInputsList .
+  vars NeEInput        : NeInputs .
+  vars CmdInput        : CommandInput .
+  vars V V' V''        : Value .
+  vars CmdId           : Identifier .
+  vars Cmds Cmds'      : Configuration .
+  vars MEM AccCmds     : Configuration .
+  vars NeQ             : NeQualified .
+  vars ExNds           : Configuration .
+  vars Hndl Hndl'      : CommandHandle .
+  vars Hndl?           : Maybe{CommandHandle} .
+  vars Args            : Arguments .
+  vars V?              : Maybe{Value} .
+  vars Q Q'            : Qualified .
+  vars AtS AtS'        : AttributeSet .
+  vars In              : Input .
+
+  var GEN : InputGenerator .
+
+  op updateInterface : Config Inputs -> Config .
+  eq updateInterface(
+      [ environment : Env ]
+      [ interface : Cmds ]
+      [ memory : MEM ]
+      Cfg,
+      EInput)
+    = [ environment : updateInternalEnvironment(Env, getLookups(EInput), mtenvironment) ]
+      [ interface : updateUpdateAcks(updateCommandInputs(Cmds, getCommandInputs(EInput)),EInput) ]
+      [ memory : updateCommandValues(Cmds,MEM, getCommandValues(EInput)) ]
+      Cfg
+  .
+
+  op updateInterfaceHistoryWithTracking : Config Inputs -> Config .
+  eq updateInterfaceHistoryWithTracking(Cfg,EInput) =
+     updateInterfaceHistory(updateInterface(Cfg,EInput),EInput)
+  .
+
+  op updateInterfaceHistoryWithoutTracking : Config Inputs -> Config .
+  eq updateInterfaceHistoryWithoutTracking(Cfg,EInput) =
+     setInterfaceHistory(updateInterface(Cfg,EInput),EInput)
+  .
+
+  op setInterfaceHistory : Config Inputs -> Config .
+  eq setInterfaceHistory(
+      [ interface-history : EIns ]
+      Cfg,
+      EInput )
+    = [ interface-history : EInput ]
+      Cfg .
+  eq setInterfaceHistory(Cfg,EInput) = [ interface-history : EInput ] Cfg [owise] .
+
+  op updateInterfaceHistory : Config Inputs -> Config .
+  eq updateInterfaceHistory(
+      [ interface-history : EIns ]
+      Cfg,
+      EInput )
+    = [ interface-history : EInput # EIns ]
+      Cfg .
+  eq updateInterfaceHistory(Cfg,EInput) = [ interface-history : EInput ] Cfg [owise] .
+
+  op getLookups : Inputs -> Inputs .
+  eq getLookups((EInput stateLookup(Q,Args,V))) = stateLookup(Q,Args,V) getLookups(EInput) .
+  eq getLookups(EInput) = noInputs [owise] .
+
+  op getCommandInputs : Inputs -> Inputs .
+  eq getCommandInputs((commandAck(CmdId,Args,Hndl) EInput)) = commandAck(CmdId,Args,Hndl) getCommandInputs(EInput) .
+  eq getCommandInputs((commandAbort(CmdId,Args,V) EInput)) = commandAbort(CmdId,Args,V) getCommandInputs(EInput) .
+  eq getCommandInputs(noInputs) = noInputs .
+  eq getCommandInputs((In EInput)) = getCommandInputs(EInput) [owise] .
+
+  op getCommandValues : Inputs -> Inputs .
+  eq getCommandValues(commandResult(CmdId,Args,V) EInput) = commandResult(CmdId,Args,V) getCommandValues(EInput) .
+  eq getCommandValues(EInput) = noInputs [owise] .
+
+  op updateInternalEnvironment : Environment Inputs Environment -> Environment .
+  eq updateInternalEnvironment(
+    ((Q(Args) : V)  , Env),
+    (stateLookup(Q,Args,V') EInput),
+    AccEnv
+  )
+  =
+    updateInternalEnvironment(Env, EInput, ((Q(Args) : V') , AccEnv))
+  .
+  eq updateInternalEnvironment(
+    (new(Q(Args) : V)  , Env),
+    (new(stateLookup(Q,Args,V')) EInput),
+    AccEnv
+  )
+  =
+    updateInternalEnvironment(Env, EInput, (new(Q(Args) : V') , AccEnv))
+  .
+  eq updateInternalEnvironment(
+    Env,
+    (new(stateLookup(Q,Args,V')) EInput),
+    AccEnv
+  )
+  =
+    updateInternalEnvironment(Env, EInput, (new(Q(Args) : V') , AccEnv))
+    [owise]
+  .
+  eq updateInternalEnvironment(
+    Env,
+    (stateLookup(Q,Args,V) EInput),
+    AccEnv
+  )
+  =
+    updateInternalEnvironment(Env, EInput, ((Q(Args) : V) , AccEnv))
+  [owise]
+  .
+  eq updateInternalEnvironment(Env, (CmdInput EInput), AccEnv) = updateInternalEnvironment(Env,EInput,AccEnv) .
+  eq updateInternalEnvironment(Env, noInputs, AccEnv) = Env , AccEnv .
+
+  --- TODO: Check the semantics to model if it is possible for two different commandAck that were supposed to be for different command instances to work on only one .
+  --- TODO: We assume this is deterministic .
+  op updateCommandHandles : Configuration Inputs -> Configuration .
+  eq updateCommandHandles(
+    < CmdId . Q : command-on-execution | arguments: Args, handle: Hndl?, AtS > Cmds,
+    (commandAck(CmdId, Args, Hndl') EInput)
+  )
+  =
+    < CmdId . Q : command-on-execution | arguments: Args, handle: just(Hndl'), AtS >
+    updateCommandHandles(Cmds,EInput)
+  .
+  eq updateCommandHandles(Cmds, (commandAck(CmdId, Args, Hndl') EInput)) = updateCommandHandles(Cmds, EInput) [owise] .
+  eq updateCommandHandles(Cmds,noInputs) = Cmds .
+
+  op updateCommandValues : Configuration Configuration Inputs -> Configuration .
+  eq updateCommandValues(
+    < CmdId . Q : command-on-execution | arguments: Args, returnVariable: just(Q'), AtS > Cmds,
+    < Q' : memory | actVal: V, prevVal: V', AtS' > MEM,
+    (commandResult(CmdId, Args, V'') EInput)
+  )
+  =
+    < Q' : memory | actVal: V'', prevVal: V, AtS' >
+    updateCommandValues(Cmds,MEM,EInput)
+  .
+  eq updateCommandValues(Cmds,MEM,noInputs) = MEM .
+  eq updateCommandValues(Cmds,MEM,EInput) = MEM [owise print "Could not match: " EInput " with any running command in " Cmds] .
+
+  op updateCommandInputs : Configuration Inputs -> Configuration .
+  eq updateCommandInputs( Cmds, (commandAck(CmdId, Args, Hndl') EInput))
+    = updateCommandHandles( Cmds, (commandAck(CmdId, Args, Hndl') EInput)) .
+  eq updateCommandInputs(
+    < CmdId . Q : command-on-execution | arguments: Args, abort: CommandAbortInvoked, AtS > Cmds,
+    (commandAbort(CmdId, Args, V) EInput)
+  )
+  =
+    < CmdId . Q : command-on-execution | arguments: Args, abort: CommandAbortComplete, AtS > .
+
+  eq updateCommandInputs(Cmds, (commandAbort(CmdId, Args, V) EInput)) = updateCommandInputs(Cmds, EInput) [owise] .
+  eq updateCommandInputs(Cmds, noInputs) = Cmds .
+  op updateUpdateAcks : Configuration Inputs ~> Configuration .
+  eq updateUpdateAcks(
+      < UId . Q : update-on-execution | ack: B, pairs: PAIRS, AtS > ExNds,
+      (updateAck(UId, B') EInput)
+  ) =
+      < UId . Q : update-on-execution | ack: B', pairs: PAIRS, AtS >
+      updateUpdateAcks(ExNds,EInput)
+  .
+  eq updateUpdateAcks(ExNds,noInputs) = ExNds .
+  eq updateUpdateAcks(ExNds,I:Input EInput) = ExNds [owise] .
+
+  vars UId : Identifier .
+  vars B B' : Bool .
+  vars PAIRS : List{Pair{Qid,Expression}} .
+endfm

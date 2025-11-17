@@ -1,0 +1,68 @@
+mod INPUT is
+  protecting PLEXIL-V .
+
+  op time : -> InputGenerator .
+  eq time = sequence(
+    noInputs
+    #
+    stateLookup('time,nilarg,val(0))
+    #
+    stateLookup('time,nilarg,val(122))
+    #
+    stateLookup('time,nilarg,val(500))
+    #
+    stateLookup('time,nilarg,val(510))
+    #
+    stateLookup('time,nilarg,val(520))
+    #
+    stateLookup('time,nilarg,val(1322))
+    #
+    stateLookup('time,nilarg,val(1323))
+    #
+    stateLookup('time,nilarg,val(1324))
+    #
+    stateLookup('time,nilarg,val(1326))
+    #
+    stateLookup('time,nilarg,val(1327))
+    #
+    stateLookup('time,nilarg,val(1328))
+    #
+    stateLookup('time,nilarg,val(1329))
+    #
+    stateLookup('time,nilarg,val(1350))
+    #
+    stateLookup('time,nilarg,val(1373))
+    #
+    stateLookup('time,nilarg,val(1394))
+    #
+    stateLookup('time,nilarg,val(1395))
+  ) .
+
+  op pointedAtTarget : -> InputGenerator .
+  eq pointedAtTarget = repeat((
+    stateLookup('PointedAtTarget,nilarg,val(true))
+    ,
+    stateLookup('PointedAtTarget,nilarg,val(false))
+  )) .
+
+  op cameraOn : -> InputGenerator .
+  eq cameraOn = repeat((
+    stateLookup('CameraOn,nilarg,val(true))
+    ,
+    stateLookup('CameraOn,nilarg,val(false))
+  )) .
+
+  op temperature : -> InputGenerator .
+  eq temperature = repeat((
+    stateLookup('Temperature,nilarg,val(80.0))
+    ,
+    stateLookup('Temperature,nilarg,val(101.0))
+  )) .
+
+  op command-ack-success : -> InputGenerator .
+  eq command-ack-success = command-ack(CommandSuccess) .
+
+  op input : -> InputGenerator .
+  eq input = time x ( command-ack-success x ( pointedAtTarget x ( cameraOn x temperature ) ) ) .
+
+endm

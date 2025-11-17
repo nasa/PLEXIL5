@@ -1,0 +1,78 @@
+--- Verification properties for TakeImage3 plan.
+
+mod M-CHECK is
+  protecting TakeImage3-PLAN .
+  protecting INPUT .
+  protecting PLEXIL-V .
+  including MODEL-CHECKER .
+
+  --- The plan executes.
+  op liveness1 : -> Prop .
+  eq [liveness1] :
+    liveness1 = O <> hasStatus('TakeImage3,executing) .
+
+  --- If the plan is executing, it eventually terminates
+  op liveness2 : -> Prop .
+  eq [liveness2] :
+    liveness2 =
+      O [] (hasStatus('TakeImage3,executing) -> <> hasStatus('TakeImage3,finished)) .
+
+  --- Start slew, then turn on camera, then take picture, then turn
+  --- off camera.  NOTE: not a realistic property, since the plan is
+  --- designed to possibly skip nodes. It passes with the deterministic
+  --- environment TakeImage3-script1, but fails as expected with the
+  --- non-deterministic environment Plan1-env1.
+  op liveness3 : -> Prop .
+  eq [liveness3] :
+    liveness3 =
+      O <> (hasStatus(('Slew . 'TakeImage3), executing) /\ <>
+	   (hasStatus(('Slew . 'TakeImage3), executing) U
+	    hasStatus(('CameraOn . 'TakeImage3), executing)) /\ <>
+	    (hasStatus(('Slew . 'TakeImage3), executing) U
+	     hasStatus(('Image . 'TakeImage3), executing)) /\ <>
+	     (hasStatus(('Image . 'TakeImage3), executing) U
+	      hasStatus(('CameraOff . 'TakeImage3), executing))) .
+
+  --- An image is not taken unless camera is powered on.
+  op safety1 : -> Prop .
+  eq [safety1] :
+    safety1 =
+      O [] (commandIsExecuting('camera_capture_image) ->
+         isTrue?(lookup('CameraOn, nilarg))) .
+
+  --- If the camera is powered on, it will be eventually be off.
+  op safety2 : -> Prop .
+  eq [safety2] :
+    safety2 =
+      O [] (commandIsExecuting('camera_power_on) ->
+         <> isFalse?(lookup('CameraOn, nilarg))) .
+
+--- An image is not taken unless the camera is pointed at target.
+  op safety3 : -> Prop .
+  eq [safety3] :
+    safety3 =
+      O [] (commandIsExecuting('camera_capture_image) ->
+         isTrue?(lookup('PointedAtTarget, nilarg))) .
+
+  --- Node CameraOn will eventually execute.  This property passes
+  --- with the deterministic environment TakeImage3-script1, but fails as
+  --- expected with the non-deterministic environment Plan1-env1.
+  op timepoint1 : -> Prop .
+  eq [timepoint1] :
+     timepoint1 = O <> isKnown?(timepoint('CameraOn . 'TakeImage3, executing, start)) .
+
+  --- If the CameraOn node runs, it does not start before Slew (if that ran).
+  op timepoint2 : -> Prop .
+  eq [timepoint2] :
+     timepoint2 = O [] ((isKnown?(timepoint('Slew, executing, start)) /\
+                         isKnown?(timepoint('CameraOn . 'TakeImage3, executing, start)))
+                        -> isTrue?(timepoint('CameraOn . 'TakeImage3, executing, start) >=
+                            timepoint('Slew . 'TakeImage3, executing, start))
+                      ) .
+
+--- End of properties.
+
+  op init : -> GlobalConfig .
+  eq [init] : init = run(compile(rootNode,input)) .
+
+endm

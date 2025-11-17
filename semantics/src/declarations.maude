@@ -1,0 +1,17 @@
+*** Local variable
+fmod LOCAL is
+ protecting VARIABLE-DECLARATION .
+ sort Local .
+ subsort Variable < Local .
+endfm
+
+view Local from TRIV to LOCAL is
+ sort Elt to Local .
+endv
+
+*** Local variables
+fmod LOCALDECLS is
+ protecting LIST{Local} * ( sort NeList{Local} to NeLocalDecls ,
+                            sort List{Local} to LocalDecls ,
+                            op nil to nilocdecl ) .
+endfm

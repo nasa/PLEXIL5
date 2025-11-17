@@ -1,0 +1,13 @@
+Boolean Command cmd1;
+Boolean Command cmd2;
+
+commandabort3: Concurrence
+{
+  cmd1: {
+    ExitCondition Lookup(time) == 1;
+    cmd1();
+  }
+  child: {
+    cmd2: cmd2();
+  }
+}

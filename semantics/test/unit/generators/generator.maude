@@ -1,0 +1,105 @@
+mod TEST--GENERATORS--GENERATOR is
+  protecting TEST-BASE .
+
+  op test--generators--generator--cardinality : -> TestResults .
+  eq test--generators--generator--cardinality =
+begin tests
+
+  assert "max' of two natural numbers returns the greatest" from
+    anExNat(
+      max'(5,1)
+    )
+  reaches
+    anExNat(
+      5
+    )
+  end
+
+  assert "max' of a natural number and infinity returns infinity" from
+    anExNat(
+      max'(infinity,5)
+    )
+  reaches
+    anExNat(
+      infinity
+    )
+  end
+
+  assert "max' of a natural number is commutative" from
+    anExNat(
+      max'(5,infinity)
+    )
+  reaches
+    anExNat(
+      max'(infinity,5)
+    )
+  end
+
+  assert "upperBound of two cardinalities with the same countPerStep is determined by the accumulated numberOfSteps" from
+    aCardinality(
+      upperBound(
+        Cardinality(countPerStep : 4 , numberOfSteps : 2),
+        Cardinality(countPerStep : 4 , numberOfSteps : 20)
+      )
+    )
+  reaches
+    aCardinality(
+      Cardinality(countPerStep : 4 , numberOfSteps : 22)
+    )
+  end
+
+  assert "upperBound of two cardinalities with the same finite numberOfSteps is determined by the maximum countPerStep" from
+    aCardinality(
+      upperBound(
+        Cardinality(countPerStep : 4 , numberOfSteps : 20),
+        Cardinality(countPerStep : 8 , numberOfSteps : 20)
+      )
+    )
+  reaches
+    aCardinality(
+      Cardinality(countPerStep : 8 , numberOfSteps : 40)
+    )
+  end
+
+  assert "upperBound of two cardinalities with different finite numberOfSteps and countPerStep accumulates the steps and takes the maximum count per step" from
+    aCardinality(
+      upperBound(
+        Cardinality(countPerStep : 9 , numberOfSteps : 20),
+        Cardinality(countPerStep : 8 , numberOfSteps : 100)
+      )
+    )
+  reaches
+    aCardinality(
+      Cardinality(countPerStep : 9 , numberOfSteps : 120)
+    )
+  end
+
+  assert "upperBound of two cardinalities with a finite and infinite numberOfSteps is determined by the infinite one" from
+    aCardinality(
+      upperBound(
+        Cardinality(countPerStep : 2 , numberOfSteps : infinity),
+        Cardinality(countPerStep : 8 , numberOfSteps : 100)
+      )
+    )
+  reaches
+    aCardinality(
+      Cardinality(countPerStep : 2 , numberOfSteps : infinity)
+    )
+  end
+
+  assert "upperBound of two cardinalities with infinite numberOfSteps is determined by the maximum countPerStep" from
+    aCardinality(
+      upperBound(
+        Cardinality(countPerStep : 2 , numberOfSteps : infinity),
+        Cardinality(countPerStep : 8 , numberOfSteps : infinity)
+      )
+    )
+  reaches
+    aCardinality(
+      Cardinality(countPerStep : 8 , numberOfSteps : infinity)
+    )
+  end
+
+end tests
+  .
+endm

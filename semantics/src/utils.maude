@@ -1,0 +1,7 @@
+fmod MAYBE{X :: TRIV} is
+  sort Maybe{X} .
+  op just : X$Elt -> Maybe{X} .
+  op nothing : -> Maybe{X} [ctor] .
+  op fromMaybe : Maybe{X} -> [X$Elt] .
+  eq fromMaybe(just(X:X$Elt)) = X:X$Elt .
+endfm

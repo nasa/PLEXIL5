@@ -1,0 +1,14 @@
+mod TEST--REDUCTIONS--SYNCRED is
+
+pr SYNC-REDUCTION .
+pr TEST-BASE .
+
+op test--reductions--syncred : -> TestResults .
+eq test--reductions--syncred =
+begin tests
+
+  noTest
+
+end tests
+.
+endm

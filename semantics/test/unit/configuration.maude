@@ -1,0 +1,114 @@
+mod TEST--CONFIGURATION is
+  protecting TEST-BASE .
+
+  op test--configuration : -> TestResults .
+  eq test--configuration =
+begin tests
+
+  assert "countObjects expressions without objects returns 0" from
+    testNat(
+      countObjects(
+        none
+      )
+    )
+  reaches
+    aNat(0)
+  end
+
+  assert "countObjects expressions without one object returns 1" from
+    testNat(
+      countObjects(
+        < 'A : memory | none >
+      )
+    )
+  reaches
+    aNat(1)
+  end
+
+  assert "countObjects expressions with different stuff returns the count of terms of the 'Object' sort" from
+    testNat(
+      countObjects(
+        < 'A : memory | none >
+        Stub{Object}
+        < 'B : list | none >
+      )
+    )
+  reaches
+    aNat(3)
+  end
+
+  assert "getObjectsByCid returns none if no object has the provided Cid" from
+    testConfiguration(
+      getObjectsByCid(
+        command,
+        < 'A : memory | none >
+        Stub{Object}
+        < 'B : list | none >
+      )
+    )
+  reaches
+    aConfiguration(none)
+  end
+
+  assert "getObjectsByCid returns the objects with the provided Cid" from
+    testConfiguration(
+      getObjectsByCid(
+        list,
+        < 'A : memory | none >
+        < 'B : list | none >
+        Stub{Object}
+        < 'C : list | none >
+      )
+    )
+  reaches
+    aConfiguration(
+      < 'B : list | none >
+      < 'C : list | none >
+    )
+  end
+
+  assert "filterObjectsByIdPrefix returns an object with the Id as an exact Id" from
+    testConfiguration(
+      filterObjectsByIdPrefix(
+        'A,
+        < 'A : memory | none >
+      )
+    )
+  reaches
+    aConfiguration(
+      < 'A : memory | none >
+    )
+  end
+
+
+  assert "filterObjectsByIdPrefix returns an object with the Id as a prefix of a longer Id" from
+    testConfiguration(
+      filterObjectsByIdPrefix(
+        'A,
+        < 'A . 'B . 'C : memory | none >
+      )
+    )
+  reaches
+    aConfiguration(
+      < 'A . 'B . 'C : memory | none >
+    )
+  end
+
+  assert "filterObjectsByIdPrefix returns no objecs without the Id as a prefix" from
+    testConfiguration(
+      filterObjectsByIdPrefix(
+        'A,
+        < 'B . 'A . 'C : memory | none >
+        Stub{Object}
+        < 'C  : memory | none >
+      )
+    )
+  reaches
+    aConfiguration(
+      none
+    )
+  end
+
+end tests .
+
+endm

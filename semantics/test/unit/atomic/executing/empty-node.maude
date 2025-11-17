@@ -1,0 +1,249 @@
+mod TEST--ATOMIC--EXECUTING--EMPTY-NODE is
+
+  pr TEST-BASE .
+
+
+  op tests--atomic--executing--empty-node : -> TestResults .
+
+  eq tests--atomic--executing--empty-node = begin tests
+
+    assert "Executing empty node follows path 1 (executing--empty--01)" from
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | inv: const(unknown),
+                              exitc: const(val(true)) >
+            < B . A : empty | status: executing,
+                              active: true,
+                              inv: const(unknown),
+                              post: const(unknown),
+                              endc: const(unknown),
+                              exitc: const(unknown) > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | inv: const(unknown),
+                              exitc: const(val(true)) >
+            < B . A : empty | status: executing,
+                              active: false,
+                              inv: const(unknown),
+                              post: const(unknown),
+                              endc: const(unknown),
+                              exitc: const(unknown) > ]
+        [ microacts : setOutcome(B . A,
+                      interrupted(parentExited)),
+                      setStatus(B . A,finished),
+                      logTransition(B . A, executing, finished, 1) ]
+        [ memory : none ]
+      )
+    end
+
+    assert "Executing empty node follows path 2 (executing--empty--02)" from
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | inv: const(unknown),
+                              exitc: const(unknown) >
+            < B . A : empty | status: executing,
+                              active: true,
+                              inv: const(unknown),
+                              post: const(unknown),
+                              endc: const(unknown),
+                              exitc: const(val(true)) > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | inv: const(unknown),
+                              exitc: const(unknown) >
+            < B . A : empty | status: executing,
+                              active: false,
+                              inv: const(unknown),
+                              post: const(unknown),
+                              endc: const(unknown),
+                              exitc: const(val(true)) > ]
+        [ microacts : setOutcome(B . A,interrupted(exited)),
+                      setStatus(B . A,iterationEnded),
+                      logTransition(B . A, executing, iterationEnded, 2) ]
+        [ memory : none ]
+      )
+    end
+
+    assert "Executing empty node follows path 3 (executing--empty--03)" from
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | inv: const(val(false)),
+                              exitc: const(unknown) >
+            < B . A : empty | status: executing,
+                              active: true,
+                              inv: const(unknown),
+                              post: const(unknown),
+                              endc: const(unknown),
+                              exitc: const(unknown) > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | inv: const(val(false)),
+                              exitc: const(unknown) >
+            < B . A : empty | status: executing,
+                              active: false,
+                              inv: const(unknown),
+                              post: const(unknown),
+                              endc: const(unknown),
+                              exitc: const(unknown) > ]
+        [ microacts : setOutcome(B . A,failure(parentFailed)),
+                      setStatus(B . A,finished),
+                      logTransition(B . A, executing, finished, 3) ]
+        [ memory : none ]
+      )
+    end
+
+    assert "Executing empty node follows path 4 (executing--empty--04)" from
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | inv: const(unknown),
+                              exitc: const(unknown) >
+            < B . A : empty | status: executing,
+                              active: true,
+                              inv: const(val(false)),
+                              post: const(unknown),
+                              endc: const(unknown),
+                              exitc: const(unknown) > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | inv: const(unknown),
+                              exitc: const(unknown) >
+            < B . A : empty | status: executing,
+                              active: false,
+                              inv: const(val(false)),
+                              post: const(unknown),
+                              endc: const(unknown),
+                              exitc: const(unknown) > ]
+        [ microacts : setOutcome(B . A,failure(invariantFailed)),
+                      setStatus(B . A,iterationEnded),
+                      logTransition(B . A, executing, iterationEnded, 4) ]
+        [ memory : none ]
+      )
+    end
+
+    assert "Executing empty node follows path 5 (executing--empty--05)" from
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | inv: const(unknown),
+                              exitc: const(unknown) >
+            < B . A : empty | status: executing,
+                              active: true,
+                              inv: const(unknown),
+                              post: const(unknown),
+                              endc: const(val(true)),
+                              exitc: const(unknown) > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | inv: const(unknown),
+                              exitc: const(unknown) >
+            < B . A : empty | status: executing,
+                              active: false,
+                              inv: const(unknown),
+                              post: const(unknown),
+                              endc: const(val(true)),
+                              exitc: const(unknown) > ]
+        [ microacts : setOutcome(B . A,failure(postconditionFailed)),
+                      setStatus(B . A,iterationEnded),
+                      logTransition(B . A, executing, iterationEnded, 5) ]
+        [ memory : none ]
+      )
+    end
+
+    assert "Executing empty node follows path 6 (executing--empty--06)" from
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | inv: const(unknown),
+                              exitc: const(unknown) >
+            < B . A : empty | status: executing,
+                              active: true,
+                              inv: const(unknown),
+                              post: const(val(true)),
+                              endc: const(val(true)),
+                              exitc: const(unknown) > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | inv: const(unknown),
+                              exitc: const(unknown) >
+            < B . A : empty | status: executing,
+                              active: false,
+                              inv: const(unknown),
+                              post: const(val(true)),
+                              endc: const(val(true)),
+                              exitc: const(unknown) > ]
+        [ microacts : setOutcome(B . A,success),
+                      setStatus(B . A,iterationEnded),
+                      logTransition(B . A, executing, iterationEnded, 6) ]
+        [ memory : none ]
+      )
+    end
+
+    assert "Executing empty node follows path 7 (executing--empty--07)" from
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | inv: const(unknown),
+                              exitc: const(unknown) >
+            < B . A : empty | status: executing,
+                              active: true,
+                              inv: const(unknown),
+                              post: const(unknown),
+                              endc: const(unknown),
+                              exitc: const(unknown) > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | inv: const(unknown),
+                              exitc: const(unknown) >
+            < B . A : empty | status: executing,
+                              active: false,
+                              inv: const(unknown),
+                              post: const(unknown),
+                              endc: const(unknown),
+                              exitc: const(unknown) > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+      )
+    end
+
+  end tests .
+
+endm

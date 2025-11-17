@@ -1,0 +1,36 @@
+load command-ack.maude
+load command-abort-ack.maude
+load filter.maude
+load generator.maude
+load if-then-else.maude
+load inputs-filter.maude
+load repeat.maude
+load sequence.maude
+load x.maude
+
+mod TEST--GENERATORS is
+  protecting TEST--GENERATORS--COMMAND-ACK .
+  protecting TEST--GENERATORS--COMMAND-ABORT-ACK .
+  protecting TEST--GENERATORS--FILTER .
+  protecting TEST--GENERATORS--GENERATOR .
+  protecting TEST--GENERATORS--IF-THEN-ELSE .
+  protecting TEST--GENERATORS--INPUTS-FILTER .
+  protecting TEST--GENERATORS--REPEAT .
+  protecting TEST--GENERATORS--SEQUENCE .
+  protecting TEST--GENERATORS--X .
+
+  op test--generators : -> TestResults .
+  eq test--generators =
+    AllTestsPassed
+    + test--generators--command-ack
+    + test--generators--command-abort-ack
+    + test--generators--filter
+    + test--generators--generator--cardinality
+    + test--generators--if-then-else
+    + test--generators--inputs-filter
+    + test--generators--repeat
+    + test--generators--sequence
+    + test--generators--x
+    .
+
+endm

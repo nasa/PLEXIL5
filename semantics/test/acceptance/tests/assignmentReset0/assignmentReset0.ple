@@ -1,0 +1,27 @@
+Command pprint(...);
+/*
+ * This example exercises the fact that variables are reset to their initial
+ * value when the execution of a node is repeated.
+ */
+assignmentReset0: Concurrence
+{
+  Integer i = 2;
+
+  loop: Concurrence {
+    Integer j = 10;
+
+    Repeat i > 0;
+
+    increment: j = j + 10;
+
+    decrement : i = i - 1;
+
+    print1: {
+      pprint("pre-assignment j: ", j);
+    }
+    print2: {
+      Start increment.state == EXECUTING;
+      pprint("post-assignment j: ", j);
+    }
+  }
+}

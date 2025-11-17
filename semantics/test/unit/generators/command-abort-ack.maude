@@ -1,0 +1,163 @@
+mod TEST--GENERATORS--COMMAND-ABORT-ACK is
+  protecting TEST-BASE .
+
+  op test--generators--command-abort-ack : -> TestResults .
+  eq test--generators--command-abort-ack =
+begin tests
+
+  assert "genCommandAbortAcks empty" from
+    anInputs(
+      genCommandAbortAcks(mtsoup)
+    )
+  reaches
+    anInputs(
+      noInputs
+    )
+  end
+
+  assert "genCommandAbortAcks on CommandAbortInvoked" from
+    anInputs(
+      genCommandAbortAcks(
+        [ interface :
+            < 'Cmd1 . 'A : command-on-execution |
+                arguments: nilarg,
+                abort: CommandAbortInvoked > ]
+      )
+    )
+  reaches
+    anInputs(
+      commandAbort('Cmd1, nilarg, val(true))
+    )
+  end
+
+  assert "genCommandAbortAcks propagates arguments" from
+    anInputs(
+      genCommandAbortAcks(
+        [ interface :
+            < 'Cmd1 . 'A : command-on-execution |
+                arguments: val(4) val(5),
+                abort: CommandAbortInvoked > ]
+      )
+    )
+  reaches
+    anInputs(
+      commandAbort('Cmd1, val(4) val(5), val(true))
+    )
+  end
+
+  assert "genCommandAbortAcks ignores CommandAbortIdle" from
+    anInputs(
+      genCommandAbortAcks(
+        [ interface :
+            < 'Cmd1 . 'A : command-on-execution |
+                arguments: nilarg,
+                abort: CommandAbortIdle > ]
+      )
+    )
+  reaches
+    anInputs(
+      noInputs
+    )
+  end
+
+  assert "genCommandAbortAcks ignores CommandAbortComplete" from
+    anInputs(
+      genCommandAbortAcks(
+        [ interface :
+            < 'Cmd1 . 'A : command-on-execution |
+                arguments: nilarg,
+                abort: CommandAbortComplete > ]
+      )
+    )
+  reaches
+    anInputs(
+      noInputs
+    )
+  end
+
+  assert "genCommandAbortAcks is exhaustive" from
+    anInputs(
+      genCommandAbortAcks(
+        [ interface :
+            < 'Cmd1 . 'A : command-on-execution |
+                arguments: nilarg,
+                abort: CommandAbortInvoked >
+            < 'Cmd2 . 'A : command-on-execution |
+                arguments: nilarg,
+                abort: CommandAbortInvoked > ]
+      )
+    )
+  reaches
+    anInputs(
+      commandAbort('Cmd1, nilarg, val(true))
+      commandAbort('Cmd2, nilarg, val(true))
+    )
+  end
+
+  assert "generate command-abort-ack empty" from
+    anInputsSet(
+      generate(
+        command-abort-ack
+        ,
+        mtsoup
+      )
+    )
+  reaches
+    anInputsSet(
+      noInputs
+    )
+  end
+
+  assert "generate command-abort-ack" from
+    anInputsSet(
+      generate(
+        command-abort-ack
+        ,
+        [ interface :
+            < 'Cmd1 . 'A : command-on-execution |
+                arguments: nilarg,
+                abort: CommandAbortInvoked >
+            < 'Cmd2 . 'A : command-on-execution |
+                arguments: nilarg,
+                abort: CommandAbortInvoked > ]
+      )
+    )
+  reaches
+    anInputsSet(
+      commandAbort('Cmd1, nilarg, val(true))
+      commandAbort('Cmd2, nilarg, val(true))
+    )
+  end
+
+  assert "update command-abort-ack is idempotent" from
+    aGenerator(
+      update(
+        command-abort-ack
+        ,
+        mtsoup
+        ,
+        noInputs
+      )
+    )
+  reaches
+    aGenerator(
+        command-abort-ack
+    )
+  end
+
+  assert "cardinality of command-abort-ack" from
+    aCardinality(
+      cardinality(
+        command-abort-ack
+      )
+    )
+  reaches
+    aCardinality(
+      Cardinality(countPerStep : 1, numberOfSteps : infinity)
+    )
+  end
+
+end tests
+  .
+
+endm

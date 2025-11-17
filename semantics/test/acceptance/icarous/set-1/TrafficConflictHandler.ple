@@ -1,0 +1,59 @@
+Integer Lookup resolutionType;
+Boolean Lookup inConflict;
+
+Command SetSpeed();
+Command SetAltitude();
+Command SetTrack();
+Command SetVerticalSpeed();
+
+// inConflict => (<> (not inConflict and TrafficConflictHandler.state = Finished))
+// <> not inConflict => <> TrafficConflictHandler.state = Finished
+
+// C F
+// CF
+// C X F
+// C X X F
+// C X X X F
+
+// not C => <> TrafficConflictHandler.state = Finished /\ not C
+// [] (not inConflict => <> isFinished(TrafficConflictHandler))
+//
+// Laura: [] (not inConflict => <> isFinished(TrafficConflictHandler))
+
+TrafficConflictHandler: CheckedSequence {
+  Integer resolutionType;
+  // Start inConflict;
+  Repeat Lookup(inConflict);
+
+  GetResolutionType:
+    resolutionType = Lookup(resolutionType);
+
+  SpeedResolution: {
+    Skip !isKnown(resolutionType) || resolutionType != 0;
+    SetSpeed();
+  }
+  AltitudeResolution: {
+    Skip !isKnown(resolutionType) || resolutionType != 1;
+    SetAltitude();
+  }
+  TrackResolution: {
+    Skip !isKnown(resolutionType) || resolutionType != 2;
+    SetTrack();
+  }
+  VerticalSpeedResolution: {
+    Skip !isKnown(resolutionType) || resolutionType != 3;
+    SetVerticalSpeed();
+  }
+}
+
+// Pensar en la charla high-level no Maude mucho basico PLEXIL y macros
+// => model ambient non-deterministically
+// => gray-box
+// => model-checking
+// => buscar error en PLEXIL de ICAROUS hace tiempo
+// => errores/improvements en PLEXIL
+//
+// [] (inConflict => <> not inConflict) -- FALSE generate unknown resolutionType
+// [] ((resolutionType in [0,1,2,3] /\ inConflict) => <> not inConflict)
+//
+// Generator: SetSpeed, Set... => inConflict turns to false

@@ -1,0 +1,9 @@
+LibraryNode library1 ();
+
+/*
+ * Two nested library calls
+ */
+libraryCall7:
+{
+   LibraryCall library1 ();
+}

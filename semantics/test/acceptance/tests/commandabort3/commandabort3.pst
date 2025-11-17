@@ -1,0 +1,10 @@
+
+// commandabort3
+
+script {
+    state time () =  0: real;
+    state time () =  1: real;
+    command-sent-to-system cmd2 ();
+    command-abort cmd1 () = 1 : bool;
+    state time () =  2: real;
+}

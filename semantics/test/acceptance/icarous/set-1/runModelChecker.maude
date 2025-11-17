@@ -1,0 +1,4 @@
+set print attribute off .
+set print color on .
+
+red customModelCheck(init,property,transitionCounterexample) .

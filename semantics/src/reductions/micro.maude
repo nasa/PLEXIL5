@@ -1,0 +1,94 @@
+fmod MICRO is
+  protecting ATOMIC .
+  protecting SYNC-REDUCTION .
+
+  vars Act            : Operation     .
+  vars St             : Config        .
+  vars Cfg Cfg' Cfg'' : Config        .
+  vars KindCfg        : [Config]      .
+  vars Nds Nds'       : Configuration .
+
+  ceq [micro-relation-withMacroactions] :
+    micro      | Cfg
+  =
+    quiescence | Cfg
+  if hasMacroactions?(Cfg)
+  .
+
+  ceq [micro-relation] :
+    micro | Cfg
+  =
+    Act   | Cfg''
+  if Cfg' := micro(Cfg // [ macroacts : mtactions ])
+  /\ Nds  := getNodes(Cfg)
+  /\ Nds' := getNodes(Cfg')
+  /\ Cfg'' := if Nds == Nds' then Cfg else Cfg' fi
+  /\ Act   := if Nds == Nds' then quiescence else micro-log fi
+  [owise]
+  .
+
+  op micro-log : -> Operation .
+  eq [micro-relation-log] : micro-log = micro [print " micro"] .
+
+
+  **************************************************
+  *** Syncrhonous closure of the atomic relation ***
+  *** under the maximal redices strategy         ***
+  **************************************************
+
+  op logNow : String -> Bool .
+  eq logNow(Str:String) = true .
+
+  op computeTransitions : Config -> Config .
+  ceq computeTransitions(St) = Cfg8:Config
+  --- finished(iterended(finishing(failing(executing(waiting(inactive(activateRedexes(St)))))))) .
+  if Cfg1:Config := activateRedexes(St)
+  /\ logNow("activateRedexes")
+  /\ Cfg2:Config := inactive(Cfg1:Config)
+  /\ logNow("inactive")
+  /\ Cfg3:Config := waiting(Cfg2:Config)
+  /\ logNow("waiting")
+  /\ Cfg4:Config := executing(Cfg3:Config)
+  /\ logNow("executing")
+  /\ Cfg5:Config := failing(Cfg4:Config)
+  /\ logNow("failing")
+  /\ Cfg6:Config := finishing(Cfg5:Config)
+  /\ logNow("finishing")
+  /\ Cfg7:Config := iterended(Cfg6:Config)
+  /\ logNow("iterended")
+  /\ Cfg8:Config := finished(Cfg7:Config)
+  /\ logNow("finished")
+  .
+
+  op executeTransitions : Config ~> Config .
+  eq executeTransitions(St) = logApplyActions(St) applyActions(St) .
+
+  op executeTransitionsNoLog : Config ~> Config .
+  eq executeTransitionsNoLog(St) = applyActions(St) .
+
+  op microWithLog : Config -> Config .
+  eq microWithLog(Cfg) = executeTransitions(computeTransitions(Cfg)) .
+
+  op microNoLog : Config -> Config .
+  eq microNoLog(Cfg) = executeTransitionsNoLog(computeTransitions(Cfg)) .
+
+  op micro : Config ~> Config .
+ ceq micro(Cfg) = microWithLog(Cfg)
+  if not hasMacroactions?(Cfg) .
+ ceq micro(Cfg) = micro-blocked(Cfg)
+  if hasMacroactions?(Cfg) [owise] .
+  eq micro(KindCfg) = micro-blocked(KindCfg) [owise] .
+
+  op micro-blocked : Config -> [Config] [ctor] .
+
+
+  **************************************************
+  *** Utility functions                          ***
+  **************************************************
+
+  op hasMicroactions?          : Config -> Bool .
+  op hasMacroactions?          : Config -> Bool .
+
+  eq hasMicroactions?(St) = getMicroacts(St) =/= mtactions .
+  eq hasMacroactions?(St) = getMacroacts(St) =/= mtactions .
+endfm

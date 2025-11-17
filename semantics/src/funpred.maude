@@ -1,0 +1,220 @@
+----                                       Predicates and auxiliary definitions
+----                                      author: Camilo Rocha & Marco A. Feliu
+
+fmod FUNPRED is
+  protecting EVAL .
+  protecting ACTION .
+
+  vars AT       : AssignmentTarget .
+  vars AtS AtS' : AttributeSet .
+  vars C        : Cid .
+  vars CH       : CommandHandle .
+  vars CmdId    : CommandId .
+  vars E E'     : Expression .
+  vars Gamma    : Environment .
+  vars I        : Identifier .
+  vars IDs      : Qualified .
+  vars IFACE    : Configuration .
+  vars MEM      : Configuration .
+  vars NeQ?     : Maybe{NeQualified} .
+  vars P        : Parameters .
+  vars Params   : Parameters .
+  vars PAIRS    : List{Pair{Qid,Expression}} .
+  vars PS PS'   : Configuration .
+  vars Q Q' Q'' : NeQualified .
+  vars QID      : Qid .
+  vars S        : Status .
+  vars STR      : String .
+  vars V        : Value .
+
+  op ancestorInv? : NeQualified Expression Environment Configuration -> Bool .
+  eq ancestorInv?((I . Q), E, Gamma, < Q : C | inv: E' , AtS > PS)
+   = if eval(Gamma, [< Q : C | inv: E' , AtS > PS], E) == eval(Gamma, [< Q : C | inv: E' , AtS > PS], E')
+     then true
+     else ancestorInv?(Q, E, Gamma, PS)
+     fi .
+  eq ancestorInv?(Q, E, Gamma, PS) = false [owise] .
+
+  *** Parent finished
+  op parentFinished? : Configuration NeQualified -> Bool .
+  eq parentFinished?( < Q : C | status: S, AtS > PS, (I . Q))
+   = S == finished .
+  eq parentFinished?(PS, Q)
+   = false [owise] . *** REFERENCE: Root nodes have a parent state that is always `executing`
+
+  *** Parent executing
+  op parentExecuting? : Configuration NeQualified -> Bool .
+  eq parentExecuting?( < Q : C | status: S, AtS > PS, (I . Q))
+   = S == executing .
+  eq parentExecuting?(PS, Q) = true [owise] .
+
+  *** Ancestor Invariant
+  op ancestorInvariantFalse? : Environment Configuration Qualified -> Bool .
+  eq ancestorInvariantFalse?(Gamma, < Q : C | inv: E , AtS > PS , (I . Q))
+   = if (eval(Gamma, PS, E) == const(val(false)))
+     then true
+     else ancestorInvariantFalse?(Gamma, PS, Q)
+     fi .
+  eq ancestorInvariantFalse?(Gamma, PS, Q) = false [owise] .
+
+  *** Ancestor exit
+  op ancestorExitTrue? : Environment Configuration Qualified -> Bool .
+  eq ancestorExitTrue?(Gamma, < Q : C | exitc: E , AtS > PS, (I . Q))
+   = if (eval(Gamma, < Q : C | exitc: E , AtS > PS, E) == const(val(true)))
+     then true
+     else ancestorExitTrue?(Gamma, < Q : C | exitc: E , AtS > PS, Q)
+     fi .
+  eq ancestorExitTrue?(Gamma, PS, Q)
+   = false [owise] .
+
+ *** Ancestor end
+ **** TODO: check semantics
+  op ancestorEndTrue? : Environment Configuration Qualified -> Bool .
+  eq ancestorEndTrue?(Gamma, < Q : C | endc: E , AtS > PS, (I . Q))
+   = if (eval(Gamma, < Q : C | endc: E , AtS > PS, E) == const(val(true)))
+     then true
+     else ancestorEndTrue?(Gamma, < Q : C | endc: E , AtS > PS, Q)
+     fi .
+  eq ancestorEndTrue?(Gamma, PS, Q)
+   = false [owise] .
+
+  *** Parent finished
+  op parentFinished? : Configuration NeQualified -> Bool .
+  eq parentFinished?( < Q : C | status: S, AtS > PS, (I . Q))
+   = S == finished .
+  eq parentFinished?(PS, Q)
+   = false [owise] . *** REFERENCE: Root nodes have a parent state that is always `executing`
+
+  *** Parent waiting
+   op parentWaiting? : Configuration NeQualified -> Bool .
+   eq parentWaiting?( < Q : C | status: waiting , AtS  > PS, (I . Q))
+    = true .
+   eq parentWaiting?(PS, Q)
+    = false [owise] .
+
+  *** Parent executing
+  op parentExecuting? : Configuration NeQualified -> Bool .
+  eq parentExecuting?( < Q : C | status: S, AtS > PS, (I . Q))
+   = S == executing .
+  eq parentExecuting?(PS, Q)
+   = true [owise] .
+
+  *** Children waiting or finished
+  op childrenWaitingFinished : Configuration Qualified -> Bool .
+  eq childrenWaitingFinished(PS, Q)
+   = waitingOrFinished(childrenProcesses(Q,PS)) .
+
+    op waitingOrFinished : Configuration -> Bool .
+    eq waitingOrFinished( < Q : C | status: S , AtS > PS) =
+       if ((S == waiting) or (S == finished))
+       then waitingOrFinished(PS)
+       else false
+       fi .
+    eq waitingOrFinished( PS )
+     = true [owise] .
+
+  *** Expression to Value
+  op expToVal : Expression ~> Value .
+  eq expToVal(const(V))
+   = V .
+
+  *** Evaluate parameters
+  op evalpar : Environment Configuration Parameters -> Arguments .
+  eq evalpar(Gamma, PS, nilpar)
+   = nilarg .
+  eq evalpar(Gamma, PS, (E P))
+   = (expToVal(eval(Gamma, PS, E)) evalpar(Gamma, PS, P)) .
+
+  *** Evaluate lists of pairs
+  op evalPairs : Environment Configuration List{Pair{Qid,Expression}} -> List{Pair{Qid,Expression}} .
+  eq evalPairs(Gamma, PS, (nil).List{Pair{Qid,Expression}})
+   = (nil).List{Pair{Qid,Expression}} .
+  eq evalPairs(Gamma, PS, < QID ; E > PAIRS)
+   = < QID ; const(expToVal(eval(Gamma, PS, E))) > evalPairs(Gamma, PS, PAIRS) .
+
+  *** Pairs of update node
+  op getPairs : Qualified Configuration ~> List{Pair{Qid,Expression}} .
+  eq getPairs(Q, < Q : update | pairs: PAIRS, AtS > PS) = PAIRS .
+
+
+  *** Evaluate library calls
+  op evalLibraryCallArguments : Qualified Environment Configuration ~> List{Pair{Qid,Expression}} .
+ ceq evalLibraryCallArguments(Q, Gamma, PS) =
+    evalPairs(Gamma, PS, PAIRS)
+  if
+    < Q : library | AtS > PS' := PS
+    /\ PAIRS := getLibraryCallPairs(AtS)
+  .
+
+    op getLibraryCallPairs : AttributeSet ~> List{Pair{Qid,Expression}} .
+   ceq getLibraryCallPairs(AtS) = getLibraryCallPairs'(IDs, Params)
+    if
+      IDs := getLibraryCallParameters(AtS)
+      /\ Params := getLibraryCallArguments(AtS)
+    .
+
+      op getLibraryCallPairs' : Qualified Parameters ~> List{Pair{Qid,Expression}} .
+      eq getLibraryCallPairs'(nilq, nilpar) = nil .
+      eq getLibraryCallPairs'(QID, E) = < QID ; E > .
+      eq getLibraryCallPairs'(QID . Q, E Params) = < QID ; E > getLibraryCallPairs'(Q,Params) .
+
+      op getLibraryCallParameters : AttributeSet ~> Qualified .
+      eq getLibraryCallParameters(parameters: ids(IDs), AtS) = IDs .
+
+      op getLibraryCallArguments : AttributeSet ~> Parameters .
+      eq getLibraryCallArguments(arguments: Params, AtS) = Params .
+
+
+  *** Assignment expression of node
+  op assignmentExpression : Qualified Configuration -> Expression .
+  eq assignmentExpression(Q, < Q : assignment | (AT := E), AtS > PS)
+   = E .
+
+  *** Assignment variable of node
+  op assignmentVariable : Qualified Configuration -> Qualified .
+  eq assignmentVariable(Q, < Q : assignment | (var(Q') := E), AtS > PS)
+   = Q' .
+  eq assignmentVariable(Q, < Q : assignment | (arrayVar(Q') := E), AtS > PS)
+   = Q' .
+  eq assignmentVariable(Q, < Q : assignment | (arrayVar(Q',E') := E), AtS > PS)
+   = Q' .
+
+  op assignmentIndexExpression : Qualified Configuration ~> Expression .
+  eq assignmentIndexExpression(Q, < Q : assignment | (arrayVar(Q', E') := E), AtS > PS) = E' .
+
+  op isArrayAssignment : Qualified Configuration -> Bool .
+  eq isArrayAssignment(Q, < Q : assignment | (arrayVar(Q')    := E), AtS > PS) = true .
+  eq isArrayAssignment(Q, < Q : assignment | (arrayVar(Q',E') := E), AtS > PS) = true .
+  eq isArrayAssignment(Q, PS) = false .
+
+
+  **************************************************
+  *** Command node functions
+
+  *** Command id of node
+  op getCommandId : Qualified Configuration Configuration ~> Identifier .
+  eq getCommandId(Q, < Q : command | command: Q' / Params / NeQ?, AtS > PS, MEM)
+   = Q' .
+  eq getCommandId(Q, < Q : command | command: cmdId(var(Q')) / Params / NeQ?, AtS > PS, < Q' : memory | actVal: val(STR), AtS' > MEM)
+   = qid(STR) .
+
+  *** Command arguments of node
+  op getCommandArguments : Qualified Configuration ~> Expression .
+  eq getCommandArguments(Q, < Q : command | command: CmdId / Params / NeQ?, AtS > PS)
+   = Params .
+
+  op isCommandHandleKnown : Qualified Configuration ~> Bool .
+  eq isCommandHandleKnown(Q, < Q' . Q : command-on-execution | handle: just(CH), AtS > IFACE) = true  .
+  eq isCommandHandleKnown(Q, < Q' . Q : command-on-execution | handle: nothing, AtS > IFACE) = false  .
+
+  op hasAborted : Configuration Configuration Qualified -> Bool .
+  *** TODO: fix the implementation once the representation for command handles is final
+  eq hasAborted(
+      < CmdId . Q : command-on-execution | abort: CommandAbortComplete, AtS > IFACE,
+      < Q : command | command: CmdId / Params / NeQ?, AtS' > PS,
+        Q )
+    = true .
+  eq hasAborted(IFACE, PS, Q)
+    = false [owise] .
+
+endfm

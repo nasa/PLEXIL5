@@ -1,0 +1,8 @@
+/*
+ * Default variable initialization for Integer.
+ */
+variableInitialization1:
+{
+  Integer x;
+  StartCondition !isKnown(x);
+}

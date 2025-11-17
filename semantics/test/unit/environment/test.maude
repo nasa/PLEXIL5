@@ -1,0 +1,115 @@
+mod TEST--ENVIRONMENT is
+  protecting TEST-BASE .
+
+  op test--environment : -> TestResults .
+  eq test--environment =
+    AllTestsPassed
+    + test--environment--inputs-list
+    + test--environment--x
+  .
+
+  op test--environment--x : -> TestResults .
+  ceq test--environment--x =
+begin tests
+
+  assert "_x_" from
+    anInputsSet(
+      (A,B) x empty
+    )
+  reaches
+    anInputsSet(
+      empty
+    )
+  end
+
+  assert "_x_" from
+    anInputsSet(
+      empty x (A,B)
+    )
+  reaches
+    anInputsSet(
+      empty
+    )
+  end
+
+  assert "_x_" from
+    anInputsSet(
+      (A,B) x C
+    )
+  reaches
+    anInputsSet(
+      (A C , B C)
+    )
+  end
+
+  assert "_x_" from
+    anInputsSet(
+      A x (B, C, D)
+    )
+  reaches
+    anInputsSet(
+      (A B, A C, A D)
+    )
+  end
+
+  assert "_x_" from
+    anInputsSet(
+      (A,B) x (C, D)
+    )
+  reaches
+    anInputsSet(
+      (A C, A D, B C, B D)
+    )
+  end
+
+end tests
+  if A := stateLookup('a,nilarg, val(true))
+  /\ B := stateLookup('b,nilarg, val(true))
+  /\ C := stateLookup('c,nilarg, val(true))
+  /\ D := stateLookup('d,nilarg, val(true))
+  .
+
+  op test--environment--inputs-list : -> TestResults .
+  ceq test--environment--inputs-list =
+begin tests
+
+  assert "0-length" from
+    aNat(
+      length(nilEInputsList)
+    )
+  reaches
+    aNat(
+      0
+    )
+  end
+
+  assert "2-length" from
+    aNat(
+      length(A B # C D)
+    )
+  reaches
+    aNat(
+      2
+    )
+  end
+
+  assert "3-length" from
+    aNat(
+      length(A B # C # D)
+    )
+  reaches
+    aNat(
+      3
+    )
+  end
+
+end tests
+  if A := stateLookup('a,nilarg, val(true))
+  /\ B := stateLookup('b,nilarg, val(true))
+  /\ C := stateLookup('c,nilarg, val(true))
+  /\ D := stateLookup('d,nilarg, val(true))
+  .
+
+  vars A B C D : StateInput .
+
+endm

@@ -1,0 +1,32 @@
+initial-state {
+  state time()           = 0 : int;
+  state resolutionType() = 0 : int;
+  state inConflict()     = true : bool;
+}
+
+script {
+  state time           () = 1 : int;
+  simultaneous {
+    state time() = 2 : int;
+    state resolutionType() = 1 : int;
+    command-success SetSpeed();
+  }
+  state time() = 3 : int;
+  simultaneous {
+    state time() = 4 : int;
+    state resolutionType() = 2 : int;
+    command-success SetAltitude();
+  }
+  state time() = 5 : int;
+  simultaneous {
+    state time() = 6 : int;
+    state resolutionType() = 3 : int;
+    command-success SetTrack();
+  }
+  state time() = 7 : int;
+  simultaneous {
+    state time() = 8 : int;
+    state inConflict() = false : bool;
+    command-success SetVerticalSpeed();
+  }
+}

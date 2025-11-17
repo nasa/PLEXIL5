@@ -1,0 +1,49 @@
+/* Simplification of TakeImage1:
+   - Converted to a straight-line plan, a checked sequence that will
+     terminate if any node fails.
+   - Removes all time based conditions, which contribute to state
+     space explosion, because each time event is paired with every
+     Lookup choice in the generated environments.
+   - Removes the camera_claimed variable, because each of its
+     assignments requires a macro step (this is a Plexil deficiency).
+   - Removes many check conditions (Pre/Post).
+*/
+
+Boolean Lookup PointedAtTarget;
+Boolean Lookup CameraOn;
+
+Command camera_power_on;
+Command camera_power_off;
+Command camera_capture_image(Integer, Integer);
+Command slew(Integer, Real, Real);
+
+TakeImage2: CheckedSequence
+{
+  Slew:
+  {
+    End Lookup(PointedAtTarget);
+    
+    Slew1: SynchronousCommand slew(1200, -90.0, 0.0);
+  }
+
+  CameraOn:
+  {
+    Skip Lookup(CameraOn);
+    End Lookup(CameraOn);
+    
+    CameraOn1: SynchronousCommand camera_power_on();
+  }
+
+  TakeImage:
+  {
+    PreCondition (Lookup(CameraOn) && Lookup(PointedAtTarget));
+    Invariant Lookup(PointedAtTarget) && Lookup(CameraOn);
+
+    TakeImage1: SynchronousCommand camera_capture_image(50, 1);
+  }
+
+  CameraOff:
+  {
+    SynchronousCommand camera_power_off();
+  }
+}

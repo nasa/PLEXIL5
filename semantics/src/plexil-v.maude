@@ -1,0 +1,5 @@
+load plexilite.maude
+
+mod PLEXIL-V is
+  pr PLEXILITE-PREDS .
+endm

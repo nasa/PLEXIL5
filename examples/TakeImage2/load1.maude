@@ -1,0 +1,6 @@
+--- Load file for TakeImage2 with deterministic environments.  Edit for
+--- the desired combination.
+
+load "TakeImage2.maude"
+load "env0.maude"
+load "properties.maude"

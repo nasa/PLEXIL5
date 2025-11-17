@@ -1,0 +1,17 @@
+// Nominal script for TakeImage0
+
+initial-state {
+  state time () = 0 : real;
+  state PointedAtTarget () = false : bool;
+}
+
+script {
+
+  // Slew
+  command-sent-to-system slew(10: int, -90.0: real, 0.0: real);
+  state PointedAtTarget () = true : bool;
+  command-success slew(10: int, -90.0: real, 0.0: real);
+
+  // TakeImage
+  command-success camera_capture_image(50: int, 1: int);
+}

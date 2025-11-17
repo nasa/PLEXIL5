@@ -1,0 +1,11 @@
+LibraryNode theLibrary (In Boolean flag,InOut String message,InOut Integer number);
+/*
+ * Library call with two input/output (InOut) arguments and one input (In) argument.
+ */
+libraryCall4:
+{
+   Integer myNumber = 1;
+   String myMessage = "INITIAL";
+   EndCondition myNumber == 2 && myMessage == "FINAL";
+   LibraryCall theLibrary (number=myNumber, message=myMessage, flag=true);
+}

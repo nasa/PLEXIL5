@@ -1,0 +1,60 @@
+fmod COMMAND-HANDLE  is
+  sort CommandHandle .
+  op CommandSentToSystem   : -> CommandHandle .
+  op CommandAccepted       : -> CommandHandle .
+  op CommandRcvdBySystem   : -> CommandHandle .
+  op CommandFailed         : -> CommandHandle .
+  op CommandDenied         : -> CommandHandle .
+  op CommandSuccess        : -> CommandHandle .
+  op CommandInterfaceError : -> CommandHandle .
+  op CommandHandleMax      : -> CommandHandle .
+endfm
+
+fmod COMMAND-ABORT is
+  sort CommandAbort .
+  op CommandAbortIdle     : -> CommandAbort .
+  op CommandAbortInvoked  : -> CommandAbort .
+  op CommandAbortComplete : -> CommandAbort .
+endfm
+
+view CommandHandle from TRIV to COMMAND-HANDLE is
+  sort Elt to CommandHandle .
+endv
+
+fmod COMMAND is
+  protecting EXPRESSION .
+  protecting MAYBE{NeQualified} .
+  protecting PARAMETER .
+  protecting IDENTIFIER .
+
+  sort CommandId .
+  subsort Identifier < CommandId .
+  op cmdId : VariableExpression -> CommandId .
+
+  sort Command .
+  op _/_/_ : CommandId Parameters Maybe{NeQualified} -> Command [prec 20] .
+
+endfm
+
+fmod COMMANDINFO is
+  protecting ARGUMENTS .
+  protecting COMMAND .
+
+  sort CommandInfo .
+  op cmdInvocation : Identifier Arguments -> CommandInfo .
+endfm
+
+fmod ACK is
+  sort Ack .
+  subsort Bool < Ack .
+endfm
+
+view Ack from TRIV to ACK is
+  sort Elt to Ack .
+endv
+
+fmod UPDATE is
+  protecting ACK .
+  protecting LIST{Pair{Qid,Expression}} .
+  protecting QUALIFIED .
+endfm

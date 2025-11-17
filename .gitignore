@@ -1,3 +1,4 @@
-.DS_Store
-plexil5/bin
-/src
+**/.DS_Store
+**/dist-*
+**/.vscode/
+*.swp

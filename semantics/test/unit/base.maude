@@ -1,0 +1,76 @@
+mod TEST-BASE is
+  pr TEST .
+  pr PLEXIL-V .
+  pr PLEXIL-V .
+
+  subsort Config Bool < SystemUnderTest .
+
+  --- Test Adapters
+
+  op testAttributes       : AttributeSet     -> Cell .
+  op testQualified        : Qualified        -> Cell .
+  op testBool             : Bool             -> Cell .
+  op testModelCheckResult : ModelCheckResult -> Cell .
+  op testSystem           : GlobalConfig     -> Cell .
+  op testOperation        : Operation        -> Cell .
+  op testQualifiedId      : Qualified        -> Cell .
+
+  op testInputs      : Inputs         -> Cell .
+  op testEInputsList : EInputsList    -> Cell .
+  op testValue       : Value          -> Cell .
+  op testVariable    : Variable       -> Cell .
+  op testGenerator   : InputGenerator -> Cell .
+
+  op anAttributeSet : AttributeSet   -> Cell .
+  op aBool          : Bool           -> Cell .
+  op aCardinality   : Cardinality    -> Cell .
+  op anEnvironment  : Environment    -> Cell .
+  op anExNat        : ExNat          -> Cell .
+  op aGenerator     : InputGenerator -> Cell .
+  op anIdentifier   : Identifier     -> Cell .
+  op anInputs       : Inputs         -> Cell .
+  op anInputsSet    : InputsSet      -> Cell .
+  op aNat           : Nat            -> Cell .
+  op somePairs      : List{Pair{Qid,Expression}} -> Cell .
+  op aSystem        : GlobalConfig   -> Cell .
+  op aValue         : Value          -> Cell .
+
+
+  ---( Configuration)
+
+  op aConfiguration    : Configuration -> Cell .
+  op testConfiguration : Configuration -> Cell .
+
+  eq testConfiguration(C:Configuration) = aConfiguration(C:Configuration) .
+
+
+  ---( Expression )
+
+  op anExpression   : Expression -> Cell .
+  op testExpression : Expression -> Cell .
+
+  eq testExpression(E:Expression) = anExpression(E:Expression) .
+
+
+  ---( Nat )
+
+  op testNat : Nat -> Cell .
+  op aNat    : Nat -> Cell .
+
+  eq testNat(N:Nat) = aNat(N:Nat) .
+
+
+  ---( Test Stubs )
+
+  op Stub{Object} : -> Object [ctor] .
+  op Stub{Config} : -> Config [ctor] .
+
+
+  --- Identifiers for test cases
+
+  op A : -> Identifier .
+  op B : -> Identifier .
+  op C : -> Identifier .
+  op M : -> Identifier .
+
+endm

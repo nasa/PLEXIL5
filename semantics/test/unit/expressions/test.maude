@@ -1,0 +1,15 @@
+load new.maude
+load operators.maude
+
+mod TEST--EXPRESSIONS is
+  protecting TEST-OPERATORS .
+  protecting TEST--EXPRESSIONS--NEW .
+
+  op test--expressions : -> TestResults .
+  eq test--expressions =
+    AllTestsPassed
+    + test--expressions--new
+    + operators--tests
+    .
+
+endm

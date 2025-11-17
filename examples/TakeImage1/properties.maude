@@ -1,0 +1,140 @@
+--- Properties for TakeImage1 plan.
+
+mod M-CHECK is
+  protecting TakeImage1-PLAN .
+  protecting INPUT .
+  protecting PLEXIL-V .
+  including MODEL-CHECKER .
+
+  op temperatureAlwaysLowerThan100 : -> Prop .
+  eq temperatureAlwaysLowerThan100 =
+    [] isTrue?(lookup('Temperature,nilarg) < const(val(100.0))) .
+
+  op eventuallyAlwaysPointedAtTarget : -> Prop .
+  eq eventuallyAlwaysPointedAtTarget =
+    <> [] isTrue?(lookup('PointedAtTarget,nilarg) equ const(val(true))) .
+
+  --- The plan executes.
+  op liveness1 : -> Prop .
+  eq [liveness1] : liveness1 = O <> hasStatus('TakeImage1,executing) .
+
+  op liveness1' : -> Prop .
+  eq liveness1' =
+    O (temperatureAlwaysLowerThan100 -> (<> hasStatus('TakeImage1,executing))) .
+
+  --- INFO: Following the way PLEXIL5 works, the provided properties
+  --- are only meaningul for verification at the next (`O`)
+  --- step. PLEXIL5 first state during rewriting should be ignored in
+  --- order to support verifying non-deterministic initial states:
+
+  ---
+  ---                           -- State-1
+  ---                         /
+  ---       State-0 (ignored) ---- State-1'
+  ---                         \
+  ---                           ...
+  ---
+  --- INFO: In general, `executing`` status may be reached but not be
+  --- observable by the `hasStatus` property. To implement it, we
+  --- would need to track the status history.
+
+  *** If the plan is executing, it eventually terminates
+  op liveness2 : -> Prop .
+  eq [liveness2] :
+    liveness2 =
+      O [] (hasStatus('TakeImage1,executing) -> <> hasStatus('TakeImage1,finished)) .
+
+  op liveness2' : -> Prop .
+  eq [liveness2'] :
+    liveness2' =
+      O ((temperatureAlwaysLowerThan100 /\ eventuallyAlwaysPointedAtTarget)
+        ->
+        [] (hasStatus('TakeImage1,executing) -> <> hasStatus('TakeImage1,finished))
+       ) .
+
+  *** An image is eventually taken.
+  op liveness3 : -> Prop .
+  eq [liveness3] : liveness3 = O <> commandIsExecuting('camera_capture_image) .
+
+  op liveness3' : -> Prop .
+  eq [liveness3'] :
+    liveness3' =
+    O ((temperatureAlwaysLowerThan100 /\ eventuallyAlwaysPointedAtTarget)
+      -> <> commandIsExecuting('camera_capture_image)) .
+
+  *** The camera powers on during slew.
+  op liveness4 : -> Prop .
+  eq [liveness4] :
+    liveness4 =
+      O [] (hasStatus(('CameraOn . 'TakeImage1), executing) ->
+          hasStatus(('Slew . 'TakeImage1), executing)) .
+
+  *** Start slew, then turn on camera, then take picture, then turn off camera.
+  op liveness5 : -> Prop .
+  eq [liveness5] :
+    liveness5 =
+      <> (hasStatus(('Slew . 'TakeImage1), executing) /\ <>
+          (hasStatus(('Slew . 'TakeImage1), executing) U
+           hasStatus(('CameraOn . 'TakeImage1), executing)) /\ <>
+	   (hasStatus(('Slew . 'TakeImage1), executing) U
+            hasStatus(('TakeImage . 'TakeImage1), executing)) /\ <>
+	    (hasStatus(('TakeImage . 'TakeImage1), executing) U
+             hasStatus(('CameraOff . 'TakeImage1), executing))) .
+	     
+  op liveness5' : -> Prop .
+  eq [liveness5'] :
+    liveness5' =
+    O (
+      temperatureAlwaysLowerThan100
+      ->
+      <> (hasStatus(('Slew . 'TakeImage1), executing) /\ <>
+          (hasStatus(('Slew . 'TakeImage1), executing) U
+           hasStatus(('CameraOn . 'TakeImage1), executing)) /\ <>
+	   (hasStatus(('Slew . 'TakeImage1), executing) U
+            hasStatus(('TakeImage . 'TakeImage1), executing)) /\ <>
+	    (hasStatus(('TakeImage . 'TakeImage1), executing) U
+             hasStatus(('CameraOff . 'TakeImage1), executing)))
+    ) .
+
+  *** An image is not taken unless camera is powered on.
+  op safety1 : -> Prop .
+  eq [safety1] :
+    safety1 =
+      O [] (commandIsExecuting('camera_capture_image) ->
+        isTrue?(lookup('CameraOn, nilarg))) .
+
+  *** If the camera is powered on, it is eventually powered off.
+  op safety2 : -> Prop .
+  eq [safety2] :
+    safety2 =
+      O [] (commandIsExecuting('camera_power_on) ->
+        <> commandIsExecuting('camera_power_off)) .
+
+*** An image is not taken unless the camera is pointed at target.
+  op safety3 : -> Prop .
+  eq [safety3] :
+    safety3 =
+      O [] (commandIsExecuting('camera_capture_image) ->
+        isTrue?(lookup('PointedAtTarget, nilarg))) .
+
+*** Temperature remains within limit.
+*** (Guessing that Next is needed because initial lookup is Unknown)
+  op safety4 : -> Prop .
+  eq [safety4] :
+    safety4 =
+      O O ([] isTrue?(lookup('Temperature, nilarg) < const(val(100.0)))) .
+
+*** Don't turn the camera off when it's in use.
+  op safety5 : -> Prop .
+  eq [safety5] :
+    safety5 =
+      O [] (commandIsExecuting('camera_power_off) ->
+        isFalse?(var('camera_claimed . 'TakeImage1
+
+
+*** End of properties.
+
+  op init : -> GlobalConfig .
+  eq [init] : init = run(compile(rootNode,input)) .
+
+endm

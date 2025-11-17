@@ -1,0 +1,5 @@
+sload atomic.maude
+sload syncred.maude
+sload micro.maude
+sload macro.maude
+sload reductions.maude

@@ -1,0 +1,57 @@
+/* Evolution of TakeImage2 to be more mission-realistic:
+   - The sequence is Unchecked so that the final (safety) step can execute.
+   - Use of Skip condition as the main sequence controller: each step
+     is skipped if its necessary preconditions don't hold.
+   - Each command has a timeout.
+*/
+
+Boolean Lookup PointedAtTarget;
+Boolean Lookup CameraOn;
+
+Command camera_power_on;
+Command camera_power_off;
+Command camera_capture_image(Integer, Integer);
+Command slew(Integer, Real, Real);
+
+TakeImage3: UncheckedSequence
+{
+  Slew:
+  {
+    Real SlewTimeout = 30.0;
+
+    Skip Lookup(PointedAtTarget);
+    Post Lookup(PointedAtTarget);
+
+    Slew1: SynchronousCommand slew(1200, -90.0, 0.0) Timeout SlewTimeout;
+  }
+
+  CameraOn:
+  {
+    Real CameraTimeout = 2.0;
+
+    Skip Lookup(CameraOn) || !Lookup(PointedAtTarget);
+    Post Lookup(CameraOn);
+
+    CameraOn1: SynchronousCommand camera_power_on() Timeout CameraTimeout;
+  }
+
+  Image:
+  {
+    Real ImageTimeout = 10.0;
+
+    Skip !(Lookup(CameraOn) && Lookup(PointedAtTarget));
+    Invariant Lookup(CameraOn) && Lookup(PointedAtTarget);
+
+    Image1: SynchronousCommand camera_capture_image(50, 1) Timeout ImageTimeout;
+  }
+
+  CameraOff:
+  {
+    Real CameraTimeout = 2.0;
+
+    Skip !Lookup(CameraOn);
+    Post !Lookup(CameraOn);
+
+    CameraOff1: SynchronousCommand camera_power_off() Timeout CameraTimeout;
+  }
+}

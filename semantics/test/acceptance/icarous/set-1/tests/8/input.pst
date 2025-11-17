@@ -1,0 +1,14 @@
+initial-state {
+  state time()           = 0 : int;
+  state inConflict()     = false : bool;
+  state resolutionType() = 1 : int;
+}
+
+script {
+  state time           () = 1 : int;
+  state time() = 2 : int;
+  simultaneous {
+    command-success SetAltitude();
+    state time() = 3 : int;
+  }
+}

@@ -1,0 +1,67 @@
+fmod STATE-SPACE-CARDINALITY is
+  protecting NAT .
+
+  sort ExNat .
+  subsort Nat < ExNat .
+  op infinity : -> ExNat .
+
+  sort Cardinality .
+  op Cardinality`(countPerStep`:_,numberOfSteps`:_`) : Nat ExNat -> Cardinality [ctor] .
+
+  op min : ExNat ExNat -> ExNat [ditto] .
+  eq min(infinity,EN:ExNat) = EN:ExNat .
+
+  op max' : ExNat ExNat -> ExNat [comm] .
+  eq max'(N:Nat,N':Nat) = max(N:Nat,N':Nat) .
+  eq max'(infinity,EN:ExNat) = infinity .
+
+  op _*_ : ExNat ExNat -> ExNat [ditto] .
+  eq _*_(infinity,EN:ExNat) = infinity .
+
+  op _^_ : ExNat ExNat ~> ExNat [ditto] .
+  eq _^_(infinity,NZ) = infinity .
+  eq _^_(NZ,infinity) = if NZ == 1 then 1 else infinity fi .
+
+  op upperBound : Cardinality Cardinality -> Cardinality [comm] .
+  eq upperBound(
+      Cardinality(countPerStep : CPS , numberOfSteps : infinity ),
+      Cardinality(countPerStep : CPS', numberOfSteps : infinity)
+     )
+   = Cardinality(countPerStep : max(CPS,CPS'), numberOfSteps : infinity)
+  .
+  eq upperBound(
+      Cardinality(countPerStep : CPS , numberOfSteps : infinity ),
+      Cardinality(countPerStep : CPS', numberOfSteps : NOS)
+     )
+   = Cardinality(countPerStep : CPS, numberOfSteps : infinity)
+  [owise]
+  .
+  eq upperBound(
+      Cardinality(countPerStep : CPS , numberOfSteps : NOS ),
+      Cardinality(countPerStep : CPS', numberOfSteps : NOS')
+     )
+   = Cardinality(countPerStep : max(CPS,CPS'), numberOfSteps : (NOS + NOS'))
+  [owise]
+  .
+
+  op stateSpaceSize : Cardinality -> ExNat .
+  eq stateSpaceSize(Cardinality(countPerStep : CPS , numberOfSteps : infinity))
+   = infinity .
+  eq stateSpaceSize(Cardinality(countPerStep : CPS , numberOfSteps : NOS))
+   = CPS ^ NOS [owise] .
+
+  vars EN CPS CPS' NOS NOS' : ExNat .
+  vars NZ : NzNat .
+
+endfm
+
+fmod GENERATOR{X :: TRIV} is
+  protecting STATE-SPACE-CARDINALITY .
+  protecting INPUTS-SET .
+  sort Generator{X} .
+
+  op isConsumed? : Generator{X} X$Elt ~> Bool .
+  op generate    : Generator{X} X$Elt ~> InputsSet .
+  op update      : Generator{X} X$Elt Inputs ~> Generator{X} .
+  op cardinality : Generator{X} ~> Cardinality .
+endfm

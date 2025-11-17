@@ -1,0 +1,173 @@
+mod TEST--ATOMIC--INACTIVE is
+
+  pr TEST-BASE .
+
+  op inactive--atomic--tests : -> TestResults .
+
+  eq inactive--atomic--tests = begin tests
+
+    assert "Root nodes always transition immediately to `waiting` status (inactive-05)" from
+      inactive(
+        [ environment : mtenvironment ]
+        [ nodes : < A : empty | status: inactive, active: true > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      inactive(
+        [ environment : mtenvironment ]
+        [ nodes : < A : empty | status: inactive, active: false > ]
+        [ microacts : setStatus(A, waiting), logTransition(A,inactive,waiting,5) ]
+        [ memory : none ]
+      )
+    end
+
+    assert "Inactive node follows path 1 (inactive-1)" from
+      inactive(
+        [ environment : mtenvironment ]
+        [ nodes :
+          < A     : list  | status: finished >
+          < B . A : empty | status: inactive, active: true > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      inactive(
+        [ environment : mtenvironment ]
+        [ nodes :
+          < A     : list  | status: finished >
+          < B . A : empty | status: inactive, active: false > ]
+        [ microacts : setStatus(B . A, finished),
+                      setOutcome(B . A,skipped),
+                      logTransition(B . A,inactive,finished,1) ]
+        [ memory : none ]
+      )
+    end
+
+    assert "Inactive node follows path 2 (inactive-2)" from
+      inactive(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | status: executing, inv: const(val(false)) >
+            < B . A : empty | status: inactive, active: true > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      inactive(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | status: executing, inv: const(val(false))>
+            < B . A : empty | status: inactive, active: false > ]
+        [ microacts : setStatus(B . A, finished),
+                      setOutcome(B . A,skipped),
+                      logTransition(B . A,inactive,finished,2) ]
+        [ memory : none ]
+      )
+    end
+
+    assert "Inactive node follows path 3 (inactive-3)" from
+      inactive(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | status: executing,
+                              inv: const(unknown),
+                              exitc: const(val(true)) >
+            < B . A : empty | status: inactive, active: true > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      inactive(
+        [ environment : mtenvironment ]
+        [ nodes :
+          < A     : list  | status: executing,
+                            inv: const(unknown),
+                            exitc: const(val(true)) >
+          < B . A : empty | status: inactive, active: false > ]
+        [ microacts : setStatus(B . A, finished),
+                      setOutcome(B . A,skipped),
+                      logTransition(B . A,inactive,finished,3) ]
+        [ memory : none ]
+      )
+    end
+
+    assert "Inactive node follows path 4 (inactive-4)" from
+      inactive(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | status: executing,
+                              inv: const(unknown),
+                              exitc: const(unknown),
+                              endc: const(val(true)) >
+            < B . A : empty | status: inactive, active: true > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      inactive(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | status: executing,
+                              inv: const(unknown),
+                              exitc: const(unknown),
+                              endc: const(val(true)) >
+            < B . A : empty | status: inactive, active: false > ]
+        [ microacts : setStatus(B . A, finished),
+                      setOutcome(B . A,skipped),
+                      logTransition(B . A,inactive,finished,4) ]
+        [ memory : none ]
+      )
+    end
+
+    assert "Inactive node follows path 5 (inactive-5)" from
+      inactive(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | status: executing,
+                              inv: const(unknown),
+                              exitc: const(unknown),
+                              endc: const(unknown) >
+            < B . A : empty | status: inactive, active: true > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      inactive(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | status: executing,
+                              inv: const(unknown),
+                              exitc: const(unknown),
+                              endc: const(unknown) >
+            < B . A : empty | status: inactive, active: false > ]
+        [ microacts : setStatus(B . A, waiting),
+                      logTransition(B . A,inactive,waiting,5) ]
+        [ memory : none ]
+      )
+    end
+
+    assert "Inactive node follows does nothing" from
+      inactive(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | status: waiting >
+            < B . A : empty | status: inactive, active: true > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      inactive(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list  | status: waiting >
+            < B . A : empty | status: inactive, active: false > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+      )
+    end
+
+  end tests .
+
+
+endm

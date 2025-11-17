@@ -1,0 +1,53 @@
+--- Verification properties for TakeImage2
+
+mod M-CHECK is
+  protecting TakeImage2-PLAN .
+  protecting INPUT .
+  protecting PLEXIL-V .
+  including MODEL-CHECKER .
+
+  --- The plan executes.
+  op liveness1 : -> Prop .
+  eq [liveness1] :
+    liveness1 = <> hasStatus('TakeImage2,executing) .
+
+  --- If the plan is executing, it eventually terminates
+  op liveness2 : -> Prop .
+  eq [liveness2] :
+    liveness2 =
+      [] (hasStatus('TakeImage2,executing) -> <> hasStatus('TakeImage2,finished)) .
+
+  --- An image is not taken unless camera is powered on.
+  op safety1 : -> Prop .
+  eq [safety1] :
+    safety1 =
+      [] (commandIsExecuting('camera_capture_image) ->
+        isTrue?(lookup('CameraOn, nilarg))) .
+
+  --- If the camera is powered on, it is eventually powered off.
+  op safety2 : -> Prop .
+  eq [safety2] :
+    safety2 =
+      [] (commandIsExecuting('camera_power_on) ->
+        <> commandIsExecuting('camera_power_off)) .
+
+--- An image is not taken unless the camera is pointed at target.
+  op safety3 : -> Prop .
+  eq [safety3] :
+    safety3 =
+      [] (commandIsExecuting('camera_capture_image) ->
+        isTrue?(lookup('PointedAtTarget, nilarg))) .
+
+  --- Timepoints start off as 'unknown'
+  --- This property is redundant with the semantics of PLEXIL, but it
+  --- demonstrates the usage of isKnown?() and timepoint().
+  op timepoint1 : -> Prop .
+  eq [timepoint1] :
+     timepoint1 = <> isKnown?(timepoint('CameraOn, executing, start)) .
+
+--- End of properties.
+
+  op init : -> GlobalConfig .
+  eq [init] : init = run(compile(rootNode,input)) .
+
+endm

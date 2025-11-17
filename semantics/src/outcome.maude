@@ -1,0 +1,15 @@
+fmod FAILURE is
+ sort FailureType .
+ ops exited parentExited parentFailed invariantFailed preconditionFailed postconditionFailed : -> FailureType .
+endfm
+
+fmod OUTCOME is
+ protecting FAILURE .
+ sort Outcome .
+
+ ops skipped success none : -> Outcome .
+ ops failure interrupted : FailureType -> Outcome .
+
+ op outcomedef : -> Outcome .
+ eq outcomedef = none .
+endfm

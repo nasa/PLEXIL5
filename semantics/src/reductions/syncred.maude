@@ -1,0 +1,132 @@
+----                                                     Synchronous reductions
+----                                                       author: Camilo Rocha
+
+fmod SYNC-REDUCTION is
+
+protecting FUNPRED .
+
+var A            : Action .
+var AS           : ActionSet .
+vars NA AtS AtS' : AttributeSet .
+vars B B'        : Bool .
+var CC           : Cid .
+vars CmdId       : CommandId .
+vars C C'        : Command .
+vars CI CI'      : CommandInfo .
+var Conf         : Config .
+vars CurrentTime : Value .
+vars PS PS' PS'' : Configuration .
+var Gamma        : Environment .
+vars E E'        : Expression .
+vars ENV         : EnvironmentList .
+vars I           : Identifier .
+vars N           : Nat .
+vars O O'        : Outcome .
+vars Pairs       : List{Pair{Qid,Expression}} .
+vars Q Q'        : NeQualified .
+vars Target      : NeQualified .
+vars QID         : Qid .
+vars S S' T T'   : Status .
+var Str          : String .
+vars TPS         : Timepoints .
+var Tr           : Trace .
+var TL           : TraceList .
+var TS           : TransitionSet .
+vars V V' V''    : Value .
+
+op logApplyActions : Config -> Config .
+eq logApplyActions([ nodes : < Q : CC | status: S, AtS > PS ]
+                   [ microacts : setStatus(Q,S'),AS ]
+                   Conf )
+ = logApplyActions([ nodes : < Q : CC | status: S', AtS > PS ]
+                   [ microacts : AS ]
+                   Conf ) [print "    " Q " from " S " to " S'] .
+eq logApplyActions(Conf) = mtsoup [owise] .
+
+op applyActions : Config ~> Config .
+eq applyActions ([ trace :         TL ] Conf)
+ = applyActions'([ trace : mttrans TL ] Conf) .
+
+
+op createOrUpdateVarForwarding : Qualified Qualified Config ~> Config .
+eq createOrUpdateVarForwarding(Q, Target, [ memory : < Q : memory |                            AtS > PS ] Conf)
+ =                                        [ memory : < Q : memory-forwarding | target: Target      > PS ] Conf .
+eq createOrUpdateVarForwarding(Q, Target, [ memory : < Q : memory-forwarding | target: Q',     AtS > PS ] Conf)
+ =                                        [ memory : < Q : memory-forwarding | target: Target, AtS > PS ] Conf .
+eq createOrUpdateVarForwarding(Q, Target, [ memory :                                            PS ] Conf)
+ =                                        [ memory : < Q : memory-forwarding | target: Target > PS ] Conf [owise] .
+
+op passParameters : Qualified List{Pair{Qid,Expression}} Config ~> Config .
+eq passParameters(Q, nil, Conf) = Conf .
+eq passParameters(Q, < QID ; const(varForwarding(Q')) > Pairs,                                           Conf)
+ = passParameters(Q,                                    Pairs, createOrUpdateVarForwarding(QID . Q, Q', Conf)) .
+eq passParameters(Q, < QID ; E > Pairs, [ memory : < QID . Q : memory | actVal:           V, prevVal: V'         , AtS > PS ] Conf) =
+   passParameters(Q,             Pairs, [ memory : < QID . Q : memory | actVal: expToVal(E), prevVal: expToVal(E), AtS > PS ] Conf)
+[owise]
+.
+
+op applyActions' : Config -> Config .
+eq applyActions'([ microacts : callLibrary(Q, Pairs),AS ] Conf )
+ = applyActions'(passParameters(Q,Pairs, [ microacts : AS ] Conf)) .
+eq applyActions'([ nodes : < Q : CC | status: S, AtS > PS ]
+                 [ microacts : setStatus(Q,S'),AS ]
+                 Conf )
+ = applyActions'([ nodes : < Q : CC | status: S', AtS > PS ]
+                 [ microacts : AS ]
+                 Conf ) .
+eq applyActions'([ nodes : < Q : CC | outcome: O, AtS > PS ]
+                 [ microacts : setOutcome(Q,O'),AS ]
+                 Conf )
+ = applyActions'([ nodes : < Q : CC | outcome: O', AtS > PS ]
+                 [ microacts : AS ]
+                 Conf ) .
+eq applyActions'([ nodes : < Q : command | outcome: O, AtS > PS ]
+                 [ interface : < I . Q : command-on-execution | AtS' > PS' ]
+                 [ microacts : resetNode(Q),AS ]
+                 Conf )
+ = applyActions'([ nodes : < Q : command | outcome: none, AtS > PS ]
+                 [ interface : PS' ]
+                 [ microacts : AS ]
+                 Conf ) .
+eq applyActions'([ nodes : < Q : CC | outcome: O, AtS > PS ]
+                 [ microacts : resetNode(Q),AS ]
+                 Conf )
+ = applyActions'([ nodes : < Q : CC | outcome: none, AtS > PS ]
+                 [ microacts : AS ]
+                 Conf ) [owise] .
+eq applyActions'([ nodes : < Q : CC | suspended: B, AtS > PS ]
+                 [ microacts : suspend(Q),AS ]
+                 Conf )
+ = applyActions'([ nodes : < Q : CC | suspended: true, AtS > PS ]
+                 [ microacts : AS ]
+                 Conf ) .
+*** TODO: Logging of transitions should be handled in transparent way through `setStatus`
+ceq applyActions'([ microacts : logTransition(Q,S,T,N),AS ]
+                 [ nodes : PS ]
+                 [ environment : ENV ]
+                 Conf )
+ = applyActions'([ microacts : AS ]
+                 [ nodes : PS'' ]
+                 [ environment : ENV ]
+                 Conf)
+ if < Q : CC | timepoints: TPS, AtS > PS' := PS
+ /\ CurrentTime := expToVal(eval(ENV, PS, lookupOnChange('time, nilarg, val(0.0))))
+ /\ PS'' := < Q : CC | timepoints: updateTimepoint(updateTimepoint(TPS, S, end, CurrentTime), T, start, CurrentTime), AtS > PS'
+ .
+eq applyActions'([ microacts : logTransition(Q,S,T,N),AS ]
+                 Conf )
+ = applyActions'([ microacts : AS ] Conf) [owise] .
+eq applyActions'(Conf) = Conf [owise] .
+
+  op pathLabel : Nat -> String .
+  eq pathLabel(N) = "path-" + string(N,10) .
+
+
+
+*** Activate redexes
+op activateRedexes : Config -> Config .
+eq activateRedexes([ nodes : < Q : CC | active: false, NA > PS ] Conf)
+ = activateRedexes([ nodes : < Q : CC | active: true,  NA > PS ] Conf) .
+eq activateRedexes(Conf) = Conf [owise] .
+
+endfm

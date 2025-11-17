@@ -1,0 +1,102 @@
+mod TEST--FUNPRED is
+
+pr FUNPRED .
+pr TEST-BASE .
+
+op test--funpred : -> TestResults .
+eq test--funpred =
+begin tests
+
+  assert "getCommandId 1" from
+    anIdentifier(
+      getCommandId(
+        'A . 'B,
+        < 'A . 'B : command | command: 'ID / nilpar / nothing >
+        < 'A      : command | command: 'ID2 / nilpar / nothing >
+        < 'B      : command | command: 'ID3 / nilpar / nothing >,
+        none
+      )
+    )
+  reaches
+    anIdentifier(
+      'ID
+    )
+  end
+
+  assert "getCommandId 2" from
+    anIdentifier(
+      getCommandId(
+        'A . 'B,
+        < 'A . 'B : command | command: 'ID  / nilpar / just('T) >
+        < 'A      : command | command: 'ID2 / nilpar / just('T) >
+        < 'B      : command | command: 'ID3 / nilpar / just('T) >,
+        none
+      )
+    )
+  reaches
+    anIdentifier(
+      'ID
+    )
+  end
+
+  assert "getCommandId 3" from
+    anIdentifier(
+      getCommandId(
+        'A . 'B
+        ,
+        < 'A . 'B : command | command: cmdId(var('C . 'A . 'B))  / nilpar / nothing >
+        ,
+        < 'C . 'A . 'B : memory | actVal: val("bar foo") >
+      )
+    )
+  reaches
+    anIdentifier(
+      'bar`foo
+    )
+  end
+
+  assert "getCommandId 4" from
+    anIdentifier(
+      getCommandId(
+        'A . 'B
+        ,
+        < 'A . 'B : command | command: cmdId(var('C . 'A . 'B))  / nilpar / just('T) >
+        ,
+        < 'C . 'A . 'B : memory | actVal: val("foo") >
+      )
+    )
+  reaches
+    anIdentifier(
+      'foo
+    )
+  end
+
+  assert "isCommandHandleKnown returns true if there exists a handle in the interface cell" from
+    aBool(
+      isCommandHandleKnown(
+        'takeOff,
+        < 'A . 'takeOff : command-on-execution | handle: just(CommandSuccess) >
+      )
+    )
+  reaches
+    aBool(
+      true
+    )
+  end
+
+  assert "isCommandHandleKnown returns false if there does not exist a handle in the interface cell" from
+    aBool(
+      isCommandHandleKnown(
+        'takeOff,
+        < 'A . 'takeOff : command-on-execution | handle: nothing >
+      )
+    )
+  reaches
+    aBool(
+      false
+    )
+  end
+
+end tests
+.
+endm

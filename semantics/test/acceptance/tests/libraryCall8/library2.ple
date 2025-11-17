@@ -1,0 +1,5 @@
+library2:
+{
+   InOut Integer number2;
+   assignment: number2 = 2;
+}

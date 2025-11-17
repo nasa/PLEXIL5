@@ -1,0 +1,28 @@
+--- Non-deterministic environment for TakeImage2.
+
+mod INPUT is
+  protecting PLEXIL-V .
+  protecting TakeImage2-PLAN .
+  protecting PLEXIL-V .
+
+  op pointedAtTarget : -> InputGenerator .
+  eq pointedAtTarget = repeat((
+    stateLookup('PointedAtTarget,nilarg,val(true))
+    ,
+    stateLookup('PointedAtTarget,nilarg,val(false))
+  )) .
+
+  op cameraOn : -> InputGenerator .
+  eq cameraOn = repeat((
+    stateLookup('CameraOn,nilarg,val(true))
+    ,
+    stateLookup('CameraOn,nilarg,val(false))
+  )) .
+
+  op command-ack-success : -> InputGenerator .
+  eq command-ack-success = command-ack(CommandSuccess) .
+
+  op input : -> InputGenerator .
+  eq input = command-abort-ack x (command-ack-success x (pointedAtTarget x cameraOn))  .
+
+endm

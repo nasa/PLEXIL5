@@ -1,0 +1,10 @@
+LibraryNode theLibrary (In Integer number, In Boolean flag, In String message);
+/*
+ * Library call with multiple input (In) arguments.
+ */
+
+
+libraryCall2:
+{
+   LibraryCall theLibrary (number=1,flag=true,message="OK");
+}

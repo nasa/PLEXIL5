@@ -1,78 +1,162 @@
-PLEXIL5 
+PLEXIL-V
 ========
-The Plan Execution Interchange Language ([PLEXIL](http://plexil.sourceforge.net)) is an open source
-synchronous language developed by [NASA](https://www.nasa.gov) for commanding and monitoring
-autonomous systems. PLEXIL Formal Interactive Verification Environment
-(PLEXIL5) is a tool that implements a formal executable semantics of
-PLEXIL. PLEXIL5 provides a graphical interface that enable access to
-formal verification techniques such as model-checking, symbolic
-execution, theorem proving, and static analysis of plans. The
-graphical environment supports formula editing and visualization of
-counterexamples, interactive simulation of plans at different
-granularity levels, and random initialization of external environment
-variables.
 
+The Plan Execution Interchange Language ([PLEXIL](http://plexil.sourceforge.net)) is an open source synchronous language developed by [NASA](https://www.nasa.gov) for commanding and monitoring autonomous systems.
 
-PLEXIL’s operational semantics has been formally specified and key
-meta-theoretical properties of the language, such as determinism and
-compositionality, have been
-[formally verified](https://shemesh.larc.nasa.gov/fm/PLEXIL)  in the [Prototype
-Verification System](http://pvs.csl.sri.com/) (PVS). This formalization yields a formal
-executable semantics of the language that serves as an efficient
-formal interpreter and reference implementation of PLEXIL. This formal
-semantics is at the core of the verification capabilities of 
-PLEXIL5. The formal analysis capabilities offered by PLEXIL5 are based
-on PLEXIL’s rewriting logic semantics written in the [Maude](http://maude.cs.illinois.edu/) system and verified in
-PVS.
+PLEXIL Formal Interactive Verification Environment (PLEXIL-V) is a tool that contains a formal executable semantics of PLEXIL specified as a rewriting logic specification in the [Maude](http://maude.cs.illinois.edu/) system.
 
-The graphical user interface has been developed in Java using
-the model-view-controller pattern. The object oriented model
-represents the hierarchical structure of plans, their execution
-behavior, and the external environment. The view consists of several
-classes that present the user with views of the tree-like-structure of
-plans. The controller consists of a custom controller-facade class and
-listener classes using and extending the Java framework.  PLEXIL5
-supports a number of input formats defining plans. For this purpose,
-the tool links a series of parsers and translators that internally
+PLEXIL-V provides an LTL model-checker of PLEXIL plans and a framework to model PLEXIL execution environments for verification.
 
-1.  generate the format supported by the rewriting logic semantics of the
-language implemented in Maude and
-
-2. construct an object oriented plan model from Maude’s output.
-
- Java and Maude communicate as processes at the operating system’s
-level with help of the Java/Maude Integration API, developed as part
-of the PLEXIL5 framework.
 
 ### Current Release
 
-PLEXIL5 v0.0 (May-31-2018)
+PLEXIL-V v0.6.0 (October-2025)
+
 
 ### Requirements
 
-* [Apache Ant](https://ant.apache.org/)
+* **Glasgow Haskell Compiler** (v9.6.7): The recommended way is to use [GHCup](https://www.haskell.org/ghcup/).
 
-* [Maude Interpreter Binaries](http://maude.cs.uiuc.edu/download/). Copy maude.linux64, maude.linux, maude.intelDarwin to `plexilite` folder.
+* **The Maude System**: Binary releases for different platforms can be found [here](https://github.com/maude-lang/Maude/releases).
 
-## Compiling and running
 
-In `build` directory:
+## First steps
 
-```bash
-$ ant run
+PLEXIL-V consists of different components:
+- `plexil2maude` translator from PLEXIL XML format to PLEXIL-V internal format.
+- `plexilog` log processing tools to compare PLEXIL-V against PLEXIL executive runs.
+- `plexil` git submodule with the official PLEXIL executive version that is supported by PLEXIL-V.
+- `semantics` the rewriting logic specification in Maude that implements the formal semantics and the auxiliary tools needed for model-checking and modeling execution environments.
+- `examples` for showcasing how to verify properties of PLEXIL plans.
+
+
+### Compile `plexil2maude` and `plexilog`
+
+From the root of the repository, where the `cabal.project` file is located, install everything with cabal:
 ```
+$ cabal install --overwrite-policy=always all
+```
+This will compile and install the tools located in the `plexil2maude` and `plexilog` folders.
+Immediately after, confirm that the compiled tools are accessible from the command line by running:
+```
+$ plx2maude
+$ plexilog-diff
+```
+Otherwise, add the folder containing those commands to the `PATH`.
+
+
+### Compile the PLEXIL interpreter **(optional)**
+
+To install the official PLEXIL executive, checkout the `plexil` submodule of this repository:
+```
+$ git submodule update --init --recursive
+```
+Then follow the instructions located in the [official repository](https://github.com/plexil-group/plexil).
+
+If you run into issues while compiling, the minimal set of tools needed for PLEXIL-V can be obtained by running the following commands from the `plexil` folder:
+```
+$ make ipc
+$ make tools -j
+```
+
+After adding the `plexil/scripts` folder to the `PATH` environment variable, the following commands should be available:
+```
+$ plexilc
+$ plexiltest
+```
+
+
+### Semantics
+
+The semantics is inside the `semantics/src/` folder.
+The file that needs to be imported to access all the semantics is the `semantics/src/plexil-v.maude` file:
+```
+$ maude semantics/src/plexil-v.maude
+```
+The `PLEXIL-V` module should be visible.
+```
+Maude> show module PLEXIL-V .
+```
+
+
+### Examples
+
+The `examples/` folder, contains some examples of PLEXIL plans with properties to verify.
+
+For example, the `TakeImage0` example contains a PLEXIL plan controlling a camera that can move to point at its target before taking a photo, if necessary.
+
+Two environment model files are provided to model the environment of execution of the plan.
+`env0.maude` models an environment in which the camera is always pointing at its target, while `env1.maude` models that the camera can be moved away from the target at any execution step.
+
+The example properties to verify are contained in `properties.maude`.
+
+Some Maude scripts are provided to automate the loading and execution of the models:
+  - `loadX.maude` scripts load the `TakeImage0` plan and the environment `envX.maude`.
+  - `check.maude` contains the commands to execute to verify the different properties.
+Before executing any of the previous scripts the PLEXIL-V main module `plexil-v.maude` has to be loaded into Maude.
+
+To verify the properties in `env0.maude` we would run the following commands:
+```
+$ cd examples/TakeImage0
+$ make                     # compiles the plans
+$ maude ../../semantics/src/plexil-v.maude load0.maude check.maude
+```
+Then we can confirm that all the properties hold:
+```
+...
+==========================================
+reduce in M-CHECK : plexilModelCheck(init, correctness1, transitionCounterexample) .
+rewrites: 6872 in 1ms cpu (1ms real) (4032863 rewrites/second)
+result Bool: true
+==========================================
+...
+```
+However, if we try to verify them over `env-1.maude`:
+```
+$ cd examples/TakeImage
+$ maude ../../semantics/src/plexil-v.maude load1.maude check.maude
+```
+some of them fail:
+```
+...
+==========================================
+reduce in M-CHECK : plexilModelCheck(init, correctness1, transitionCounterexample) .
+rewrites: 8316 in 2ms cpu (2ms real) (3977044 rewrites/second)
+result TransitionCounterexample:
+Start
+-->
+Input(stateLookup('PointedAtTarget, nilarg, val(true)))
+-->
+Input(commandAck('camera_capture_image, val(50) val(1), CommandSuccess) stateLookup('PointedAtTarget, nilarg, val(false)))
+-->
+Loop{
+
+Input(stateLookup('PointedAtTarget, nilarg, val(true)))
+--> Input(stateLookup('PointedAtTarget, nilarg, val(false)))
+}
+==========================================
+...
+```
+Note that a counterexample is provided for each of the failures.
+
+The example property `correctness1`, defined as `hasStatus('TakeImage, executing) U hasStatus('TakeImage, finished)`, states that the root node of the plan remains in the `EXECUTING` status until it eventually reaches the `FINISHED` state.
+
+This property clearly holds when the camera is always pointing at its target (as in `env0.maude`) but not if it can move (as in `env1.maude`), since in the latter case, an invariant condition in the plan is violated, preventing the root node from finishing.
 
 ### License
 
-The code in this repository is released under NASA's Open Source
-Agreement.  See the directory [`LICENSES`](LICENSES); see also the copyright notice at the end of this file. 
+The code in this repository is released under NASA's Open Source Agreement.
+See the directory [`LICENSES`](LICENSES); see also the copyright notice at the end of this file.
 
 ### Authors
 
-* [C&eacute;sar A. Mu&ntilde;oz](http://shemesh.larc.nasa.gov/people/cam) (cesar.a.munoz@nasa.gov), NASA Langley Research Center, USA. 
-* Hector Cadavid, Escuela Colombiana de Ingenier&iacute;a, Colombia.
+* [Cesar A. Mu&ntilde;oz](http://shemesh.larc.nasa.gov/people/cam) (cesar.a.munoz@nasa.gov), NASA Langley Research Center, USA.
+* Marco A. Feliu, Analytical Mechanics Associates supporting NASA Langley Research Center, USA.
+
+### Contributors
+
 * Camilo Rocha, Pontificia Universidad Javeriana de Cali, Colombia.
-* Marco Feli&uacute;, National Institute of Aerospace, USA. 
+* Hector Cadavid, Escuela Colombiana de Ingenier&iacute;a, Colombia.
 
 ### Copyright Notice
 

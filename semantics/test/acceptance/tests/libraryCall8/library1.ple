@@ -1,0 +1,7 @@
+LibraryNode library2 (InOut Integer number2);
+
+library1:
+{
+   InOut Integer number1;
+   LibraryCall library2 (number2=number1);
+}

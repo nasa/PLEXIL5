@@ -1,0 +1,6 @@
+LibraryNode theLibrary (In Integer number);
+
+libraryCall1:
+{
+   LibraryCall theLibrary (number=1);
+}

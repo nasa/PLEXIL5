@@ -1,0 +1,18 @@
+--- Environment model for TakeImage0 that has PointedAtTarget always
+--- true and commands always succeed.
+
+mod INPUT is
+  protecting PLEXIL-V .
+
+  op pointedAtTarget : -> InputGenerator .
+  eq pointedAtTarget = repeat((
+    stateLookup('PointedAtTarget,nilarg,val(true))
+  )) .
+
+  op command-ack-success : -> InputGenerator .
+  eq command-ack-success = command-ack(CommandSuccess) .
+
+  op input : -> InputGenerator .
+  eq input = command-ack-success x pointedAtTarget .
+
+endm

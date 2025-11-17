@@ -1,0 +1,106 @@
+mod TEST--GENERATORS--IF-THEN-ELSE is
+  protecting TEST-BASE .
+
+  op test--generators--if-then-else : -> TestResults .
+ ceq test--generators--if-then-else =
+begin tests
+
+  assert "if-then-else generates from the first generator when the condition IS satisfied " from
+    anInputsSet(
+      generate(
+        if-then-else(repeat((A, B)),repeat((C, D)),const(val(true))),
+        [ nodes : none ] [ environment : mtenvironment ]
+      )
+    )
+  reaches
+    anInputsSet(
+      (A, B)
+    )
+  end
+
+  assert "if-then-else generates from the second generator when the condition IS NOT satisfied " from
+    anInputsSet(
+      generate(
+        if-then-else(repeat((A, B)),repeat((C, D)),const(val(false))),
+        [ nodes : none ] [ environment : mtenvironment ]
+      )
+    )
+  reaches
+    anInputsSet(
+      (C, D)
+    )
+  end
+
+  assert "if-then-else updates the first generator when the condition IS satisfied" from
+    aGenerator(
+      update(
+        if-then-else(sequence(A # B),sequence(C # D),const(val(true))),
+        [ nodes : none ] [ environment : mtenvironment ],
+        A
+      )
+    )
+  reaches
+    aGenerator(
+      if-then-else(sequence(B),sequence(C # D),const(val(true)))
+    )
+  end
+
+  assert "if-then-else updates the second generator when the condition IS NOT satisfied" from
+    aGenerator(
+      update(
+        if-then-else(sequence(A # B),sequence(C # D),const(val(false))),
+        [ nodes : none ] [ environment : mtenvironment ],
+        A
+      )
+    )
+  reaches
+    aGenerator(
+      if-then-else(sequence(A # B),sequence(D),const(val(false)))
+    )
+  end
+
+  assert "if-then-else computes it's cardinality as the upper bound of both generators 1" from
+    aCardinality(
+      cardinality(
+        if-then-else(sequence(A # B # C),sequence(D # D),const(val(false)))
+      )
+    )
+  reaches
+    aCardinality(
+      Cardinality(countPerStep : 1, numberOfSteps : 3)
+    )
+  end
+
+  assert "if-then-else computes it's cardinality as the upper bound of both generators 2" from
+    aCardinality(
+      cardinality(
+        if-then-else(sequence(A # B),repeat((D)),const(val(false)))
+      )
+    )
+  reaches
+    aCardinality(
+      Cardinality(countPerStep : 1, numberOfSteps : infinity)
+    )
+  end
+
+  assert "if-then-else computes it's cardinality as the upper bound of both generators 3" from
+    aCardinality(
+      cardinality(
+        if-then-else(repeat((A , B)),repeat((D)),const(val(false)))
+      )
+    )
+  reaches
+    aCardinality(
+      Cardinality(countPerStep : 2, numberOfSteps : infinity)
+    )
+  end
+
+end tests
+  if A := stateLookup('a,nilarg, val(true))
+  /\ B := stateLookup('b,nilarg, val(true))
+  /\ C := stateLookup('c,nilarg, val(true))
+  /\ D := stateLookup('d,nilarg, val(true))
+  .
+
+  vars A B C D : StateInput .
+endm

@@ -1,0 +1,12 @@
+temp.*
+*.temp
+output.*
+*.psx
+*.plx
+*.~*
+benchmark/icarous/cognition/TrafficConflictHandler.maude
+benchmark/icarous/**/input.maude
+test/acceptance/**/*.maude
+test/regression/parsedTests
+test/regression/run.maude
+

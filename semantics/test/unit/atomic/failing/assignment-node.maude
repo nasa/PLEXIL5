@@ -1,0 +1,87 @@
+mod TEST--ATOMIC--FAILING--ASSIGNMENT-NODE is
+
+  pr TEST-BASE .
+
+
+  op tests--atomic--failing--assignment-node : -> TestResults .
+
+  eq tests--atomic--failing--assignment-node = begin tests
+
+    assert "Failing assignment node follows path 1 (failing--assignment--01)" from
+      failing(
+        [ nodes :
+            < A : assignment | status: failing,
+                               active: true,
+                               outcome: failure(parentExited) > ]
+        [ microacts : mtactions ]
+      )
+    reaches
+      failing(
+        [ nodes :
+            < A : assignment | status: failing,
+                               active: false,
+                               outcome: failure(parentExited) > ]
+        [ microacts : setStatus(A,finished),
+                      logTransition(A, failing, finished, 1) ]
+      )
+    end
+
+    assert "Failing assignment node follows path 2 (failing--assignment--02)" from
+      failing(
+        [ nodes :
+            < A : assignment | status: failing,
+                               active: true,
+                               outcome: failure(parentFailed) > ]
+        [ microacts : mtactions ]
+      )
+    reaches
+      failing(
+        [ nodes :
+            < A : assignment | status: failing,
+                               active: false,
+                               outcome: failure(parentFailed) > ]
+        [ microacts : setStatus(A,finished),
+                      logTransition(A, failing, finished, 2) ]
+      )
+    end
+
+    assert "Failing assignment node follows path 3 (failing--assignment--03)" from
+      failing(
+        [ nodes :
+            < A : assignment | status: failing,
+                               active: true,
+                               outcome: failure(exited) > ]
+        [ microacts : mtactions ]
+      )
+    reaches
+      failing(
+        [ nodes :
+            < A : assignment | status: failing,
+                               active: false,
+                               outcome: failure(exited) > ]
+        [ microacts : setStatus(A,iterationEnded),
+                      logTransition(A, failing, iterationEnded, 3) ]
+      )
+    end
+
+    assert "Failing assignment node has to evolved" from
+      failing(
+        [ nodes :
+            < A : assignment | status: failing,
+                               active: true,
+                               outcome: failure(exited) > ]
+        [ microacts : mtactions ]
+      )
+    avoids
+      failing(
+        [ nodes :
+            < A : assignment | status: failing,
+                               active: false,
+                               outcome: failure(exited) > ]
+        [ microacts : mtactions ]
+      )
+    end
+
+  end tests .
+
+endm

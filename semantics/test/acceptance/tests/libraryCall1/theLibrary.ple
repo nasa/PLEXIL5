@@ -1,0 +1,7 @@
+theLibrary:
+{
+   In Integer number;
+   empty: {
+      Start number == 1;
+   }
+}

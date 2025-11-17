@@ -1,0 +1,10 @@
+*** Check properties for TakeImage3 plan.
+
+red customModelCheck(init,liveness1,transitionCounterexample) .
+red customModelCheck(init,liveness2,transitionCounterexample) .
+red customModelCheck(init,liveness3,transitionCounterexample) .
+red customModelCheck(init,safety1,transitionCounterexample) .
+red customModelCheck(init,safety2,transitionCounterexample) .
+red customModelCheck(init,safety3,transitionCounterexample) .
+red customModelCheck(init,timepoint1, transitionCounterexample) .
+red customModelCheck(init,timepoint2,transitionCounterexample) .

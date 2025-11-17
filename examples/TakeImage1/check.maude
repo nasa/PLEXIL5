@@ -1,0 +1,33 @@
+--- Property checks for TakeImage1 plan.
+
+--- Structural estimation of the state space size (number of different
+--- traces to check)
+red estimateMCStateSpace(init) .
+
+--- Time estimation of the state space exploration (time to explore
+--- all different traces to check)
+red estimateMCExecutionTime(msPerExecutionSequence: 54, state: init) .
+
+--- Quiet model checking invocation without counterexample
+red customModelCheck(init, liveness1, noCounterexample) .
+
+--- Verbose model checking invocation with the external inputs of the counterexample
+red customModelCheck(init, liveness1, transitionCounterexample) .
+
+--- Verbose model checking invocation with the external inputs of the
+--- counterexample and final State
+
+red customModelCheck(init, liveness1, transitionCounterexampleWithFinalState) .
+red customModelCheck(init, liveness1, transitionCounterexample) .
+red customModelCheck(init, liveness1', transitionCounterexample) .
+red customModelCheck(init, liveness2, transitionCounterexample) .
+red customModelCheck(init, liveness2', transitionCounterexample) .
+red customModelCheck(init, liveness3, transitionCounterexample) .
+red customModelCheck(init, liveness3', transitionCounterexample) .
+red customModelCheck(init, liveness4, transitionCounterexample) .
+red customModelCheck(init, liveness5', transitionCounterexample) .
+red customModelCheck(init, safety1, transitionCounterexample) .
+red customModelCheck(init, safety2, transitionCounterexample) .
+red customModelCheck(init, safety3, transitionCounterexample) .
+red customModelCheck(init, safety4, transitionCounterexample) .
+red customModelCheck(init, safety5, transitionCounterexample) .

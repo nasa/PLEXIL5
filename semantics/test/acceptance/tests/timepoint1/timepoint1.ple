@@ -1,0 +1,4 @@
+timepoint1:
+{
+  EndCondition isKnown(timepoint1.INACTIVE.START);
+}

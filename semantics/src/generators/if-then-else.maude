@@ -1,0 +1,33 @@
+fmod IF-THEN-ELSE-GENERATOR is
+  protecting SYSTEM .
+  protecting EVAL .
+
+  op if-then-else : InputGenerator InputGenerator Expression -> InputGenerator [ctor] .
+  eq generate(if-then-else(Gen1,Gen2,Cond),Cfg)
+    =
+    if bEval(Cond,Cfg)
+      then generate(Gen1,Cfg)
+      else generate(Gen2,Cfg)
+    fi
+  .
+
+  eq update(if-then-else(Gen1,Gen2,Cond),Cfg,In)
+    =
+    if bEval(Cond,Cfg)
+      then if-then-else(update(Gen1,Cfg,In),Gen2,Cond)
+      else if-then-else(Gen1,update(Gen2,Cfg,In),Cond)
+    fi
+  .
+
+  eq cardinality(if-then-else(Gen1,Gen2,Cond))
+   = upperBound(
+      cardinality(Gen1),
+      cardinality(Gen2)
+     )
+  .
+
+  vars Cfg : Config .
+  vars Cond : Expression .
+  vars Gen1 Gen2  : InputGenerator .
+  vars In : Inputs .
+endfm

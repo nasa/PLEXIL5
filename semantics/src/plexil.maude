@@ -1,0 +1,38 @@
+----                                                Definition of a PLEXIL plan
+----                                                       author: Camilo Rocha
+
+*** Initial sort, defined this way, so we can have mutual
+*** recursion in the strtucture
+fmod PREPLEXIL is
+ sort Plexil .
+endfm
+
+view Plexil from TRIV to PREPLEXIL is
+ sort Elt to Plexil .
+endv
+
+*** We are going to have list and non-empty lists of Plexil,
+*** but only in the internal nodes, that is, there is always
+*** at most one plan
+fmod PREPLEXILLIST is
+ protecting LIST{Plexil} * (sort NeList{Plexil} to NePrePlexilList ,
+                            sort List{Plexil} to PrePlexilList,
+                            op __ to __ [format (d ni d)]) .
+endfm
+
+*** PLEXIL Plan
+fmod PLEXIL is
+ protecting DEFS .
+ including PREPLEXIL .
+ including PREPLEXILLIST .
+ sorts PlexilList PlexilLibrary PlexilCommand PlexilRetCommand PlexilAssignment PlexilUpdate PlexilEmpty .
+ subsort PlexilList PlexilLibrary PlexilCommand PlexilRetCommand PlexilAssignment PlexilUpdate PlexilEmpty < Plexil .
+
+ op assignment`(_,_,_,_`)     : Identifier LocalDecls AttributeSet Attribute                   -> PlexilAssignment [ctor format (d d d d ++ni d ni d ni-- ni d)] .
+ op command`(_,_,_,_`)        : Identifier LocalDecls AttributeSet Command                     -> PlexilCommand    [ctor format (d d d d ++ni d ni d ni-- ni d)] .
+ op empty`(_,_,_`)            : Identifier LocalDecls AttributeSet                             -> PlexilEmpty      [ctor format (d d d d ++ni d ni-- ni d)] .
+ op list`(_,_,_,_`)           : Identifier LocalDecls AttributeSet PrePlexilList               -> PlexilList       [ctor format (d d d d ++ni d ni d ni n--i d)] .
+ op library`(_,_,_,_,_`)        : Identifier LocalDecls AttributeSet LibraryCallInfo Plexil      -> PlexilLibrary    [ctor format (d d d d ++ni d ni d ni d ni n--i d)] .
+ op retCommand`(_,_,_,_,_,_`) : Identifier LocalDecls AttributeSet Qualified Qualified Command -> PlexilRetCommand [ctor format (d d d d ++ni d ni d ni d ni d ni-- ni d)] .
+ op update`(_,_,_,_`)         : Identifier LocalDecls AttributeSet List{Pair{Qid,Expression}}  -> PlexilUpdate     [ctor format (d d d d ++ni d ni d ni-- ni d)] .
+endfm

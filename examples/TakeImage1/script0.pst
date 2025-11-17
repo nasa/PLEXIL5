@@ -1,0 +1,51 @@
+// Nominal script for TakeImage1.
+
+initial-state {
+  state time () = 0 : real;
+  state PointedAtTarget () = false : bool;
+  state CameraOn () = false : bool;
+  state Temperature () = 80.0 : real;
+  state ImagesTaken () = 0 : int;
+}
+
+script {
+  // Slew (start)
+  state time () = 122 : real;
+  command-sent-to-system slew(1200: int, -90.0: real, 0.0: real);
+
+  // CameraOn
+  state time () = 500 : real;
+  command-sent-to-system camera_power_on();
+  state time () = 510 : real;
+  state CameraOn () = true : bool;
+  command-success camera_power_on();
+
+  state time () = 520 : real;
+
+  // Slew (finish)
+  command-success slew(1200: int, -90.0: real, 0.0: real);
+  state Temperature () = 82.0 : real;
+
+  // TakeImage (takes several macro steps)
+  simultaneous {
+    state time () = 1322 : real;
+    state PointedAtTarget () = true : bool;
+  }
+  state time () = 1323 : real;
+  state time () = 1324 : real;
+  command-success camera_capture_image(50: int, 0: int);
+  state time () = 1326 : real;
+  state time () = 1327 : real;
+  command-success camera_capture_image(50: int, 1: int);
+  state time () = 1328 : real;
+  state time () = 1329 : real;
+  command-success camera_capture_image(50: int, 2: int);
+  state time () = 1350 : real;
+  state Temperature () = 83.0 : real;
+
+  // CameraOff
+  state time () = 1373 : real;
+  state CameraOn () = false : bool;
+  command-success camera_power_off();
+  state time () = 1394 : real;
+}

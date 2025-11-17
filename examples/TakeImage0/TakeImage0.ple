@@ -1,0 +1,25 @@
+// Basic version of a plan for an imagined satellite that has it slew
+// to a fixed position and then capture an image.
+
+Boolean Lookup PointedAtTarget;
+
+Command camera_capture_image(Integer, Integer);
+Command slew(Integer, Real, Real);
+
+TakeImage0: CheckedSequence
+{
+  Slew:
+  {
+    End Lookup(PointedAtTarget);
+
+    Slew1: SynchronousCommand slew(10, -90.0, 0.0);
+  }
+
+  CaptureImage:
+  {
+    PreCondition Lookup(PointedAtTarget);
+    Invariant Lookup(PointedAtTarget);
+
+    CaptureImage1: SynchronousCommand camera_capture_image(50, 1);
+  }
+}

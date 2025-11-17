@@ -1,0 +1,8 @@
+/*
+ * Default variable initialization for Real.
+ */
+variableInitialization2:
+{
+  Real x;
+  StartCondition !isKnown(x);
+}

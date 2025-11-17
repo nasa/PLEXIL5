@@ -1,0 +1,15 @@
+theLibrary:
+{
+   InOut Integer number;
+   In Boolean flag;
+   InOut String message;
+   assignment: {
+      Start number == 1 && flag;
+      setNumber: {
+         number = 2;
+      }
+      setMessage: {
+         message = "FINAL";
+      }
+   }
+}

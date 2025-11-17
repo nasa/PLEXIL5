@@ -1,0 +1,3 @@
+load "TakeImage0.maude"
+load "env1.maude"
+load "properties.maude"

@@ -1,0 +1,212 @@
+mod TEST--ATOMIC--EXECUTING--LIST-NODE is
+
+  pr TEST-BASE .
+
+
+  op tests--atomic--executing--list-node : -> TestResults .
+
+  eq tests--atomic--executing--list-node = begin tests
+
+    assert "Executing list node follows path 1 (executing--list--01)" from
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list | inv: const(unknown),
+                             exitc: const(val(true)) >
+            < B . A : list | status: executing,
+                             active: true,
+                             inv: const(unknown),
+                             post: const(unknown),
+                             endc: const(unknown),
+                             exitc: const(unknown) > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list | inv: const(unknown),
+                             exitc: const(val(true)) >
+            < B . A : list | status: executing,
+                             active: false,
+                             inv: const(unknown),
+                             post: const(unknown),
+                             endc: const(unknown),
+                             exitc: const(unknown) > ]
+        [ microacts : setOutcome(B . A,interrupted(parentExited)),
+                      setStatus(B . A,failing),
+                      logTransition(B . A, executing, failing, 1) ]
+        [ memory : none ]
+      )
+    end
+
+    assert "Executing list node follows path 2 (executing--list--02)" from
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes : < A     : list | inv: const(unknown),
+                           exitc: const(unknown) >
+          < B . A : list | status: executing,
+                           active: true,
+                           inv: const(unknown),
+                           post: const(unknown),
+                           endc: const(unknown),
+                           exitc: const(val(true)) > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list | inv: const(unknown),
+                             exitc: const(unknown) >
+            < B . A : list | status: executing,
+                             active: false,
+                             inv: const(unknown),
+                             post: const(unknown),
+                             endc: const(unknown),
+                             exitc: const(val(true)) > ]
+        [ microacts : setOutcome(B . A,interrupted(exited)),
+                      setStatus(B . A,failing),
+                      logTransition(B . A, executing, failing, 2) ]
+        [ memory : none ]
+      )
+    end
+
+    assert "Executing list node follows path 3 (executing--list--03)" from
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list | inv: const(val(false)),
+                             exitc: const(unknown) >
+            < B . A : list | status: executing,
+                             active: true,
+                             inv: const(unknown),
+                             post: const(unknown),
+                             endc: const(unknown),
+                             exitc: const(unknown) > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list | inv: const(val(false)),
+                             exitc: const(unknown) >
+            < B . A : list | status: executing,
+                             active: false,
+                             inv: const(unknown),
+                             post: const(unknown),
+                             endc: const(unknown),
+                             exitc: const(unknown) > ]
+        [ microacts : setOutcome(B . A,failure(parentFailed)),
+                      setStatus(B . A,failing),
+                      logTransition(B . A, executing, failing, 3) ]
+        [ memory : none ]
+      )
+    end
+
+    assert "Executing list node follows path 4 (executing--list--04)" from
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list | inv: const(unknown),
+                             exitc: const(unknown) >
+            < B . A : list | status: executing,
+                             active: true,
+                             inv: const(val(false)),
+                             post: const(unknown),
+                             endc: const(unknown),
+                             exitc: const(unknown) > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list | inv: const(unknown),
+                             exitc: const(unknown) >
+            < B . A : list | status: executing,
+                             active: false,
+                             inv: const(val(false)),
+                             post: const(unknown),
+                             endc: const(unknown),
+                             exitc: const(unknown) > ]
+        [ microacts : setOutcome(B . A,failure(invariantFailed)),
+                      setStatus(B . A,failing),
+                      logTransition(B . A, executing, failing, 4) ]
+        [ memory : none ]
+      )
+    end
+
+    assert "Executing list node follows path 5 (executing--list--05)" from
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list | inv: const(unknown),
+                             exitc: const(unknown) >
+            < B . A : list | status: executing,
+                             active: true,
+                             inv: const(unknown),
+                             post: const(unknown),
+                             endc: const(val(true)),
+                             exitc: const(unknown) > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list | inv: const(unknown),
+                             exitc: const(unknown) >
+            < B . A : list | status: executing,
+                             active: false,
+                             inv: const(unknown),
+                             post: const(unknown),
+                             endc: const(val(true)),
+                             exitc: const(unknown) > ]
+        [ microacts : setStatus(B . A,finishing),
+                      logTransition(B . A, executing, finishing, 5) ]
+        [ memory : none ]
+      )
+    end
+
+    assert "Executing list node follows path 6 (executing--list--06)" from
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list | inv: const(unknown),
+                             exitc: const(unknown) >
+            < B . A : list | status: executing,
+                             active: true,
+                             inv: const(unknown),
+                             post: const(unknown),
+                             endc: const(unknown),
+                             exitc: const(unknown) > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+      )
+    reaches
+      executing(
+        [ environment : mtenvironment ]
+        [ nodes :
+            < A     : list | inv: const(unknown),
+                             exitc: const(unknown) >
+            < B . A : list | status: executing,
+                             active: false,
+                             inv: const(unknown),
+                             post: const(unknown),
+                             endc: const(unknown),
+                             exitc: const(unknown) > ]
+        [ microacts : mtactions ]
+        [ memory : none ]
+      )
+    end
+
+  end tests .
+
+endm

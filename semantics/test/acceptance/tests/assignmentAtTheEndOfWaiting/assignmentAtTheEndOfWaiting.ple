@@ -1,0 +1,13 @@
+Command pprint(...);
+
+assignmentAtTheEndOfWaiting: Concurrence
+{
+  Integer i = 1;
+
+  increment : i = 2;
+
+  print1 : {
+    Start increment.state == EXECUTING;
+    pprint("i: ", i);
+  }
+}

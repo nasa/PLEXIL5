@@ -1,0 +1,237 @@
+mod TEST--ATOMIC--EXECUTING--COMMAND-NODE is
+
+  pr TEST-BASE .
+
+
+  op tests--atomic--executing--command-node : -> TestResults .
+
+  eq tests--atomic--executing--command-node = begin tests
+
+    assert "Executing command node follows path 1 (executing--command--01)" from
+      executing(
+        [ nodes :
+            < 'A      : list |
+                inv: const(unknown),
+                exitc: const(val(true)) >
+            < 'B . 'A : command |
+                status: executing,
+                active: true,
+                inv: const(unknown),
+                post: const(unknown),
+                endc: const(unknown),
+                exitc: const(unknown),
+                command: 'cmdId / nilpar / nothing > ]
+        [ microacts : mtactions ]
+        [ macroacts : mtactions ]
+        [ memory : none ]
+        [ environment : mtenvironment ]
+        [ interface : none ]
+      )
+    reaches
+        [ nodes :
+            < 'A      : list |
+                inv: const(unknown),
+                exitc: const(val(true)) >
+            < 'B . 'A : command |
+                status: executing,
+                active: false,
+                inv: const(unknown),
+                post: const(unknown),
+                endc: const(unknown),
+                exitc: const(unknown),
+                command: 'cmdId / nilpar / nothing > ]
+        [ microacts : setOutcome('B . 'A,interrupted(parentExited)),
+                      setStatus('B . 'A,failing),
+                      logTransition('B . 'A, executing, failing, 1) ]
+        [ macroacts : abortCommand('B . 'A) ]
+        [ memory : none ]
+        [ environment : mtenvironment ]
+        [ interface : none ]
+    end
+
+    assert "Executing command node follows path 2 (executing--command--02)" from
+      executing(
+        [ nodes :
+            < 'A : command |
+                status: executing,
+                active: true,
+                inv: const(unknown),
+                post: const(unknown),
+                endc: const(unknown),
+                exitc: const(val(true)),
+                command: 'cmdId / nilpar / nothing > ]
+        [ microacts : mtactions ]
+        [ macroacts : mtactions ]
+        [ memory : none ]
+        [ environment : mtenvironment ]
+        [ interface : none ]
+      )
+    reaches
+        [ nodes :
+            < 'A : command |
+                status: executing,
+                active: false,
+                inv: const(unknown),
+                post: const(unknown),
+                endc: const(unknown),
+                exitc: const(val(true)),
+                command: 'cmdId / nilpar / nothing > ]
+        [ microacts : setOutcome('A,interrupted(exited)),
+                      setStatus('A,failing),
+                      logTransition('A, executing, failing, 2) ]
+        [ macroacts : abortCommand('A) ]
+        [ memory : none ]
+        [ environment : mtenvironment ]
+        [ interface : none ]
+    end
+
+  assert "Executing command node follows path 3 (executing--command--03)" from
+      executing(
+        [ nodes :
+            < 'A      : list |
+                inv: const(val(false)),
+                exitc: const(unknown) >
+            < 'B . 'A : command |
+                status: executing,
+                active: true,
+                inv: const(unknown),
+                post: const(unknown),
+                endc: const(unknown),
+                exitc: const(unknown),
+                command: 'cmdId / nilpar / nothing > ]
+        [ microacts : mtactions ]
+        [ macroacts : mtactions ]
+        [ memory : none ]
+        [ environment : mtenvironment ]
+        [ interface : none ]
+      )
+  reaches
+        [ nodes :
+            < 'A      : list |
+                inv: const(val(false)),
+                exitc: const(unknown) >
+            < 'B . 'A : command |
+                status: executing,
+                active: false,
+                inv: const(unknown),
+                post: const(unknown),
+                endc: const(unknown),
+                exitc: const(unknown),
+                command: 'cmdId / nilpar / nothing > ]
+        [ microacts : setOutcome('B . 'A,failure(parentFailed)),
+                      setStatus('B . 'A,failing),
+                      logTransition('B . 'A, executing, failing, 3) ]
+        [ macroacts : abortCommand('B . 'A) ]
+        [ memory : none ]
+        [ environment : mtenvironment ]
+        [ interface : none ]
+  end
+
+  assert "Executing command node follows path 4 (executing--command--04)" from
+      executing(
+        [ nodes :
+            < 'A : command |
+                status: executing,
+                active: true,
+                inv: const(val(false)),
+                post: const(unknown),
+                endc: const(unknown),
+                exitc: const(unknown),
+                command: 'cmdId / nilpar / nothing > ]
+        [ microacts : mtactions ]
+        [ macroacts : mtactions ]
+        [ memory : none ]
+        [ environment : mtenvironment ]
+        [ interface : none ]
+      )
+  reaches
+        [ nodes :
+            < 'A : command |
+                status: executing,
+                active: false,
+                inv: const(val(false)),
+                post: const(unknown),
+                endc: const(unknown),
+                exitc: const(unknown),
+                command: 'cmdId / nilpar / nothing > ]
+        [ microacts : setOutcome('A,failure(invariantFailed)),
+                      setStatus('A,failing),
+                      logTransition('A, executing, failing, 4) ]
+        [ macroacts : abortCommand('A) ]
+        [ memory : none ]
+        [ environment : mtenvironment ]
+        [ interface : none ]
+  end
+
+  assert "Executing command node follows path 5 (executing--command--05)" from
+      executing(
+        [ nodes :
+            < 'A : command |
+                status: executing,
+                active: true,
+                inv: const(unknown),
+                post: const(unknown),
+                endc: const(val(true)),
+                exitc: const(unknown),
+                command: 'cmdId / nilpar / nothing > ]
+        [ microacts : mtactions ]
+        [ macroacts : mtactions ]
+        [ memory : none ]
+        [ environment : mtenvironment ]
+        [ interface : none ]
+      )
+  reaches
+        [ nodes :
+            < 'A : command |
+                status: executing,
+                active: false,
+                inv: const(unknown),
+                post: const(unknown),
+                endc: const(val(true)),
+                exitc: const(unknown),
+                command: 'cmdId / nilpar / nothing > ]
+        [ microacts : setStatus('A,finishing),
+                      logTransition('A, executing, finishing, 5) ]
+        [ macroacts : mtactions ]
+        [ memory : none ]
+        [ environment : mtenvironment ]
+        [ interface : none ]
+  end
+
+  assert "Executing command node follows path 6 (executing--command--06)" from
+      executing(
+        [ nodes :
+            < 'A : command |
+                status: executing,
+                active: true,
+                inv: const(unknown),
+                post: const(unknown),
+                endc: const(unknown),
+                exitc: const(unknown),
+                command: 'cmdId / nilpar / nothing > ]
+        [ microacts : mtactions ]
+        [ macroacts : mtactions ]
+        [ memory : none ]
+        [ environment : mtenvironment ]
+        [ interface : none ]
+      )
+  reaches
+        [ nodes :
+            < 'A : command |
+                status: executing,
+                active: false,
+                inv: const(unknown),
+                post: const(unknown),
+                endc: const(unknown),
+                exitc: const(unknown),
+                command: 'cmdId / nilpar / nothing > ]
+        [ microacts : mtactions ]
+        [ macroacts : mtactions ]
+        [ memory : none ]
+        [ environment : mtenvironment ]
+        [ interface : none ]
+  end
+
+  end tests .
+
+endm

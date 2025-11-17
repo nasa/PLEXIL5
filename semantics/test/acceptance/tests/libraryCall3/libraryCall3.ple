@@ -1,0 +1,10 @@
+LibraryNode theLibrary (InOut Integer number);
+/*
+ * Library call with one input/output (InOut) argument.
+ */
+libraryCall3:
+{
+   Integer myNumber = 1;
+   EndCondition myNumber == 2;
+   LibraryCall theLibrary (number=myNumber);
+}

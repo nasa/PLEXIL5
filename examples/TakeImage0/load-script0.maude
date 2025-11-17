@@ -1,0 +1,3 @@
+load "TakeImage0.maude"
+load "script0.maude"
+load "properties.maude"

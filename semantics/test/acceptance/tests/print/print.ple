@@ -1,0 +1,24 @@
+/*
+ * name: print
+ *
+ * description: This plan showcases the basic support for printing utilities.
+ *
+ * limitations: `pprint` cannot be automatically tested because the Test Executive
+ *               does not provide a way to disable the printing utilities output
+ *               to the terminal, an this confuses the PLEXIL5 parser of the debugging
+ *               information.
+ */
+
+Command print(...);
+// Command pprint(...);
+
+print: Concurrence
+{
+  print("");
+  // pprint("");
+  Sequence {
+    {}
+    {}
+    {}
+  }
+}

@@ -1,0 +1,43 @@
+version: 2.1
+
+jobs:
+  build:
+    docker:
+      - image: semantictests/plexil5:2.0
+    environment:
+      TERM: xterm
+    steps:
+      - checkout
+      - run: git submodule update --init --recursive
+      - run:
+          name: Install plexil2maude
+          command: |
+            cd plexil2maude
+            cabal v2-install --overwrite-policy=always
+      - run:
+          name: Install plexilog
+          command: |
+            cd plexilog
+            cabal v2-install --overwrite-policy=always
+      - run:
+          name: Parser tests
+          command: |
+            cd plexil2maude
+            cabal new-run test -- --hide-successes --ansi-tricks=false
+      - run:
+          name: Semantic tests - Unit Tests
+          command: |
+            cd semantics
+            ./runTests.sh --check
+      - run:
+          name: Semantic tests - Acceptance Tests
+          command: |
+            export PATH=/plexil/scripts:/plexil/bin:$PATH:~/.cabal/bin
+            cd semantics
+            ./runAT.sh --check
+      - run:
+          name: Regression tests - Check for changes
+          command: |
+            export PATH=/plexil/scripts:/plexil/bin:$PATH:~/.cabal/bin
+            cd semantics/test/regression
+            python3 runRegression.py -p

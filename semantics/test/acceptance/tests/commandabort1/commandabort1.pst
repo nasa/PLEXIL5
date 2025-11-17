@@ -1,0 +1,8 @@
+
+// commandabort1
+
+script {
+    //command-sent-to-system cmd_name ();
+    state time () =  1: real;
+    command-abort cmd_name () = 1 : bool;
+}

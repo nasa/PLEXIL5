@@ -1,0 +1,196 @@
+mod TEST--GENERATORS--X is
+  protecting TEST-BASE .
+
+  op test--generators--x : -> TestResults .
+  ceq test--generators--x =
+begin tests
+
+  assert "min ExNat 0" from
+    anExNat(
+      min(infinity,infinity)
+    )
+  reaches
+    anExNat(
+      infinity
+    )
+  end
+
+  assert "min ExNat 1" from
+    anExNat(
+      min(infinity, 0)
+    )
+  reaches
+    anExNat(
+      0
+    )
+  end
+
+  assert "min ExNat 2" from
+    anExNat(
+      min(0, infinity)
+    )
+  reaches
+    anExNat(
+      0
+    )
+  end
+
+  assert "min ExNat 3" from
+    anExNat(
+      min(2, 10)
+    )
+  reaches
+    anExNat(
+      2
+    )
+  end
+
+  assert "generate _x_ InputGenerator combinator with sequences" from
+    anInputsSet(
+      generate(
+        sequenceGenerator(A # B, started, mtsoup, mtsoup)
+        x
+        sequenceGenerator(C # D, started, mtsoup, mtsoup)
+        ,
+        mtsoup
+      )
+    )
+  reaches
+    anInputsSet(
+      (
+        A
+        C
+      )
+    )
+  end
+
+  assert "update _x_ InputGenerator combinator with sequences" from
+    aGenerator(
+      update(
+        sequence(A # B)
+        x
+        sequence(C # D)
+        ,
+        mtsoup
+        ,
+        D
+      )
+    )
+  reaches
+    aGenerator(
+        sequence(B)
+        x
+        sequence(D)
+    )
+  end
+
+  assert "generate _x_ InputGenerator combinator with nd-repeats 1" from
+    anInputsSet(
+      generate(
+        repeat((A , B))
+        x
+        repeat((C , D))
+        ,
+        mtsoup
+      )
+    )
+  reaches
+    anInputsSet(
+      (
+        A C,
+        A D,
+        B C,
+        B D
+      )
+
+    )
+  end
+
+  assert "generate _x_ InputGenerator combinator with nd-repeats 2" from
+    anInputsSet(
+      generate(
+        repeat((A C, B))
+        x
+        repeat((C , B D))
+        ,
+        mtsoup
+      )
+    )
+  reaches
+    anInputsSet(
+      (
+        A C,
+        A C B D,
+        B C,
+        B D
+      )
+    )
+  end
+
+  assert "cardinality _x_ InputGenerator combinator with sequence and repeat" from
+    aCardinality(
+      cardinality(
+        sequence(A # B)
+        x
+        repeat((C , D , E))
+      )
+    )
+  reaches
+    aCardinality(
+      Cardinality(countPerStep : 3, numberOfSteps : 1)
+    )
+  end
+
+  assert "cardinality _x_ InputGenerator combinator with sequence and repeat" from
+    aCardinality(
+      cardinality(
+        repeat((A , B , C , D , E))
+        x
+        sequence(A)
+      )
+    )
+  reaches
+    aCardinality(
+      Cardinality(countPerStep : 5, numberOfSteps : 0)
+    )
+  end
+
+  assert "cardinality _x_ InputGenerator combinator with repeat" from
+    aCardinality(
+      cardinality(
+        repeat((A , B))
+        x
+        repeat((C , D , E))
+      )
+    )
+  reaches
+    aCardinality(
+      Cardinality(countPerStep : 6, numberOfSteps : infinity)
+    )
+  end
+
+  assert "cardinality _x_ InputGenerator combinator with sequence" from
+    aCardinality(
+      cardinality(
+        sequence(A # B # C)
+        x
+        sequence(D # E)
+      )
+    )
+  reaches
+    aCardinality(
+      Cardinality(countPerStep : 1, numberOfSteps : 1)
+    )
+  end
+
+end tests
+  if A := stateLookup('a,nilarg, val(true))
+  /\ B := stateLookup('b,nilarg, val(true))
+  /\ C := stateLookup('c,nilarg, val(true))
+  /\ D := stateLookup('d,nilarg, val(true))
+  /\ E := stateLookup('e,nilarg, val(true))
+  .
+
+  vars A B C D E : StateInput .
+
+endm

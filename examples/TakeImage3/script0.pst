@@ -1,0 +1,28 @@
+// Nominal script for TakeImage3.
+
+initial-state {
+  state time () = 0 : real;
+  state PointedAtTarget () = false : bool;
+  state CameraOn () = false : bool;
+}
+
+script {
+
+  // Slew
+  command-sent-to-system slew(1200: int, -90.0: real, 0.0: real);
+  state PointedAtTarget () = true : bool;
+  command-success slew(1200: int, -90.0: real, 0.0: real);
+
+  // CameraOn
+  command-sent-to-system camera_power_on();
+  state CameraOn () = true : bool;
+  command-success camera_power_on();
+
+  // TakeImage
+  command-success camera_capture_image(50: int, 1: int);
+
+
+  // CameraOff
+  state CameraOn () = false : bool;
+  command-success camera_power_off();
+}

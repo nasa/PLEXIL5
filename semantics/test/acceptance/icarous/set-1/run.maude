@@ -1,0 +1,10 @@
+set print attribute on .
+set print color on .
+
+mod PLAN-SIMULATION is
+  protecting TrafficConflictHandler-PLAN .
+  protecting INPUT .
+endm
+
+rew run(compile(rootNode,input)) .
+q

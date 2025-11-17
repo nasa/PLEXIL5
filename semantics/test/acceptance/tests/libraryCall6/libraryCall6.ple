@@ -1,0 +1,11 @@
+LibraryNode library1 ();
+LibraryNode library2 ();
+
+/*
+ * Two library calls in the same plan
+ */
+libraryCall6:
+{
+   LibraryCall library1 ();
+   LibraryCall library2 ();
+}

@@ -1,0 +1,11 @@
+---( Properties to check )
+
+red plexilModelCheck(init,correctness1,transitionCounterexample) .
+red plexilModelCheck(init,correctness2,transitionCounterexample) .
+red plexilModelCheck(init,correctness3,transitionCounterexample) .
+red plexilModelCheck(init,correctness4,transitionCounterexample) .
+
+red plexilModelCheck(init,liveness1,transitionCounterexample) .
+red plexilModelCheck(init,liveness2,transitionCounterexample) .
+
+red plexilModelCheck(init,safety1,transitionCounterexample) .

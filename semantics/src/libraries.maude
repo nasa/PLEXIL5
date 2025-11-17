@@ -1,0 +1,10 @@
+fmod LIBRARY is
+  protecting IDENTIFIER .
+  protecting IDENTIFIERS .
+  protecting PARAMETER .
+
+  sort LibraryCallInfo .
+
+  op callInfo : Identifier Identifiers Parameters -> LibraryCallInfo [ctor] .
+
+endfm

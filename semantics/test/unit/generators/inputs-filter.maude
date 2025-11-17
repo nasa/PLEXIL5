@@ -1,0 +1,151 @@
+mod TEST--GENERATORS--INPUTS-FILTER is
+  protecting TEST-BASE .
+
+  op test--generators--inputs-filter : -> TestResults .
+  ceq test--generators--inputs-filter =
+begin tests
+
+  assert "generate inputs-filter accepts pure boolean state expressions 1" from
+    anInputsSet(
+      generate(
+        inputs-filter(repeat((A B, C D)),const(val(true))),
+        [ nodes : none ] [ environment : mtenvironment ]
+      )
+    )
+  reaches
+    anInputsSet(
+      (A B,C D)
+    )
+  end
+
+  assert "generate inputs-filter accepts pure boolean state expressions 2" from
+    anInputsSet(
+      generate(
+        inputs-filter(repeat((A B, C D)), const(val(false))),
+        [ nodes : none ] [ environment : mtenvironment ]
+      )
+    )
+  reaches
+    anInputsSet(
+      (noInputs)
+    )
+  end
+
+  assert "generate inputs-filter accepts boolean expressions with new-lookup" from
+    anInputsSet(
+      generate(
+        inputs-filter(repeat((A B, C D)), new(lookup('d,nilarg)) equ const(val(true))),
+        [ nodes : none ] [ environment : mtenvironment ]
+      )
+    )
+  reaches
+    anInputsSet(
+      (C D)
+    )
+  end
+
+  assert "generate inputs-filter accepts new-lookup expressions that return booleans" from
+    anInputsSet(
+      generate(
+        inputs-filter(repeat((A B, C D, B C)), new(lookup('b,nilarg))),
+        [ nodes : none ] [ environment : mtenvironment ]
+      )
+    )
+  reaches
+    anInputsSet(
+      (A B,B C)
+    )
+  end
+
+  assert "generate inputs-filter: a boolean new-lookup can be used as a property" from
+    anInputsSet(
+      generate(
+        inputs-filter(repeat((A B, C D, B C)), not new(lookup('c,nilarg))),
+        [ nodes : none ] [ environment : mtenvironment ]
+      )
+    )
+  reaches
+    anInputsSet(
+      (C D,B C)
+    )
+  end
+
+  assert "generate inputs-filter: a boolean new-lookup can be used as a property" from
+    anInputsSet(
+      generate(
+        inputs-filter(repeat((A B, C D, B C)), not new(lookup('c,nilarg))),
+        [ nodes : none ] [ environment : mtenvironment ]
+      )
+    )
+  reaches
+    anInputsSet(
+      (C D,B C)
+    )
+  end
+
+  assert "update inputs-filter: propagates update to nested generator 1" from
+    aGenerator(
+      update(
+        inputs-filter(sequence((A B # C D)),const(val(true))),
+        [ nodes : none ] [ environment : mtenvironment ],
+        C D
+      )
+    )
+  reaches
+    aGenerator(
+      inputs-filter(sequence((C D)),const(val(true)))
+    )
+  end
+
+  assert "update inputs-filter propagates update to nested generator 2" from
+    aGenerator(
+      update(
+        inputs-filter(sequence((A B # C D)),const(val(false))),
+        [ nodes : none ] [ environment : mtenvironment ],
+        C D
+      )
+    )
+  reaches
+    aGenerator(
+      inputs-filter(sequence((C D)),const(val(false)))
+    )
+  end
+
+  assert "cardinality inputs-filter propagates cardinality to nested generator 1" from
+    aCardinality(
+      cardinality(
+        inputs-filter(repeat((A B, C D)),const(val(true)))
+      )
+    )
+  reaches
+    aCardinality(
+      cardinality(
+        repeat((A B, C D))
+      )
+    )
+  end
+
+  assert "cardinality inputs-filter propagates cardinality to nested generator 2" from
+    aCardinality(
+      cardinality(
+        inputs-filter(repeat((A B, C D)),const(val(false)))
+      )
+    )
+  reaches
+    aCardinality(
+      cardinality(
+        repeat((A B, C D))
+      )
+    )
+  end
+
+end tests
+  if A := stateLookup('a,nilarg, val(true))
+  /\ B := stateLookup('b,nilarg, val(true))
+  /\ C := stateLookup('c,nilarg, val(false))
+  /\ D := stateLookup('d,nilarg, val(true))
+  .
+
+  vars A B C D : StateInput .
+
+endm

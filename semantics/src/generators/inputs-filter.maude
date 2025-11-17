@@ -1,0 +1,47 @@
+fmod INPUTS-FILTER-GENERATOR is
+  protecting SYSTEM .
+  protecting EVAL .
+  protecting INTERFACE .
+
+  op inputs-filter : InputGenerator Expression -> InputGenerator [ctor] .
+  ceq generate(inputs-filter(Gen,Expr),Cfg)
+    = if FilteredInS == empty then noInputs else FilteredInS fi
+  if InS := generate(Gen,Cfg)
+  /\ FilteredInS := filter-inputs-set(InS,Expr,Cfg)
+  .
+
+  op filter-inputs-set : InputsSet Expression Config ~> InputsSet .
+  eq filter-inputs-set(InS,Expr,Cfg) = filter-inputs-set'(InS,Expr,Cfg,empty) .
+
+    op filter-inputs-set' : InputsSet Expression Config InputsSet ~> InputsSet .
+   ceq filter-inputs-set'((In, InS),Expr,Cfg, InS') =
+      if Result == const(val(true)) then
+        filter-inputs-set'(InS,Expr,Cfg,(In,InS'))
+      else
+        filter-inputs-set'(InS,Expr,Cfg,InS')
+      fi
+    if In' := wrapWithNew(getLookups(In))
+    /\ Env := updateInternalEnvironment(getEnvironment(Cfg), In',mtenvironment)
+    /\ Nds := getNodes(Cfg)
+    /\ Result := eval(Env,Nds,Expr)
+    .
+    eq filter-inputs-set'(empty,Expr,Cfg,InS') = InS' [owise] .
+
+
+  op wrapWithNew : Inputs -> Inputs .
+  eq wrapWithNew(StI In) = new(StI) wrapWithNew(In) .
+  eq wrapWithNew(In) = In [owise] .
+
+  eq update(inputs-filter(Gen,Expr),Cfg,In) = inputs-filter(update(Gen,Cfg,In),Expr) .
+
+  eq cardinality(inputs-filter(Gen,Expr)) = cardinality(Gen) .
+
+  vars Nds : Configuration .
+  vars Cfg : Config .
+  vars Expr Result : Expression .
+  vars Env : Environment .
+  vars Gen  : InputGenerator .
+  vars StI : StateInput .
+  vars In In' : Inputs .
+  vars InS InS' FilteredInS : InputsSet .
+endfm

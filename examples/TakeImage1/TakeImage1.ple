@@ -1,0 +1,69 @@
+/* Extension of TakeImage0:
+   - Adds external states (Lookups).
+   - Sequences steps on absolute time.
+   - Adds camera power on/off operations and resource lock.
+   - Takes multiple images.
+   - Adds plan invariant based on Temperature.
+*/
+
+Real Lookup time;
+Boolean Lookup PointedAtTarget;
+Boolean Lookup CameraOn;
+Real    Lookup Temperature;
+
+Command camera_power_on;
+Command camera_power_off;
+Command camera_capture_image(Integer, Integer);
+Command slew(Integer, Real, Real);
+
+TakeImage1: Concurrence
+{
+  Boolean camera_claimed = false;
+  Invariant Lookup(Temperature) < 100.0;
+
+  Slew:
+  {
+    StartCondition Lookup(time) >= 122;
+    EndCondition Lookup(time) >= 1322 && Lookup(PointedAtTarget);
+
+    SynchronousCommand slew(1200, -90.0, 0.0);
+  }
+
+  CameraOn:
+  {
+    StartCondition Lookup(time) >= 500;
+    PreCondition !Lookup(CameraOn);
+    EndCondition Lookup(time) >= 520;
+    PostCondition Lookup(CameraOn);
+
+    SynchronousCommand camera_power_on();
+  }
+
+  TakeImage:
+  {
+    StartCondition Lookup(time) >= 1322;
+    PreCondition (!camera_claimed &&
+                  Lookup(CameraOn) &&
+                  Lookup(PointedAtTarget));
+    EndCondition Lookup(time) >= 1373;
+    Invariant Lookup(PointedAtTarget);
+
+    camera_claimed = true;
+    for (Integer i = 0; i < 3; i + 1) {
+      SynchronousCommand camera_capture_image(50, i);
+      // Not yet supported by model checker
+      //      Wait 1;
+    }
+    camera_claimed = false;
+  }
+
+  CameraOff:
+  {
+    StartCondition Lookup(time) >= 1373;
+    PreCondition !camera_claimed;
+    EndCondition Lookup(time) >= 1394;
+    PostCondition !Lookup(CameraOn);
+
+    SynchronousCommand camera_power_off();
+  }
+}

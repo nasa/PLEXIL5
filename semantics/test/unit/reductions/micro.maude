@@ -1,0 +1,25 @@
+mod TEST--REDUCTIONS--MICRO is
+
+  pr TEST-BASE .
+
+  op micro--reductions--tests : -> TestResults .
+  eq micro--reductions--tests = begin tests
+
+    assert "`micro` reduction advances if an atomic transition is posible" from
+      getNodesCell(
+        micro(
+          emptyConfig /
+            [ nodes : < A : empty | status: inactive, active: true > ]
+        )
+      )
+    reaches
+      getNodesCell(
+        emptyConfig /
+          [ nodes : < A : empty | status: waiting, active: false > ]
+      )
+    end
+
+  end tests .
+
+
+endm

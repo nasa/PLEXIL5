@@ -1,0 +1,6 @@
+LibraryNode theLibrary ();
+
+libraryCall0:
+{
+   LibraryCall theLibrary ();
+}

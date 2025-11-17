@@ -1,0 +1,12 @@
+Command pprint(...);
+
+theLibrary:
+{
+   In Integer number;
+   In Boolean flag;
+   In String message;
+   empty: {
+      Start number == 1 && flag == true;
+      pprint("the message is: ", message);
+   }
+}

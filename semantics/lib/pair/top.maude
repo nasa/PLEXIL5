@@ -1,0 +1,14 @@
+fmod PAIR{X :: TRIV, Y :: TRIV} is
+  sort Pair{X, Y} .
+  op <_;_> : X$Elt Y$Elt -> Pair{X, Y} .
+  op 1st : Pair{X, Y} -> X$Elt .
+  op 2nd : Pair{X, Y} -> Y$Elt .
+  var A : X$Elt .
+  var B : Y$Elt .
+  eq 1st(< A ; B >) = A .
+  eq 2nd(< A ; B >) = B .
+endfm
+
+view Pair{X :: TRIV, Y :: TRIV} from TRIV to PAIR{X,Y} is
+  sort Elt to Pair{X,Y} .
+endv

@@ -1,0 +1,52 @@
+--- Verification properties for TakeImage0
+
+mod M-CHECK is
+  protecting TakeImage0-PLAN .
+  protecting INPUT .
+  protecting PLEXIL-V .
+
+  --- The plan root node is in executing state until it is finished.
+  op correctness1 : -> Prop .
+  eq correctness1 =
+      hasStatus('TakeImage0, executing) U hasStatus('TakeImage0, finished) .
+
+  --- The plan root node is in executing state until it is finished if it finishes.
+  op correctness2 : -> Prop .
+  eq correctness2 = (<> hasStatus('TakeImage0, finished)) => correctness1 .
+
+  --- The plan root node succeeds.
+  op correctness3 : -> Prop .
+  eq correctness3 = <> hasOutcome?('TakeImage0, success) .
+
+  --- The plan root node succeeds if it finishes.
+  op correctness4 : -> Prop .
+  eq correctness4 =
+      (<> hasStatus('TakeImage0, finished)) 
+      =>
+      <> hasOutcome?('TakeImage0, success) .
+
+  --- The plan starts executing.
+  op liveness1 : -> Prop .
+  eq liveness1 = <> hasStatus('TakeImage0,executing) .
+
+  --- The plan eventually terminates from any state in which it is executing.
+  op liveness2 : -> Prop .
+  eq liveness2 =
+    [] (hasStatus('TakeImage0,executing) -> <> hasStatus('TakeImage0,finished)) .
+
+  ---( If the plan is taking a picture by executing the
+      `camera_capture_image` then camera is pointed at target. )
+  *** NOTE: This property is always satisfied in the proposed
+  *** environments because the success command handle is returned
+  *** immediately and the `commandIsExecuting` property currently
+  *** requires that command node is in the `EXECUTING` state to return
+  *** true. This causes the precondition to be true exactly only in
+  *** the state where 'PointedAtTarget will be true.
+  op safety1 : -> Prop .
+  eq safety1 = [] (commandIsExecuting('camera_capture_image)
+                   -> isTrue?(lookup('PointedAtTarget, nilarg))) .
+
+  op init : -> GlobalConfig .
+  eq init = run(compile(rootNode,input)) .
+
+endm

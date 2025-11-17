@@ -1,0 +1,44 @@
+mod TEST--REDUCTIONS--VALUES is
+
+  pr TEST-BASE .
+
+  op values--reductions--tests : -> TestResults .
+  eq values--reductions--tests = begin tests
+
+    assert "Assign an array to another with less values, fill with unknown" from
+      getNodesCell(
+        performAssignments(
+          [ memory : < 'id : memory | actVal: array(val(0) # val(1) # val(2)), prevVal: array(val(0) # val(0) # val(0)) > ]
+          [ macroacts : setMem('id,array(val(3) # val(4)),nothing) ]
+        )
+      )
+    reaches
+      getNodesCell(
+        performAssignments(
+          --- [ memory : < 'id : memory | actVal: assign(PArr, PArr'), prevVal: V, AtS > PS ]
+          [ memory : < 'id : memory | actVal: array(val(3) # val(4) # unknown), prevVal: array(val(0) # val(1) # val(2)) > ]
+          [ macroacts : mtactions ]
+        )
+      )
+    end
+
+    assert "Assign an array to another with less values, fill with unknown" from
+      getNodesCell(
+        performAssignments(
+          [ memory : < 'id : memory | actVal: array(unknown # unknown # unknown # unknown), prevVal: array(unknown # unknown # unknown # unknown) > ]
+          [ macroacts : setMem('id,array(val(0) # val(1)),nothing) ]
+        )
+      )
+    reaches
+      getNodesCell(
+        performAssignments(
+          [ memory : < 'id : memory | actVal: array(val(0) # val(1) # unknown # unknown), prevVal: array(unknown # unknown # unknown # unknown) > ]
+          [ macroacts : mtactions ]
+        )
+      )
+    end
+
+  end tests .
+
+
+endm

@@ -1,0 +1,4 @@
+[submodule "plexil"]
+	path = plexil
+	url = https://github.com/plexil-group/plexil.git
+	ignore = untracked

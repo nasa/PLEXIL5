@@ -1,0 +1,5 @@
+--- Loads plan, script, properties.
+
+load "TakeImage3.maude"
+load "script0.maude"
+load "properties.maude"

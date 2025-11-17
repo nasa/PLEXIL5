@@ -1,0 +1,52 @@
+mod TEST--EXPRESSIONS--NEW is
+  protecting TEST-BASE .
+
+  op test--expressions--new : -> TestResults .
+  eq test--expressions--new =
+begin tests
+
+  assert "new lookup returns a new-tagged lookup from the environment if it matches" from
+    anExpression(
+      eval(
+          new('d(nilarg) : val(true)),
+          [ none ],
+          new(lookup('d,nilarg))
+      )
+    )
+  reaches
+    anExpression(
+      const(val(true))
+    )
+  end
+
+  assert "new lookup returns a plain (old) lookup from the environment if it matches and no new-tagged lookup matches" from
+    anExpression(
+      eval(
+          ('d(nilarg) : val(true)),
+          [ none ],
+          new(lookup('d,nilarg))
+      )
+    )
+  reaches
+    anExpression(
+      const(val(true))
+    )
+  end
+
+  assert "new lookup returns a unknown if no new-tagged nor plain (old) lookup matches" from
+    anExpression(
+      eval(
+          ('a(nilarg) : val(true)),
+          [ none ],
+          new(lookup('d,nilarg))
+      )
+    )
+  reaches
+    anExpression(
+      const(unknown)
+    )
+  end
+
+end tests .
+
+endm

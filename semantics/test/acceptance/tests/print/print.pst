@@ -1,0 +1,7 @@
+script {
+    state time () =  1: real;
+    state time () =  2: real;
+    state time () =  3: real;
+    state time () =  4: real;
+    state time () =  5: real;
+}
