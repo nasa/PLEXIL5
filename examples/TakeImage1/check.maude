@@ -16,9 +16,10 @@ red customModelCheck(init, liveness1, transitionCounterexample) .
 
 --- Verbose model checking invocation with the external inputs of the
 --- counterexample and final State
-
 red customModelCheck(init, liveness1, transitionCounterexampleWithFinalState) .
-red customModelCheck(init, liveness1, transitionCounterexample) .
+
+--- Remainder of checks using transitionCounterexample
+
 red customModelCheck(init, liveness1', transitionCounterexample) .
 red customModelCheck(init, liveness2, transitionCounterexample) .
 red customModelCheck(init, liveness2', transitionCounterexample) .

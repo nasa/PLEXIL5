@@ -129,7 +129,7 @@ mod M-CHECK is
   eq [safety5] :
     safety5 =
       O [] (commandIsExecuting('camera_power_off) ->
-        isFalse?(var('camera_claimed . 'TakeImage1
+        isFalse?(var('camera_claimed . 'TakeImage1))) .
 
 
 *** End of properties.
