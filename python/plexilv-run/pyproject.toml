@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "plexilv-run"
+version = "0.1.0"
+description = "PLEXIL plan execution using the PLEXIL-V formal semantics"
+requires-python = ">=3.9"
+
+dependencies = [
+    "click>=8.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "pytest-mock>=3.0",
+]
+
+[project.scripts]
+plexilv-run = "plexilv_run.cli:main"
+
+[tool.pytest.ini_options]
+markers = [
+    "unit: Unit tests (fast, mocked dependencies)",
+    "integration: Integration tests (moderate speed, may use file system)",
+    "e2e: End-to-end tests (slow, require real tools or comprehensive mocks)",
+    "requires_tools: Tests that require plx2maude/psx2maude/maude installed",
+    "slow: Slow tests (e.g., with timeouts)",
+]

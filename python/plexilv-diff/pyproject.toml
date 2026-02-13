@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "plexilv-diff"
+version = "0.1.0"
+description = "Compare PLEXIL interpreter outputs across multiple tests"
+requires-python = ">=3.8"
+dependencies = [
+    "click>=8.0",
+    "plumbum>=1.8",
+    "rich>=13.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "pytest-timeout>=2.1",
+    "pytest-mock>=3.10",
+]
+
+[project.scripts]
+plexilv-diff = "plexilv_diff.cli:main"
+
+[tool.setuptools]
+packages = ["plexilv_diff"]
+
+[tool.setuptools.package-data]
+plexilv_diff = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "e2e: marks tests as end-to-end tests with stub executables",
+    "acceptance: marks tests as acceptance tests with real PLEXIL tools (optional)",
+]

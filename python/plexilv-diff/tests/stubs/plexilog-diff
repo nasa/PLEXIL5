@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# Stub plexilog-diff
+
+if [ $# -ne 2 ]; then
+    echo "Error: Expected 2 arguments" >&2
+    exit 2
+fi
+
+log1="$1"
+log2="$2"
+
+if [ ! -f "$log1" ]; then
+    echo "Error: File not found: $log1" >&2
+    exit 2
+fi
+
+if [ ! -f "$log2" ]; then
+    echo "Error: File not found: $log2" >&2
+    exit 2
+fi
+
+# Compare the files
+if diff -q "$log1" "$log2" > /dev/null 2>&1; then
+    # Files are identical
+    echo "No differences found"
+    exit 0
+else
+    # Files differ
+    echo "=== Differences found ==="
+    echo ""
+    diff -u "$log1" "$log2"
+    exit 1
+fi

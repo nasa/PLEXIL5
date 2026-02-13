@@ -10,7 +10,7 @@ PLEXIL-V provides an LTL model-checker of PLEXIL plans and a framework to model 
 
 ### Current Release
 
-PLEXIL-V v0.6.0 (October-2025)
+PLEXIL-V v0.6.1 (February-2026)
 
 
 ### Requirements
@@ -19,12 +19,15 @@ PLEXIL-V v0.6.0 (October-2025)
 
 * **The Maude System**: Binary releases for different platforms can be found [here](https://github.com/maude-lang/Maude/releases).
 
+* **Python** (>= 3.9): Binary releases for different platforms can be found [here](https://www.python.org/downloads/).
+
 
 ## First steps
 
-PLEXIL-V consists of different components:
+The components of PLEXIL-V are organized in the following directories:
 - `plexil2maude` translator from PLEXIL XML format to PLEXIL-V internal format.
 - `plexilog` log processing tools to compare PLEXIL-V against PLEXIL executive runs.
+- `python` integrated command line interface (called `plexilv`) for different PLEXIL-V tools and workflows.
 - `plexil` git submodule with the official PLEXIL executive version that is supported by PLEXIL-V.
 - `semantics` the rewriting logic specification in Maude that implements the formal semantics and the auxiliary tools needed for model-checking and modeling execution environments.
 - `examples` for showcasing how to verify properties of PLEXIL plans.
@@ -45,7 +48,26 @@ $ plexilog-diff
 Otherwise, add the folder containing those commands to the `PATH`.
 
 
-### Compile the PLEXIL interpreter **(optional)**
+### Install the `plexilv` command **(optional, but recommended)**
+
+From the root of the repository, create a Python virtual environment and load it to be able to install packages:
+```
+$ python3 -m venv .venv
+$ source .venv/bin/activate
+```
+Then, install the Python `plexilv-cli` package located `python/plexilv-cli`:
+```
+pip install -e python/plexilv-cli
+```
+Immediately after, confirm that `plexilv` is accessible from the command line by running:
+```
+$ plexilv
+$ plexilv run --help
+$ plexilv diff --help
+```
+
+
+### Compile the PLEXIL interpreter
 
 To install the official PLEXIL executive, checkout the `plexil` submodule of this repository:
 ```
@@ -83,7 +105,9 @@ Maude> show module PLEXIL-V .
 
 The `examples/` folder, contains some examples of PLEXIL plans with properties to verify.
 
-For example, the `TakeImage0` example contains a PLEXIL plan controlling a camera that can move to point at its target before taking a photo, if necessary.
+#### Verification of properties
+
+As a verification example, let's use `TakeImage0` folder, which contains a PLEXIL plan controlling a camera that can move to point at its target before taking a photo, if necessary.
 
 Two environment model files are provided to model the environment of execution of the plan.
 `env0.maude` models an environment in which the camera is always pointing at its target, while `env1.maude` models that the camera can be moved away from the target at any execution step.
@@ -142,6 +166,45 @@ Note that a counterexample is provided for each of the failures.
 The example property `correctness1`, defined as `hasStatus('TakeImage, executing) U hasStatus('TakeImage, finished)`, states that the root node of the plan remains in the `EXECUTING` status until it eventually reaches the `FINISHED` state.
 
 This property clearly holds when the camera is always pointing at its target (as in `env0.maude`) but not if it can move (as in `env1.maude`), since in the latter case, an invariant condition in the plan is violated, preventing the root node from finishing.
+
+
+#### Running plans with the formal interpreter **(optional)**
+
+Executing a plan in PLEXIL-V follows a similar approach to running tests with the `plexiltest` utility found in the official PLEXIL release.
+First, you have an input `.ple` plan and input `.pst` script that you compile by using the official `plexilc` compiler into the internal PLEXIL XML formats `.plx` and `.psx`, respectively.
+Then, you call the interpreter with the compiled files and observe the output.
+
+For example, in the `TakeImage0` example, the plan and script input files would be compiled like this:
+```
+$ cd examples/TakeImage0
+$ plexilc TakeImage0.ple
+$ plexilc script1.pst
+```
+And the PLEXIL-V formal interpreter would be invoked with the following command:
+```
+$ plexilv run -p TakeImage0.plx -s script1.psx
+```
+Currently, the output of the interpreter is the sequence of synchronous transitions performed by the plan.
+
+
+#### Performing differential testing PLEXIL/PLEXIL-V **(optional)**
+
+PLEXIL-V provides the `plexilv diff` utility to perform differential testing of the execution of a PLEXIL plan with multiple input scripts between the official PLEXIL test executor (`plexiltest`) and the PLEXIL-V formal interpreter (`plexil run`).
+First, you have an input `.ple` plan and multiple input `.pst` scripts that you compile into the internal PLEXIL XML formats `.plx` and `.psx`, respectively.
+Then you call `plexilv diff` with all those inputs, obtaining a summary of differences found during execution.
+
+For example, in the `TakeImage0` example, the plan and scripts inputs would be compiled like this:
+```
+$ cd examples/TakeImage0
+$ plexilc TakeImage0.ple
+$ plexilc script0.pst
+$ plexilc script1.pst
+```
+And the PLEXIL-V differential testing tool would be invoked like this:
+```
+$ plexilv diff -p TakeImage0.plx -s script0.psx -s script1.psx
+```
+
 
 ### License
 

@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# Stub plexilv executor
+
+# Parse arguments
+plan_file=""
+script_file=""
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -p)
+            plan_file="$2"
+            shift 2
+            ;;
+        -s)
+            script_file="$2"
+            shift 2
+            ;;
+        *)
+            shift
+            ;;
+    esac
+done
+
+if [ -z "$plan_file" ]; then
+    echo "Error: No plan file specified" >&2
+    exit 1
+fi
+
+if [ -z "$script_file" ]; then
+    echo "Error: No script file specified" >&2
+    exit 1
+fi
+
+# Generate fake execution log (identical to plexiltest for now)
+cat << EOF
+PlexilExec:step Starting execution
+PlexilExec:cycle Cycle 0
+PlexilExec:step Node: Root [INACTIVE -> WAITING]
+PlexilExec:cycle Cycle 1
+PlexilExec:step Node: Root [WAITING -> EXECUTING]
+PlexilExec:step Node: TestNode [INACTIVE -> WAITING]
+PlexilExec:cycle Cycle 2
+PlexilExec:step Node: TestNode [WAITING -> EXECUTING]
+PlexilExec:step Node: TestNode [EXECUTING -> FINISHED]
+PlexilExec:cycle Cycle 3
+PlexilExec:step Node: Root [EXECUTING -> FINISHED]
+PlexilExec:step Execution completed successfully
+EOF
+
+exit 0

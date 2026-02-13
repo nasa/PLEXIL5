@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "plexilv-cli"
+version = "0.1.0"
+description = "Unified CLI for PLEXIL verification tools"
+requires-python = ">=3.9"
+authors = [
+    {name = "PLEXIL-V Team"},
+]
+
+dependencies = [
+    "click>=8.0",
+    "plexilv-run @ file:../plexilv-run",
+    "plexilv-diff @ file:../plexilv-diff",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "pytest-mock>=3.0",
+]
+
+[project.scripts]
+plexilv = "plexilv_cli.cli:main"
+
+[tool.setuptools]
+packages = ["plexilv_cli"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+markers = [
+    "unit: Unit tests (fast, mocked dependencies)",
+]

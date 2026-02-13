@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Stub plexilc compiler
+
+# Parse arguments to find input file
+input_file=""
+for arg in "$@"; do
+    if [[ "$arg" == *.ple ]] || [[ "$arg" == *.pst ]]; then
+        input_file="$arg"
+        break
+    fi
+done
+
+if [ -z "$input_file" ]; then
+    echo "Error: No input file specified" >&2
+    exit 1
+fi
+
+# Determine output file
+if [[ "$input_file" == *.ple ]]; then
+    output_file="${input_file%.ple}.plx"
+elif [[ "$input_file" == *.pst ]]; then
+    output_file="${input_file%.pst}.psx"
+else
+    echo "Error: Unknown file type: $input_file" >&2
+    exit 1
+fi
+
+# Create a simple XML output
+cat > "$output_file" << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<PlexilPlan>
+  <!-- Compiled by stub plexilc -->
+</PlexilPlan>
+EOF
+
+echo "Compiled $input_file -> $output_file" >&2
+exit 0

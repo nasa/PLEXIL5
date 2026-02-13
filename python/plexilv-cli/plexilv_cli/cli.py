@@ -1,0 +1,58 @@
+"""Unified CLI for PLEXIL verification tools."""
+
+import click
+from plexilv_run.cli import main as run_command
+from plexilv_diff.cli import main as diff_command
+
+
+@click.group()
+@click.version_option()
+def main():
+    """PLEXIL verification tools.
+
+    This tool provides commands for executing and verifying PLEXIL plans:
+
+    \b
+    run (or test)  Execute a PLEXIL plan using the PLEXIL-V formal semantics
+    diff           Compare two PLEXIL plans
+    """
+    pass
+
+
+@main.command(name='help')
+@click.argument('command', required=False)
+def help_command(command):
+    """Display help information.
+
+    Show general help, or help for a specific subcommand.
+
+    Examples:
+
+    \b
+    plexilv help           Show this help message
+    plexilv help run       Show help for the run command
+    plexilv help diff      Show help for the diff command
+    """
+    if command is None:
+        # Show main help
+        click.echo(main.get_help(click.Context(main)))
+    elif command in main.commands:
+        # Show help for specific subcommand
+        ctx = click.Context(main.commands[command])
+        click.echo(main.commands[command].get_help(ctx))
+    else:
+        click.echo(f"Error: Unknown command '{command}'", err=True)
+        click.echo(f"Available commands: {', '.join(sorted(main.commands.keys()))}", err=True)
+        raise click.Exit(1)
+
+
+# Register the run/test command
+main.add_command(run_command, name='run')
+main.add_command(run_command, name='test')  # Alias for run
+
+# Register the diff command
+main.add_command(diff_command, name='diff')
+
+
+if __name__ == '__main__':
+    main()
