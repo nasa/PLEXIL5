@@ -6,7 +6,7 @@ module PSX2Maude.PrettyMaude where
 import PLEXILScript
 
 import Data.List (intersperse)
-import Data.OneOfN (OneOf3(..), OneOf6(..))
+import Data.OneOfN (OneOf3(..), OneOf7(..))
 import Prelude hiding ((<>))
 import Debug.Trace
 import Data.Typeable(typeOf)
@@ -46,13 +46,16 @@ instance Pretty Script where
 
 instance Pretty ScriptEntry where
   pretty (ScriptEntry e)
-    | (OneOf6 st)    <- e = pretty st
-    | (TwoOf6 cmd)   <- e = pretty cmd
-    | (ThreeOf6 ca) <- e = pretty ca
-    | (FourOf6 sim)  <- e = pretty sim
-    | (FiveOf6 ua)   <- e = pretty ua
-    | (SixOf6 cab)   <- e = pretty cab
+    | (OneOf7 st)    <- e = pretty st
+    | (TwoOf7 cmd)   <- e = pretty cmd
+    | (ThreeOf7 ca)  <- e = pretty ca
+    | (FourOf7 sim)  <- e = pretty sim
+    | (FiveOf7 ua)   <- e = pretty ua
+    | (SixOf7 cab)   <- e = pretty cab
+    | (SevenOf7 del) <- e = pretty del
 
+instance Pretty Delay where
+  pretty _ = text "noInputs"
 
 instance Pretty State where
   pretty State { stName, stParams, stValue, stType } =

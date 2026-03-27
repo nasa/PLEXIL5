@@ -6,7 +6,7 @@ import Text.XML.HXT.Core
 import Data.Maybe (fromJust)
 import Data.Either (partitionEithers)
 import Data.Either.Combinators (maybeToRight)
-import Data.OneOfN (OneOf3(..), OneOf6(..))
+import Data.OneOfN (OneOf3(..), OneOf7(..))
 
 data PLEXILScript = PLEXILScript
   { initialState :: InitialState
@@ -38,26 +38,28 @@ xpInitialState =
 newtype Script = Script [ScriptEntry] deriving (Show,Eq)
 
 newtype ScriptEntry = ScriptEntry
-  { unScriptEntry :: (OneOf6 State Command CommandAck Simultaneous UpdateAck CommandAbort)
+  { unScriptEntry :: (OneOf7 State Command CommandAck Simultaneous UpdateAck CommandAbort Delay)
   } deriving (Show,Eq)
 
 instance XmlPickler ScriptEntry where
   xpickle = xpWrap (ScriptEntry,unScriptEntry) $ xpAlt tag ps
     where
-      tag (OneOf6   _) = 0
-      tag (TwoOf6   _) = 1
-      tag (ThreeOf6 _) = 2
-      tag (FourOf6  _) = 3
-      tag (FiveOf6  _) = 4
-      tag (SixOf6   _) = 5
+      tag (OneOf7   _) = 0
+      tag (TwoOf7   _) = 1
+      tag (ThreeOf7 _) = 2
+      tag (FourOf7  _) = 3
+      tag (FiveOf7  _) = 4
+      tag (SixOf7   _) = 5
+      tag (SevenOf7 _) = 6
 
       ps
-        = [ xpWrap (OneOf6,  \(OneOf6 x)   -> x) $ xpickle
-          , xpWrap (TwoOf6,  \(TwoOf6 x)   -> x) $ xpickle
-          , xpWrap (ThreeOf6,\(ThreeOf6 x) -> x) $ xpickle
-          , xpWrap (FourOf6, \(FourOf6 x)  -> x) $ xpickle
-          , xpWrap (FiveOf6, \(FiveOf6 x)  -> x) $ xpickle
-          , xpWrap (SixOf6,  \(SixOf6  x)  -> x) $ xpickle ]
+        = [ xpWrap (OneOf7,  \(OneOf7 x)   -> x) $ xpickle
+          , xpWrap (TwoOf7,  \(TwoOf7 x)   -> x) $ xpickle
+          , xpWrap (ThreeOf7,\(ThreeOf7 x) -> x) $ xpickle
+          , xpWrap (FourOf7, \(FourOf7 x)  -> x) $ xpickle
+          , xpWrap (FiveOf7, \(FiveOf7 x)  -> x) $ xpickle
+          , xpWrap (SixOf7,  \(SixOf7  x)  -> x) $ xpickle
+          , xpWrap (SevenOf7,\(SevenOf7 x) -> x) $ xpickle ]
 
 instance XmlPickler Script where
   xpickle = xpScript
@@ -67,6 +69,14 @@ xpScript =
   xpElem "Script" $
   xpWrap (Script,\(Script xs) -> xs) $
   xpList xpickle
+
+newtype Delay = Delay () deriving (Show,Eq)
+
+instance XmlPickler Delay where
+  xpickle =
+    xpElem "Delay" $
+    xpWrap (Delay,const ()) $
+    xpUnit
 
 newtype Simultaneous = Simultaneous [SimultaneousEntry] deriving (Show,Eq)
 

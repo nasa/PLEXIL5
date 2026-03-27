@@ -20,7 +20,7 @@ import PLEXILScript
 import PSX2Maude.PrettyMaude
 import Text.PrettyPrint
 
-import Data.OneOfN (OneOf6(..))
+import Data.OneOfN (OneOf7(..))
 
 
 testPSX2Maude :: TestTree
@@ -38,6 +38,7 @@ testPSX2Maude =
     , testPrettyPrint
     , testOptionalElements
     , testState
+    , testDelay
     ]
 
 testOptionalElements :: TestTree
@@ -452,12 +453,31 @@ testUpdateAck = testGroup "UpdateAck"
     testItPicklesAs :: UpdateAck -> String -> TestTree
     testItPicklesAs cmd str = testCase (show cmd) $ cmd `isPickledAs` str
 
+testDelay :: TestTree
+testDelay = testGroup "Delay"
+  [ [r|<Delay/>|]
+      `testItParsesAs`
+        Delay ()
+  , [r|<Delay></Delay>|]
+      `testItParsesAs`
+        Delay ()
+  , Delay ()
+      `testItPicklesAs`
+        "<Delay/>"
+  ]
+  where
+    testItParsesAs :: String -> Delay -> TestTree
+    testItParsesAs str cmd = testCase (show cmd) $ str `parsesOnlyAs` cmd
+
+    testItPicklesAs :: Delay -> String -> TestTree
+    testItPicklesAs cmd str = testCase (show cmd) $ cmd `isPickledAs` str
+
 testScript :: TestTree
 testScript = testGroup "Script"
   [ testGroup "from XML"
     [ [r|<Script><UpdateAck name="array8"/></Script>|]
         `testItParsesAs`
-          Script [ ScriptEntry { unScriptEntry = FiveOf6 $ UpdateAck { uaName = "array8", uaBool = True } } ]
+          Script [ ScriptEntry { unScriptEntry = FiveOf7 $ UpdateAck { uaName = "array8", uaBool = True } } ]
     ]
   ]
   where
