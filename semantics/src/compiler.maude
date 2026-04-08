@@ -191,9 +191,9 @@ fmod COMPILER is
   *** - getFullyQualifiedNodeId
   *** - getFullyQualifiedVariableId
   ***
-  op unresolvedNode     : Identifier Qualified     -> Identifier .
-  op unresolvedVariable : Identifier Qualified     -> Identifier .
-  op ambiguity          : Qualified  Configuration -> Identifier .
+  op unresolvedNode     : Identifier Qualified     -> [Identifier] .
+  op unresolvedVariable : Identifier Qualified     -> [Identifier] .
+  op ambiguity          : Qualified  Configuration -> [Identifier] .
 
   op  getFullyQualifiedNodeId : Identifier Qualified Configuration -> Qualified .
   ceq getFullyQualifiedNodeId(I, Q, Cfg) = ambiguity(Q',Cfg)
