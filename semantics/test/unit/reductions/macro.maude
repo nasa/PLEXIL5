@@ -100,6 +100,7 @@ mod TEST--REDUCTIONS--MACRO is
             arguments: val("Hello World!"),
             returnVariable: nothing,
             handle: just(CommandSuccess),
+            order: 1,
             abort: CommandAbortIdle > ]
     end
 
@@ -117,6 +118,7 @@ mod TEST--REDUCTIONS--MACRO is
             arguments: val("Hello World!"),
             returnVariable: nothing,
             handle: just(CommandSuccess),
+            order: 1,
             abort: CommandAbortIdle > ]
     end
 
@@ -130,7 +132,7 @@ mod TEST--REDUCTIONS--MACRO is
         [ nodes : < 'COMMAND--32 : command | command: 'SetVel / nilpar / nothing > ]
         [ macroacts : mtactions ]
         [ interface :
-          < 'SetVel . 'COMMAND--32 : command-on-execution | arguments: (val(-1.0e+5) val(-1.0e+5)), returnVariable: nothing, handle: nothing, abort: CommandAbortIdle > ]
+          < 'SetVel . 'COMMAND--32 : command-on-execution | arguments: (val(-1.0e+5) val(-1.0e+5)), order: 0, returnVariable: nothing, handle: nothing, abort: CommandAbortIdle > ]
     end
 
     assert "executeCommands supports commands without return value 2" from
@@ -138,13 +140,14 @@ mod TEST--REDUCTIONS--MACRO is
         [ nodes : < 'COMMAND--32 : command | command: 'SetVel / nilpar / nothing > ]
         [ macroacts : runCommand('COMMAND--32,cmdInvocation('SetVel,(val(-1.0e+5) val(-1.0e+5)))) ]
         [ interface :
-          < 'SetVel . 'COMMAND--32 : command-on-execution | arguments: (val(-2.0e+5) val(-2.0e+5)), handle: nothing, abort: CommandAbortIdle > ]
+          < 'SetVel . 'COMMAND--32 : command-on-execution | arguments: (val(-2.0e+5) val(-2.0e+5)), handle: nothing, order: 0, abort: CommandAbortIdle > ]
       )
     reaches
         [ nodes : < 'COMMAND--32 : command | command: 'SetVel / nilpar / nothing > ]
         [ macroacts : mtactions ]
         [ interface :
-          < 'SetVel . 'COMMAND--32 : command-on-execution | arguments: (val(-1.0e+5) val(-1.0e+5)), handle: nothing, returnVariable: nothing, abort: CommandAbortIdle > ]
+          < 'SetVel . 'COMMAND--32 : command-on-execution | arguments: (val(-2.0e+5) val(-2.0e+5)), handle: nothing, order: 0, abort: CommandAbortIdle >
+          < 'SetVel . 'COMMAND--32 : command-on-execution | arguments: (val(-1.0e+5) val(-1.0e+5)), handle: nothing, order: 0, returnVariable: nothing, abort: CommandAbortIdle > ]
     end
 
     assert "executeCommands supports commands without return value 3" from
@@ -152,7 +155,7 @@ mod TEST--REDUCTIONS--MACRO is
         [ nodes : < 'COMMAND--32 : command | command: cmdId(var('CommandName . 'COMMAND--32)) / nilpar / nothing > ]
         [ macroacts : runCommand('COMMAND--32,cmdInvocation('SetVel,(val(-1.0e+5) val(-1.0e+5)))) ]
         [ interface :
-          < 'SetVel . 'COMMAND--32 : command-on-execution | arguments: (val(-2.0e+5) val(-2.0e+5)), handle: nothing, abort: CommandAbortIdle > ]
+          < 'SetVel . 'COMMAND--32 : command-on-execution | arguments: (val(-2.0e+5) val(-2.0e+5)), handle: nothing, order: 0, abort: CommandAbortIdle > ]
         [(memory).CellId :
           < 'CommandName . 'COMMAND--32 : memory | initVal: val("SetVel"), actVal: val("SetVel"), prevVal: val(
             "SetVel") > ]
@@ -161,7 +164,8 @@ mod TEST--REDUCTIONS--MACRO is
         [ nodes : < 'COMMAND--32 : command | command: cmdId(var('CommandName . 'COMMAND--32)) / nilpar / nothing > ]
         [ macroacts : mtactions ]
         [ interface :
-          < 'SetVel . 'COMMAND--32 : command-on-execution | arguments: (val(-1.0e+5) val(-1.0e+5)), handle: nothing, returnVariable: nothing, abort: CommandAbortIdle > ]
+          < 'SetVel . 'COMMAND--32 : command-on-execution | arguments: (val(-2.0e+5) val(-2.0e+5)), handle: nothing, order: 0, abort: CommandAbortIdle >
+          < 'SetVel . 'COMMAND--32 : command-on-execution | arguments: (val(-1.0e+5) val(-1.0e+5)), handle: nothing, returnVariable: nothing, order: 0, abort: CommandAbortIdle > ]
         [(memory).CellId :
           < 'CommandName . 'COMMAND--32 : memory | initVal: val("SetVel"), actVal: val("SetVel"), prevVal: val(
             "SetVel") > ]

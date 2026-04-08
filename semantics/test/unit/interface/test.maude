@@ -1,12 +1,14 @@
+load command.maude
 load update.maude
 
 mod TEST--INTERFACE is
   pr TEST-BASE .
-  pr TEST--INTERFACE--UPDATE .
+  pr TEST--INTERFACE--COMMAND .
+  pr TEST--INTERFACE--UPDATE  .
 
   op interface--tests : -> TestResults .
 
-  eq interface--tests = test--interface--update +
+  eq interface--tests = test--interface--command + test--interface--update +
     begin tests
 
       assert "updateGenerator calls update on the generator" from
@@ -102,7 +104,8 @@ mod TEST--INTERFACE is
       assert "updateInterfaceHistoryWithTracking prepends external inputs to list 1" from
         updateInterfaceHistoryWithTracking(
           [ environment : mtenvironment ]
-          [ interface : none ]
+          [ interface :
+            < A . B : command-on-execution | arguments: nilarg, handle: nothing, order: 1, abort: CommandAbortIdle > ]
           [ memory : none ]
           [ interface-history : updateAck(A,true) ]
           ,
@@ -110,7 +113,8 @@ mod TEST--INTERFACE is
         )
       reaches
           [ environment : mtenvironment ]
-          [ interface : none ]
+          [ interface :
+            < A . B : command-on-execution | arguments: nilarg, handle: just(CommandAccepted), order: 1, abort: CommandAbortIdle > ]
           [ memory : none ]
           [ interface-history : commandAck(A, nilarg, CommandAccepted) # updateAck(A,true) ]
       end
@@ -165,7 +169,8 @@ mod TEST--INTERFACE is
       assert "updateInterfaceHistoryWithoutTracking prepends external inputs to list 1" from
         updateInterfaceHistoryWithoutTracking(
           [ environment : mtenvironment ]
-          [ interface : none ]
+          [ interface :
+            < A . B : command-on-execution | arguments: nilarg, handle: nothing, order: 1, abort: CommandAbortIdle > ]
           [ memory : none ]
           [ interface-history : updateAck(A,true) ]
           ,
@@ -173,7 +178,8 @@ mod TEST--INTERFACE is
         )
       reaches
           [ environment : mtenvironment ]
-          [ interface : none ]
+          [ interface :
+            < A . B : command-on-execution | arguments: nilarg, handle: just(CommandAccepted), order: 1, abort: CommandAbortIdle > ]
           [ memory : none ]
           [ interface-history : commandAck(A, nilarg, CommandAccepted) ]
       end

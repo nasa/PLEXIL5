@@ -140,13 +140,13 @@ begin tests
     assert "Update interface with a CommandAck 1" from
       testConfiguration(
         updateCommandInputs(
-          < 'anId . 'aRootId : command-on-execution | arguments: nilarg, handle: nothing >,
+          < 'anId . 'aRootId : command-on-execution | arguments: nilarg, order: 0, handle: nothing >,
           (commandAck('anId, nilarg, CommandDenied))
         )
       )
     reaches
       testConfiguration(
-        < 'anId . 'aRootId : command-on-execution | arguments: nilarg, handle: just(CommandDenied) >
+        < 'anId . 'aRootId : command-on-execution | arguments: nilarg, order: 0, handle: just(CommandDenied) >
       )
     end
 

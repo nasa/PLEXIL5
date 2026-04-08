@@ -176,7 +176,13 @@ fmod MACRO is
      executeCommands(
        [ nodes : < Q : command | AtS > Nds ]
        [ macroacts : AS ]
-       [ interface : < CmdId . Q : command-on-execution | arguments: Args, returnVariable: nothing, handle: just(CommandSuccess), abort: CommandAbortIdle > Cmds ]
+       [ interface :
+        < CmdId . Q : command-on-execution |
+          arguments: Args,
+          returnVariable: nothing,
+          handle: just(CommandSuccess),
+          abort: CommandAbortIdle,
+          order: (getLatestRunningCommandNumber(Cmds,CmdId,Args,0) + 1) > Cmds ]
        Conf
      )
   if ((CmdId == 'pprint) or (CmdId == 'print))
@@ -185,13 +191,25 @@ fmod MACRO is
   eq executeCommands(
        [ nodes : < Q : command | command: CmdIdExpr / Params / NeQ?, AtS > Nds ]
        [ macroacts : runCommand(Q, cmdInvocation(CmdId,Args)), AS ]
-       [ interface : < CmdId . Q : command-on-execution | AtS' > Cmds ]
+       [ interface : < CmdId . Q' : command-on-execution | arguments: Args, AtS' > Cmds ]
        Conf )
    =
     executeCommands(
       [ nodes : < Q : command | command: CmdIdExpr / Params / NeQ?, AtS > Nds ]
       [ macroacts : AS ]
-      [ interface : < CmdId . Q : command-on-execution | arguments: Args, returnVariable: NeQ?, handle: nothing, abort: CommandAbortIdle > Cmds ]
+      [ interface :
+        < CmdId . Q : command-on-execution |
+          arguments: Args,
+          returnVariable: NeQ?,
+          handle: nothing,
+          abort: CommandAbortIdle,
+          order: (getLatestRunningCommandNumber(
+            < CmdId . Q' : command-on-execution | AtS' > Cmds,
+            CmdId,
+            Args,
+            0) + 1
+          ) >
+        < CmdId . Q' : command-on-execution | AtS' > Cmds ]
       Conf
     )
   [owise]
@@ -205,7 +223,13 @@ fmod MACRO is
     executeCommands(
       [ nodes : < Q : command | command: CmdIdExpr / Params / NeQ?, AtS > Nds ]
       [ macroacts : AS ]
-      [ interface : < CmdId . Q : command-on-execution | arguments: Args, returnVariable: NeQ?, handle: nothing, abort: CommandAbortIdle > Cmds ]
+      [ interface :
+        < CmdId . Q : command-on-execution |
+          arguments: Args,
+          returnVariable: NeQ?,
+          handle: nothing,
+          abort: CommandAbortIdle,
+          order: 0 > Cmds ]
       Conf
     )
   [owise]
