@@ -11,9 +11,11 @@ fmod INTERFACE is
   vars CmdId           : Identifier .
   vars Cmds Cmds'      : Configuration .
   vars MEM AccCmds     : Configuration .
+  vars N N'            : Nat .
   vars NeQ             : NeQualified .
   vars ExNds           : Configuration .
   vars Hndl Hndl'      : CommandHandle .
+  vars Obj             : Object .
   vars Hndl?           : Maybe{CommandHandle} .
   vars Args            : Arguments .
   vars V?              : Maybe{Value} .
@@ -116,18 +118,53 @@ fmod INTERFACE is
   eq updateInternalEnvironment(Env, (CmdInput EInput), AccEnv) = updateInternalEnvironment(Env,EInput,AccEnv) .
   eq updateInternalEnvironment(Env, noInputs, AccEnv) = Env , AccEnv .
 
-  --- TODO: Check the semantics to model if it is possible for two different commandAck that were supposed to be for different command instances to work on only one .
-  --- TODO: We assume this is deterministic .
-  op updateCommandHandles : Configuration Inputs -> Configuration .
-  eq updateCommandHandles(
-    < CmdId . Q : command-on-execution | arguments: Args, handle: Hndl?, AtS > Cmds,
+  op getLatestRunningCommand : Configuration Identifier Arguments ~> Object .
+  eq getLatestRunningCommand(Cmds, CmdId, Args)
+   = getRunningCommandWithNumber(Cmds, CmdId, Args, getLatestRunningCommandNumber(Cmds, CmdId, Args, 0)) .
+
+    op  getLatestRunningCommandNumber : Configuration Identifier Arguments Nat -> Nat .
+    eq  getLatestRunningCommandNumber(
+          < CmdId . Q : command-on-execution | arguments: Args, handle: Hndl?, order: N, AtS > Cmds,
+          CmdId,
+          Args,
+          N'
+        )
+      = getLatestRunningCommandNumber(
+          Cmds,
+          CmdId,
+          Args,
+          if N > N' then N else N' fi
+        ) .
+    eq  getLatestRunningCommandNumber(
+          Cmds,
+          CmdId,
+          Args,
+          N
+        )
+      = N [owise] .
+
+    op  getRunningCommandWithNumber : Configuration Identifier Arguments Nat ~> Object .
+    eq  getRunningCommandWithNumber(
+          < CmdId . Q : command-on-execution | arguments: Args, handle: Hndl?, order: N, AtS > Cmds,
+          CmdId,
+          Args,
+          N
+        )
+      =   < CmdId . Q : command-on-execution | arguments: Args, handle: Hndl?, order: N, AtS > .
+
+  --- INFO: `plexiltest` assigns a commandAck to the latest node that executed that command. We track it with a counter.
+  op updateCommandHandles : Configuration Inputs ~> Configuration .
+ ceq updateCommandHandles(
+    Cmds,
     (commandAck(CmdId, Args, Hndl') EInput)
   )
   =
-    < CmdId . Q : command-on-execution | arguments: Args, handle: just(Hndl'), AtS >
-    updateCommandHandles(Cmds,EInput)
+    < CmdId . Q : command-on-execution | handle: just(Hndl'), AtS >
+    updateCommandHandles(Cmds',EInput)
+  if Obj := getLatestRunningCommand(Cmds, CmdId, Args)
+  /\ < CmdId . Q : command-on-execution | handle: Hndl?, AtS > := Obj
+  /\ Obj Cmds' := Cmds
   .
-  eq updateCommandHandles(Cmds, (commandAck(CmdId, Args, Hndl') EInput)) = updateCommandHandles(Cmds, EInput) [owise] .
   eq updateCommandHandles(Cmds,noInputs) = Cmds .
 
   op updateCommandValues : Configuration Configuration Inputs -> Configuration .

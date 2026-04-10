@@ -1,0 +1,39 @@
+mod TEST--INTERFACE--COMMAND is
+
+  pr TEST-BASE .
+
+  op test--interface--command : -> TestResults .
+
+  eq test--interface--command =
+    begin tests
+
+      assert "updateCommandHandles 1" from
+        testConfiguration(
+          updateCommandHandles(
+            < A . B : command-on-execution | arguments: nilarg, handle: nothing, order: 2, abort: CommandAbortIdle >,
+            commandAck(A, nilarg, CommandDenied)
+          )
+        )
+      reaches
+        testConfiguration(
+          < A . B : command-on-execution | arguments: nilarg, handle: just(CommandDenied), order: 2, abort: CommandAbortIdle >
+        )
+      end
+
+      assert "updateCommandHandles 2" from
+        testConfiguration(
+          updateCommandHandles(
+            < A . B : command-on-execution | arguments: nilarg, handle: just(CommandSuccess), order: 2, abort: CommandAbortIdle >,
+            commandAck(A, nilarg, CommandDenied)
+          )
+        )
+      reaches
+        testConfiguration(
+          < A . B : command-on-execution | arguments: nilarg, handle: just(CommandDenied), order: 2, abort: CommandAbortIdle >
+        )
+      end
+
+    end tests
+    .
+
+endm

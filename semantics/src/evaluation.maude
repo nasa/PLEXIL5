@@ -153,6 +153,13 @@ fmod EVAL is
  ceq eval(C,[ < Q : memory | NA , actVal: ArrV > PS ],arrayVar(Q,E)) = const(nth(ArrV,I))
     if val(I) := expToVal(eval(C,[ < Q : memory | NA , actVal: ArrV > PS ],E)) .
 
+ ceq [eval-forwarded-arrayVariable] :
+  eval(C, [ PS ], arrayVar(Q,E)) = const(nth(ArrV,I))
+  if [ < Q  : memory-forwarding | target: Q', AtS  >
+       < Q' : memory            | actVal: ArrV,  AtS' > PS' ] := [ PS ]
+  /\ val(I) := expToVal(eval(C,[ PS ],E))
+  [owise]
+  .
 eq [eval-forwarded-variable] :
   eval(
     C,

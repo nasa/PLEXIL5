@@ -363,19 +363,19 @@ parseNode cursor =
         libraryNodeCallArrow = child >=> element "NodeBody" >=> child >=> element "LibraryNodeCall"
         hasLibraryNodeCall = not $ null $ libraryNodeCallArrow cursor
         libraryBody = let x = (libraryNodeCallArrow >=> child >=> element "Node") cursor in head x
-        libraryName =  case toQID <$> maudifyLabel <$> parseNodeId (head $ libraryNodeCallArrow cursor) of
+        libraryName =  case toQID . maudifyLabel <$> parseNodeId (head $ libraryNodeCallArrow cursor) of
             Left msg -> error $ "no library name found in: " ++ show (libraryNodeCallArrow cursor) ++ "\nerrorMsg: " ++ msg
             Right n -> n
         libraryArgs = let nodeParameter = libraryNodeCallArrow >=> child >=> element "Alias" >=> child >=> element "NodeParameter" >=> child >=> content in nodeParameter cursor
 
-        prettyLibraryParameters = hsep $ intersperse (text ".") $ map (text . toQID . maudifyLabel . T.unpack) libraryArgs
+        prettyLibraryParameters = hsep $ intersperse (text ".") $ map (text . toQID . T.unpack) libraryArgs
 
         prettyLibraryArguments = hsep $ map process argsCursor
             where
                 process argCursor =
                     if null $ checkName (isSuffixOf "Variable" . T.unpack . XML.nameLocalName) argCursor
                         then elementVisitor argCursor
-                        else text "const" <> parens (text "varForwarding" <> parens (text $ toQID $ maudifyLabel $ T.unpack $ T.concat $ (child >=> content) argCursor))
+                        else text "const" <> parens (text "varForwarding" <> parens (text $ toQID $ T.unpack $ T.concat $ (child >=> content) argCursor))
 
                 argsCursor = (libraryNodeCallArrow >=> child >=> element "Alias" >=> child >=> element "NodeParameter" >=> followingSibling) cursor
         ---
